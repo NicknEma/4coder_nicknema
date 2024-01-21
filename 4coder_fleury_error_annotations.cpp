@@ -1,5 +1,7 @@
 //~ NOTE(rjf): Error annotations
 
+NAMESPACE_BEGIN(nne)
+
 function void
 F4_RenderErrorAnnotations(Application_Links *app, Buffer_ID buffer,
                           Text_Layout_ID text_layout_id,
@@ -101,7 +103,7 @@ F4_RenderErrorAnnotations(Application_Links *app, Buffer_ID buffer,
                         Vec2_f32 draw_position =
                         {
                             region.x1 - metrics.max_advance*jump_line.size -
-                                (y.max-y.min)/2 - metrics.line_height/2,
+							(y.max-y.min)/2 - metrics.line_height/2,
                             y.min + (y.max-y.min)/2 - metrics.line_height/2,
                         };
                         
@@ -126,3 +128,5 @@ F4_RenderErrorAnnotations(Application_Links *app, Buffer_ID buffer,
         }
     }
 }
+
+NAMESPACE_END()

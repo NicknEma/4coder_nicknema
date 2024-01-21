@@ -3,6 +3,8 @@
 #ifndef FCODER_FLEURY_HOOKS_H
 #define FCODER_FLEURY_HOOKS_H
 
+NAMESPACE_BEGIN(nne)
+
 //~ NOTE(rjf): @f4_hooks The hooks that 4coder's core will call back, that are
 // implemented by 4coder_fleury.
 
@@ -28,5 +30,7 @@ function DELTA_RULE_SIG(F4_DeltaRule)
 
 //~ NOTE(rjf): @f4_hook_helpers
 function void F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id, Buffer_ID buffer, Text_Layout_ID text_layout_id, Rect_f32 rect, Frame_Info frame_info);
+
+NAMESPACE_END()
 
 #endif // 4CODER_FLEURY_HOOKS_H

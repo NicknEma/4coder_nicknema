@@ -1,142 +1,118 @@
+#ifndef FCODER_CUSTOM_LANG_JAI_CPP
+#define FCODER_CUSTOM_LANG_JAI_CPP
 
-internal void
-F4_Jai_ParseDeclSet(F4_Index_ParseCtx *ctx, F4_Index_Note *parent)
-{
+NAMESPACE_BEGIN(nne)
+
+internal void F4_Jai_ParseDeclSet(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
     F4_Index_Note *last_parent = F4_Index_PushParent(ctx, parent);
-    for(;!ctx->done;)
-    {
+    for (;!ctx->done;) {
         Token *name = 0;
-        if(F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, F4_Index_TokenSkipFlag_SkipWhitespace) &&
-           F4_Index_RequireToken(ctx, S8Lit(":"), F4_Index_TokenSkipFlag_SkipWhitespace))
-        {
+        if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, F4_Index_TokenSkipFlag_SkipWhitespace) &&
+			F4_Index_RequireToken(ctx, S8Lit(":"), F4_Index_TokenSkipFlag_SkipWhitespace)) {
             F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Decl, 0);
             
-            for(;!ctx->done;)
-            {
+            for (;!ctx->done;) {
                 Token *token = token_it_read(&ctx->it);
-                if(token->sub_kind == TokenJaiKind_Comma ||
-                   token->sub_kind == TokenJaiKind_Semicolon)
-                {
+                if (token->sub_kind == TokenJaiKind_Comma || token->sub_kind == TokenJaiKind_Semicolon) {
                     F4_Index_ParseCtx_Inc(ctx, F4_Index_TokenSkipFlag_SkipWhitespace);
                     break;
-                }
-                else if(token->kind == TokenBaseKind_ScopeClose ||
-                        token->sub_kind == TokenJaiKind_ParenCl)
-                {
+                } else if (token->kind == TokenBaseKind_ScopeClose || token->sub_kind == TokenJaiKind_ParenCl) {
                     goto end;
                 }
+				
                 F4_Index_ParseCtx_Inc(ctx, F4_Index_TokenSkipFlag_SkipWhitespace);
             }
             
-        }
-        else
-        {
-            break;
-        }
+        } else { break; }
     }
     
     end:;
     F4_Index_PopParent(ctx, last_parent);
 }
 
-internal void
-F4_Jai_ParseDeclSet_Braces(F4_Index_ParseCtx *ctx, F4_Index_Note *parent)
-{
-    if(F4_Index_RequireToken(ctx, S8Lit("{"), F4_Index_TokenSkipFlag_SkipWhitespace))
-    {
+internal void F4_Jai_ParseDeclSet_Braces(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
+    if (F4_Index_RequireToken(ctx, S8Lit("{"), F4_Index_TokenSkipFlag_SkipWhitespace)) {
         F4_Jai_ParseDeclSet(ctx, parent);
         F4_Index_RequireToken(ctx, S8Lit("}"), F4_Index_TokenSkipFlag_SkipWhitespace);
     }
 }
 
-internal void
-F4_Jai_ParseDeclSet_Parens(F4_Index_ParseCtx *ctx, F4_Index_Note *parent)
-{
-    if(F4_Index_RequireToken(ctx, S8Lit("("), F4_Index_TokenSkipFlag_SkipWhitespace))
-    {
+internal void F4_Jai_ParseDeclSet_Parens(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
+    if (F4_Index_RequireToken(ctx, S8Lit("("), F4_Index_TokenSkipFlag_SkipWhitespace)) {
         F4_Jai_ParseDeclSet(ctx, parent);
         F4_Index_RequireToken(ctx, S8Lit(")"), F4_Index_TokenSkipFlag_SkipWhitespace);
     }
 }
 
-internal F4_LANGUAGE_INDEXFILE(F4_Jai_IndexFile)
-{
+internal FILE_INDEXER(F4_Jai_IndexFile) {
     int scope_nest = 0;
-    for(;!ctx->done;)
-    {
+    
+	for (; !ctx->done; ) {
         Token *name = 0;
         F4_Index_TokenSkipFlags flags = F4_Index_TokenSkipFlag_SkipWhitespace;
         
         // NOTE(rjf): Handle nests.
         {
             Token *token = token_it_read(&ctx->it);
-            if(token)
-            {
-                if(token->kind == TokenBaseKind_ScopeOpen)
-                {
+            if (token) {
+                if (token->kind == TokenBaseKind_ScopeOpen) {
                     scope_nest += 1;
-                }
-                else if(token->kind == TokenBaseKind_ScopeClose)
-                {
+                } else if (token->kind == TokenBaseKind_ScopeClose) {
                     scope_nest -= 1;
                 }
-                if(scope_nest < 0)
-                {
+				
+				if (scope_nest < 0) {
                     scope_nest = 0;
                 }
             }
         }
         
-        if(F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, flags))
-        {
+        if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, flags)) {
             
             // NOTE(rjf): Definitions
-            if(F4_Index_RequireToken(ctx, S8Lit("::"), flags))
-            {
-                // NOTE(rjf): Procedures
-                if(F4_Index_PeekToken(ctx, S8Lit("(")) ||
-                   (F4_Index_RequireToken(ctx, S8Lit("inline"), flags) &&
-                    F4_Index_PeekToken(ctx, S8Lit("("))))
-                {
+            if (F4_Index_RequireToken(ctx, S8Lit("::"), flags)){
+                
+				// NOTE(rjf): Procedures
+                if (F4_Index_PeekToken(ctx, S8Lit("(")) ||
+					(F4_Index_RequireToken(ctx, S8Lit("inline"), flags) &&
+					 F4_Index_PeekToken(ctx, S8Lit("(")))) {
                     F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Function, 0);
                     F4_Jai_ParseDeclSet_Parens(ctx, parent);
                 }
+				
                 // NOTE(rjf): Structs
-                else if(F4_Index_RequireToken(ctx, S8Lit("struct"), flags))
-                {
+                else if (F4_Index_RequireToken(ctx, S8Lit("struct"), flags)) {
                     F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, F4_Index_NoteFlag_ProductType);
                     F4_Jai_ParseDeclSet_Braces(ctx, parent);
                 }
+				
                 // NOTE(rjf): Unions
-                else if(F4_Index_RequireToken(ctx, S8Lit("union"), flags))
-                {
+                else if (F4_Index_RequireToken(ctx, S8Lit("union"), flags)) {
                     F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, F4_Index_NoteFlag_SumType);
                     F4_Jai_ParseDeclSet_Braces(ctx, parent);
                 }
+				
                 // NOTE(rjf): Enums
-                else if(F4_Index_RequireToken(ctx, S8Lit("enum"), flags))
-                {
+                else if (F4_Index_RequireToken(ctx, S8Lit("enum"), flags)) {
                     F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, 0);
                 }
+				
                 // NOTE(rjf): Constants
-                else if(F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, 0, flags) ||
-                        F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralInteger, 0, flags) ||
-                        F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralFloat, 0, flags) ||
-                        F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralString, 0, flags))
-                {
+                else if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, 0, flags) ||
+						 F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralInteger, 0, flags) ||
+						 F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralFloat, 0, flags) ||
+						 F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralString, 0, flags)) {
                     F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Constant, 0);
                 }
             }
         }
         
         //~ NOTE(rjf): Comment Tags
-        else if(F4_Index_RequireTokenKind(ctx, TokenBaseKind_Comment, &name, F4_Index_TokenSkipFlag_SkipWhitespace))
-        {
+        else if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Comment, &name, F4_Index_TokenSkipFlag_SkipWhitespace)) {
             F4_Index_ParseComment(ctx, name);
         }
         
-        else
-        {
+        else {
             F4_Index_ParseCtx_Inc(ctx, flags);
         }
     }
@@ -190,11 +166,11 @@ _F4_Jai_FindDecl(Application_Links *app, Buffer_ID buffer, i64 pos, Token *decl_
     return result;
 }
 
-internal F4_LANGUAGE_POSCONTEXT(F4_Jai_PosContext)
+internal POSITIONAL_CONTEXT_GETTER(F4_Jai_PosContext)
 {
     int count = 0;
-    F4_Language_PosContextData *first = 0;
-    F4_Language_PosContextData *last = 0;
+	Positional_Context_Data *first = 0;
+	Positional_Context_Data *last = 0;
     
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     
@@ -311,6 +287,9 @@ internal F4_LANGUAGE_POSCONTEXT(F4_Jai_PosContext)
     return first;
 }
 
-internal F4_LANGUAGE_HIGHLIGHT(F4_Jai_Highlight)
-{
+internal LANGUAGE_HIGHLIGHTER(F4_Jai_Highlight) {
 }
+
+NAMESPACE_END()
+
+#endif // FCODER_CUSTOM_LANG_JAI_CPP

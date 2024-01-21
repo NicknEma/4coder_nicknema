@@ -3,6 +3,8 @@
 #ifndef FCODER_FLEURY_LEGO_H
 #define FCODER_FLEURY_LEGO_H
 
+NAMESPACE_BEGIN(nne)
+
 enum F4_LegoKind
 {
     F4_LegoKind_Null,
@@ -21,5 +23,7 @@ struct F4_Lego
 };
 
 function void F4_Lego_Store(F4_Lego *lego, F4_LegoKind kind, String8 string);
+
+NAMESPACE_END()
 
 #endif // FCODER_FLEURY_LEGO_H

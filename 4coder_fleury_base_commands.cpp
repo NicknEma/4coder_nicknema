@@ -1,16 +1,17 @@
 
+
 //~ NOTE(rjf): @f4_base_commands
 
 // TODO(rjf): Remove once Allen adds official version.
 CUSTOM_COMMAND_SIG(f4_leave_event_unhandled)
-CUSTOM_DOC("when bound to keystroke, ensures the event falls through to text insertion")
-{
+CUSTOM_DOC("when bound to keystroke, ensures the event falls through to text insertion") {
     leave_current_input_unhandled(app);
 }
 
+NAMESPACE_BEGIN(nne)
+
 internal void
-F4_Search(Application_Links *app, Scan_Direction dir)
-{
+F4_Search(Application_Links *app, Scan_Direction dir) {
     Scratch_Block scratch(app);
     View_ID view = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
@@ -25,22 +26,27 @@ F4_Search(Application_Links *app, Scan_Direction dir)
     }
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_search)
-CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, will fill search query with it.")
-{
-    F4_Search(app, Scan_Forward);
+CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, will fill search query with it.") {
+    using namespace nne;
+	
+	F4_Search(app, Scan_Forward);
 }
 
 CUSTOM_COMMAND_SIG(f4_reverse_search)
-CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, will fill search query with it.")
-{
-    F4_Search(app, Scan_Backward);
+CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, will fill search query with it.") {
+    using namespace nne;
+	
+	F4_Search(app, Scan_Backward);
 }
 
 CUSTOM_COMMAND_SIG(f4_write_text_input)
-CUSTOM_DOC("Inserts whatever text was used to trigger this command.")
-{
-    write_text_input(app);
+CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
+    using namespace nne;
+	
+	write_text_input(app);
     F4_PowerMode_CharacterPressed();
     User_Input in = get_current_input(app);
     String_Const_u8 insert = to_writable(&in);
@@ -48,9 +54,10 @@ CUSTOM_DOC("Inserts whatever text was used to trigger this command.")
 }
 
 CUSTOM_COMMAND_SIG(f4_write_text_and_auto_indent)
-CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.")
-{
-    write_text_and_auto_indent(app);
+CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.") {
+    using namespace nne;
+	
+	write_text_and_auto_indent(app);
     F4_PowerMode_CharacterPressed();
     User_Input in = get_current_input(app);
     String_Const_u8 insert = to_writable(&in);
@@ -58,16 +65,18 @@ CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if a
 }
 
 CUSTOM_COMMAND_SIG(f4_write_zero_struct)
-CUSTOM_DOC("At the cursor, insert a ' = {0};'.")
-{
-    write_string(app, string_u8_litexpr(" = {0};"));
+CUSTOM_DOC("At the cursor, insert a ' = {0};'.") {
+    using namespace nne;
+	
+	write_string(app, string_u8_litexpr(" = {0};"));
     F4_PowerMode_CharacterPressed();
     F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), 0);
 }
 
 CUSTOM_COMMAND_SIG(f4_home)
-CUSTOM_DOC("Goes to the beginning of the line.")
-{
+CUSTOM_DOC("Goes to the beginning of the line.") {
+	using namespace nne;
+	
     seek_pos_of_visual_line(app, Side_Min);
     View_ID view = get_active_view(app, Access_ReadWriteVisible);
     Buffer_Scroll scroll = view_get_buffer_scroll(app, view);
@@ -76,38 +85,36 @@ CUSTOM_DOC("Goes to the beginning of the line.")
 }
 
 CUSTOM_COMMAND_SIG(f4_toggle_battery_saver)
-CUSTOM_DOC("Toggles battery saving mode.")
-{
+CUSTOM_DOC("Toggles battery saving mode.") {
+	using namespace nne;
+	
     global_battery_saver = !global_battery_saver;
 }
 
 CUSTOM_COMMAND_SIG(f4_toggle_compilation_expand)
-CUSTOM_DOC("Expand the compilation window.")
-{
+CUSTOM_DOC("Expand the compilation window.") {
+	using namespace nne;
+	
     Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
     Face_ID face_id = get_face_id(app, buffer);
     Face_Metrics metrics = get_face_metrics(app, face_id);
-    if(global_compilation_view_expanded ^= 1)
-    {
+    if (global_compilation_view_expanded ^= 1) {
         view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*32.f));
-    }
-    else
-    {
+    } else {
         view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*4.f));
     }
 }
 
+NAMESPACE_BEGIN(nne)
+
 internal void
-F4_GoToDefinition(Application_Links *app, F4_Index_Note *note, b32 same_panel)
-{
-    if(note != 0 && note->file != 0)
-    {
+F4_GoToDefinition(Application_Links *app, F4_Index_Note *note, b32 same_panel) {
+    if (note != 0 && note->file != 0) {
         View_ID view = get_active_view(app, Access_Always);
         Rect_f32 region = view_get_buffer_region(app, view);
         f32 view_height = rect_height(region);
         Buffer_ID buffer = note->file->buffer;
-        if(!same_panel)
-        {
+        if (!same_panel) {
             view = get_next_view_looped_primary_panels(app, view, Access_Always);
         }
         point_stack_push_view_cursor(app, view);
@@ -124,27 +131,21 @@ F4_GoToDefinition(Application_Links *app, F4_Index_Note *note, b32 same_panel)
 }
 
 internal F4_Index_Note *
-F4_FindMostIntuitiveNoteInDuplicateChain(F4_Index_Note *note, Buffer_ID cursor_buffer, i64 cursor_pos)
-{
-    F4_Index_Note *result = note;
-    if(note != 0)
-    {
+F4_FindMostIntuitiveNoteInDuplicateChain(F4_Index_Note *note, Buffer_ID cursor_buffer, i64 cursor_pos) {
+    using namespace nne;
+	
+	F4_Index_Note *result = note;
+    if (note != 0) {
         F4_Index_Note *best_note_based_on_cursor = 0;
-        for(F4_Index_Note *candidate = note; candidate; candidate = candidate->next)
-        {
+        for (F4_Index_Note *candidate = note; candidate; candidate = candidate->next) {
             F4_Index_File *file = candidate->file;
-            if(file != 0)
-            {
-                if(cursor_buffer == file->buffer &&
-                   candidate->range.min <= cursor_pos && cursor_pos <= candidate->range.max)
-                {
-                    if(candidate->next)
-                    {
+            if (file != 0) {
+                if (cursor_buffer == file->buffer &&
+					candidate->range.min <= cursor_pos && cursor_pos <= candidate->range.max) {
+                    if (candidate->next) {
                         best_note_based_on_cursor = candidate->next;
                         break;
-                    }
-                    else
-                    {
+                    } else {
                         best_note_based_on_cursor = note;
                         break;
                     }
@@ -152,16 +153,11 @@ F4_FindMostIntuitiveNoteInDuplicateChain(F4_Index_Note *note, Buffer_ID cursor_b
             }
         }
         
-        if(best_note_based_on_cursor)
-        {
+        if (best_note_based_on_cursor) {
             result = best_note_based_on_cursor;
-        }
-        else if(note->flags & F4_Index_NoteFlag_Prototype)
-        {
-            for(F4_Index_Note *candidate = note; candidate; candidate = candidate->next)
-            {
-                if(!(candidate->flags & F4_Index_NoteFlag_Prototype))
-                {
+        } else if (note->flags & F4_Index_NoteFlag_Prototype) {
+            for (F4_Index_Note *candidate = note; candidate; candidate = candidate->next) {
+                if (!(candidate->flags & F4_Index_NoteFlag_Prototype)) {
                     result = candidate;
                     break;
                 }
@@ -171,9 +167,12 @@ F4_FindMostIntuitiveNoteInDuplicateChain(F4_Index_Note *note, Buffer_ID cursor_b
     return result;
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_go_to_definition)
-CUSTOM_DOC("Goes to the definition of the identifier under the cursor.")
-{
+CUSTOM_DOC("Goes to the definition of the identifier under the cursor.") {
+	using namespace nne;
+	
     View_ID view = get_active_view(app, Access_Always);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
     Scratch_Block scratch(app);
@@ -184,8 +183,9 @@ CUSTOM_DOC("Goes to the definition of the identifier under the cursor.")
 }
 
 CUSTOM_COMMAND_SIG(f4_go_to_definition_same_panel)
-CUSTOM_DOC("Goes to the definition of the identifier under the cursor in the same panel.")
-{
+CUSTOM_DOC("Goes to the definition of the identifier under the cursor in the same panel.") {
+	using namespace nne;
+	
     View_ID view = get_active_view(app, Access_Always);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
     Scratch_Block scratch(app);
@@ -195,11 +195,13 @@ CUSTOM_DOC("Goes to the definition of the identifier under the cursor in the sam
     F4_GoToDefinition(app, note, 1);
 }
 
+NAMESPACE_BEGIN(nne)
+
 internal void
-_F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister, F4_Index_Note *note)
-{
-    if(note && note->file)
-    {
+_F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister, F4_Index_Note *note) {
+	using namespace nne;
+	
+    if (note && note->file) {
         F4_Index_File *file = note->file;
         Buffer_ID buffer = file->buffer;
         
@@ -210,39 +212,32 @@ _F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister
         String_Const_u8 buffer_name = push_buffer_unique_name(app, arena, buffer);
         String_Const_u8 name = push_stringf(arena, "[%.*s] %.*s", string_expand(buffer_name), string_expand(note->string));
         String_Const_u8 sort = S8Lit("");
-        switch(note->kind)
-        {
-            case F4_Index_NoteKind_Type:
-            {
+        switch (note->kind) {
+            case F4_Index_NoteKind_Type: {
                 sort = push_stringf(arena, "type [%s] [%s]",
                                     note->flags & F4_Index_NoteFlag_Prototype ? "prototype" : "def",
                                     note->flags & F4_Index_NoteFlag_SumType ? "sum" : "product");
-            }break;
+            } break;
             
-            case F4_Index_NoteKind_Function:
-            {
+            case F4_Index_NoteKind_Function: {
                 sort = push_stringf(arena, "function [%s]", note->flags & F4_Index_NoteFlag_Prototype ? "prototype" : "def");
-            }break;
+            } break;
             
-            case F4_Index_NoteKind_Macro:
-            {
+            case F4_Index_NoteKind_Macro: {
                 sort = S8Lit("macro");
-            }break;
+            } break;
             
-            case F4_Index_NoteKind_Constant:
-            {
+            case F4_Index_NoteKind_Constant: {
                 sort = S8Lit("constant");
-            }break;
+            } break;
             
-            case F4_Index_NoteKind_CommentTag:
-            {
+            case F4_Index_NoteKind_CommentTag: {
                 sort = S8Lit("comment tag");
-            }break;
+            } break;
             
-            case F4_Index_NoteKind_CommentToDo:
-            {
+            case F4_Index_NoteKind_CommentToDo: {
                 sort = S8Lit("TODO");
-            }break;
+            } break;
             
             default: break;
         }
@@ -251,8 +246,9 @@ _F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister
 }
 
 internal void
-F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID buffer, i64 pos)
-{
+F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID buffer, i64 pos) {
+	using namespace nne;
+	
     // NOTE(rjf): This function was ripped from 4coder's jump_to_location. It was copied
     // and modified so that jumping to a location didn't cause a selection in notepad-like
     // mode.
@@ -261,17 +257,19 @@ F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID buffer, i64 po
     Buffer_Seek seek = seek_pos(pos);
     set_view_to_location(app, view, buffer, seek);
     
-    if (auto_center_after_jumps)
-    {
+    if (auto_center_after_jumps) {
         center_view(app);
     }
     view_set_cursor(app, view, seek);
     view_set_mark(app, view, seek);
 }
 
+NAMESPACE_END()
+
 CUSTOM_UI_COMMAND_SIG(f4_search_for_definition__project_wide)
-CUSTOM_DOC("List all definitions in the index and jump to the one selected by the user.")
-{
+CUSTOM_DOC("List all definitions in the index and jump to the one selected by the user.") {
+	using namespace nne;
+	
     char *query = "Index (Project):";
     
     Scratch_Block scratch(app);
@@ -282,13 +280,10 @@ CUSTOM_DOC("List all definitions in the index and jump to the one selected by th
     F4_Index_Lock();
     {
         for (Buffer_ID buffer = get_buffer_next(app, 0, Access_Always);
-             buffer != 0; buffer = get_buffer_next(app, buffer, Access_Always))
-        {
+             buffer != 0; buffer = get_buffer_next(app, buffer, Access_Always)) {
             F4_Index_File *file = F4_Index_LookupFile(app, buffer);
-            if(file != 0)
-            {
-                for(F4_Index_Note *note = file->first_note; note; note = note->next_sibling)
-                {
+            if (file != 0) {
+                for (F4_Index_Note *note = file->first_note; note; note = note->next_sibling) {
                     _F4_PushListerOptionForNote(app, scratch, lister, note);
                 }
             }
@@ -302,8 +297,7 @@ CUSTOM_DOC("List all definitions in the index and jump to the one selected by th
         block_copy_struct(&result, (Tiny_Jump*)l_result.user_data);
     }
     
-    if (result.buffer != 0)
-    {
+    if (result.buffer != 0) {
         View_ID view = get_this_ctx_view(app, Access_Always);
         point_stack_push_view_cursor(app, view);
         F4_JumpToLocation(app, view, result.buffer, result.pos);
@@ -311,8 +305,9 @@ CUSTOM_DOC("List all definitions in the index and jump to the one selected by th
 }
 
 CUSTOM_UI_COMMAND_SIG(f4_search_for_definition__current_file)
-CUSTOM_DOC("List all definitions in the current file and jump to the one selected by the user.")
-{
+CUSTOM_DOC("List all definitions in the current file and jump to the one selected by the user.") {
+	using namespace nne;
+	
     char *query = "Index (File):";
     
     View_ID view = get_active_view(app, Access_Always);
@@ -326,10 +321,8 @@ CUSTOM_DOC("List all definitions in the current file and jump to the one selecte
     F4_Index_Lock();
     {
         F4_Index_File *file = F4_Index_LookupFile(app, buffer);
-        if(file != 0)
-        {
-            for(F4_Index_Note *note = file->first_note; note; note = note->next_sibling)
-            {
+        if (file != 0) {
+            for (F4_Index_Note *note = file->first_note; note; note = note->next_sibling) {
                 _F4_PushListerOptionForNote(app, scratch, lister, note);
             }
         }
@@ -338,12 +331,11 @@ CUSTOM_DOC("List all definitions in the current file and jump to the one selecte
     
     Lister_Result l_result = run_lister(app, lister);
     Tiny_Jump result = {};
-    if (!l_result.canceled && l_result.user_data != 0){
+    if (!l_result.canceled && l_result.user_data != 0) {
         block_copy_struct(&result, (Tiny_Jump*)l_result.user_data);
     }
     
-    if (result.buffer != 0)
-    {
+    if (result.buffer != 0) {
         View_ID view_id = get_this_ctx_view(app, Access_Always);
         point_stack_push_view_cursor(app, view_id);
         F4_JumpToLocation(app, view_id, result.buffer, result.pos);
@@ -351,8 +343,9 @@ CUSTOM_DOC("List all definitions in the current file and jump to the one selecte
 }
 
 CUSTOM_COMMAND_SIG(f4_toggle_enclosure_side)
-CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the closest enclosure.")
-{
+CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the closest enclosure.") {
+	using namespace nne;
+	
     View_ID view = get_active_view(app, Access_Always);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
     i64 pos = view_get_cursor_pos(app, view);
@@ -363,11 +356,9 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
         
         Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
         Token *token = token_it_read(&it);
-        if(token)
-        {
-            if(token->kind == TokenBaseKind_ScopeOpen ||
-               token->kind == TokenBaseKind_ParentheticalOpen)
-            {
+        if (token) {
+            if (token->kind == TokenBaseKind_ScopeOpen ||
+				token->kind == TokenBaseKind_ParentheticalOpen) {
                 pos += 1;
                 goto end;
             }
@@ -375,11 +366,9 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
         
         token_it_dec_all(&it);
         token = token_it_read(&it);
-        if(token)
-        {
-            if(token->kind == TokenBaseKind_ScopeClose ||
-               token->kind == TokenBaseKind_ParentheticalClose)
-            {
+        if (token) {
+            if (token->kind == TokenBaseKind_ScopeClose ||
+				token->kind == TokenBaseKind_ParentheticalClose) {
                 pos -= 1;
                 goto end;
             }
@@ -391,15 +380,11 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
     Scratch_Block scratch(app);
     Range_i64_Array ranges = get_enclosure_ranges(app, scratch, buffer, pos,
                                                   FindNest_Scope | FindNest_Paren);
-    if(ranges.count > 0)
-    {
+    if (ranges.count > 0) {
         Range_i64 nearest_range = ranges.ranges[0];
-        if(pos == nearest_range.min+1)
-        {
+        if (pos == nearest_range.min+1) {
             pos = nearest_range.max;
-        }
-        else
-        {
+        } else {
             pos = nearest_range.min;
         }
         view_set_cursor(app, view, seek_pos(pos));
@@ -408,18 +393,17 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
 }
 
 CUSTOM_UI_COMMAND_SIG(f4_open_project)
-CUSTOM_DOC("Open a project by navigating to the project file.")
-{
-    for(;;)
-    {
+CUSTOM_DOC("Open a project by navigating to the project file.") {
+	using namespace nne;
+	
+    for (;;) {
         Scratch_Block scratch(app);
         View_ID view = get_this_ctx_view(app, Access_Always);
         File_Name_Result result = get_file_name_from_user(app, scratch, "Open Project:", view);
         if (result.canceled) break;
         
         String_Const_u8 file_name = result.file_name_activated;
-        if (file_name.size == 0)
-        {
+        if (file_name.size == 0) {
             file_name = result.file_name_in_text_field;
         }
         if (file_name.size == 0) break;
@@ -428,14 +412,12 @@ CUSTOM_DOC("Open a project by navigating to the project file.")
         String_Const_u8 full_file_name = push_u8_stringf(scratch, "%.*s/%.*s",
                                                          string_expand(path), string_expand(file_name));
         
-        if (result.is_folder)
-        {
+        if (result.is_folder) {
             set_hot_directory(app, full_file_name);
             continue;
         }
         
-        if(character_is_slash(file_name.str[file_name.size - 1]))
-        {
+        if (character_is_slash(file_name.str[file_name.size - 1])) {
             File_Attributes attribs = system_quick_file_attributes(scratch, full_file_name);
             if (HasFlag(attribs.flags, FileAttribute_IsDirectory)){
                 set_hot_directory(app, full_file_name);
@@ -459,8 +441,9 @@ CUSTOM_DOC("Open a project by navigating to the project file.")
 }
 
 CUSTOM_COMMAND_SIG(f4_setup_new_project)
-CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.")
-{
+CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
+	using namespace nne;
+	
     Scratch_Block scratch(app);
     Query_Bar_Group bar_group(app);
     
@@ -561,10 +544,14 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.")
     load_project(app);
 }
 
+NAMESPACE_BEGIN(nne)
+
 function i64
 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
                                Side side, Scan_Direction direction, i64 pos)
 {
+	using namespace nne;
+	
     i64 result = boundary_non_whitespace(app, buffer, side, direction, pos);
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     if (tokens.tokens != 0){
@@ -680,6 +667,8 @@ function i64
 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
                                         Side side, Scan_Direction direction, i64 pos)
 {
+	using namespace nne;
+	
     Scratch_Block scratch(app);
     
     Range_i64_Array scopes = get_enclosure_ranges(app, scratch, buffer, pos, FindNest_Scope);
@@ -753,10 +742,14 @@ F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer
     return result ;
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_move_left)
 CUSTOM_DOC("Moves the cursor one character to the left.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
     View_ID view = get_active_view(app, Access_ReadVisible);
     if(fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) ||
@@ -770,7 +763,9 @@ CUSTOM_DOC("Moves the cursor one character to the left.")
 CUSTOM_COMMAND_SIG(f4_move_right)
 CUSTOM_DOC("Moves the cursor one character to the right.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
     View_ID view = get_active_view(app, Access_ReadVisible);
     if(fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) ||
@@ -784,49 +779,63 @@ CUSTOM_DOC("Moves the cursor one character to the right.")
 CUSTOM_COMMAND_SIG(f4_move_up_token_occurrence)
 CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_down_token_occurrence)
 CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_right_token_boundary)
 CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_left_token_boundary)
 CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_token_boundary)
 CUSTOM_DOC("Deletes left to a token boundary.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_delete_token_boundary)
 CUSTOM_DOC("Deletes right to a token boundary.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_alpha_numeric_or_camel_boundary)
 CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch,
                                                                         boundary_alpha_numeric,
                                                                         boundary_alpha_numeric_camel));
@@ -835,7 +844,9 @@ CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.")
 CUSTOM_COMMAND_SIG(f4_delete_alpha_numeric_or_camel_boundary)
 CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch,
                                                                        boundary_alpha_numeric,
                                                                        boundary_alpha_numeric_camel));
@@ -844,7 +855,9 @@ CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.")
 CUSTOM_COMMAND_SIG(f4_home_first_non_whitespace)
 CUSTOM_DOC("Goes to the beginning of the line.")
 {
-    View_ID view = get_active_view(app, Access_Read);
+    using namespace nne;
+	
+	View_ID view = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     if(view && buffer)
     {
@@ -910,10 +923,14 @@ CUSTOM_DOC("Goes to the beginning of the line.")
     }
 }
 
+NAMESPACE_BEGIN(nne)
+
 function void
 F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_delta)
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     String_Const_u8 line_string = push_buffer_line(app, scratch, buffer, line);
     i64 line_start_pos = get_line_start_pos(app, buffer, line);
     
@@ -965,7 +982,9 @@ F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_d
 internal void
 F4_ReIndentLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta)
 {
-    for(i64 i = range.min; i <= range.max; i += 1)
+    using namespace nne;
+	
+	for(i64 i = range.min; i <= range.max; i += 1)
     {
         F4_ReIndentLine(app, buffer, i, indent_delta);
     }
@@ -974,7 +993,9 @@ F4_ReIndentLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, 
 internal Range_i64
 F4_LineRangeFromPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 pos_range)
 {
-    Range_i64 lines_range =
+    using namespace nne;
+	
+	Range_i64 lines_range =
         Ii64(get_line_number_from_pos(app, buffer, pos_range.min),
              get_line_number_from_pos(app, buffer, pos_range.max));
     return lines_range;
@@ -983,7 +1004,9 @@ F4_LineRangeFromPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 pos
 internal Range_i64
 F4_PosRangeFromLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 line_range)
 {
-    if(line_range.min > line_range.max)
+    using namespace nne;
+	
+	if(line_range.min > line_range.max)
     {
         i64 swap = line_range.max;
         line_range.max = line_range.min;
@@ -998,7 +1021,9 @@ F4_PosRangeFromLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 lin
 internal void
 F4_ReIndentPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta)
 {
-    F4_ReIndentLineRange(app, buffer,
+    using namespace nne;
+	
+	F4_ReIndentLineRange(app, buffer,
                          F4_LineRangeFromPosRange(app, buffer, range),
                          indent_delta);
 }
@@ -1006,7 +1031,9 @@ F4_ReIndentPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i
 internal void
 F4_AdjustCursorAndMarkForIndentation(Application_Links *app, View_ID view, i64 original_cursor, i64 original_mark, Range_i64 original_line_range)
 {
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
+    using namespace nne;
+	
+	Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     Scratch_Block scratch(app);
     if(original_cursor == original_mark)
     {
@@ -1033,10 +1060,14 @@ F4_AdjustCursorAndMarkForIndentation(Application_Links *app, View_ID view, i64 o
     }
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_autocomplete_or_indent)
 CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts indentation if such a word is not found.")
 {
-    ProfileScope(app, "[F4] Word Complete");
+    using namespace nne;
+	
+	ProfileScope(app, "[F4] Word Complete");
     
     View_ID view = get_active_view(app, Access_ReadWriteVisible);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
@@ -1105,7 +1136,9 @@ CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts in
 CUSTOM_COMMAND_SIG(f4_unindent)
 CUSTOM_DOC("Unindent the selected range.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     
     View_ID view = get_active_view(app, Access_ReadWrite);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWrite);
@@ -1119,6 +1152,8 @@ CUSTOM_DOC("Unindent the selected range.")
     history_group_end(group);
     no_mark_snap_to_cursor(app, view);
 }
+
+NAMESPACE_BEGIN(nne)
 
 function void
 F4_GenerateHotDirectoryFileList_Project(Application_Links *app, Lister *lister)
@@ -1205,7 +1240,9 @@ F4_GenerateHotDirectoryFileList_Project(Application_Links *app, Lister *lister)
 function File_Name_Result
 F4_GetFileNameFromUser_Project(Application_Links *app, Arena *arena, String_Const_u8 query, View_ID view)
 {
-    Lister_Handlers handlers = lister_get_default_handlers();
+    using namespace nne;
+	
+	Lister_Handlers handlers = lister_get_default_handlers();
     handlers.refresh = F4_GenerateHotDirectoryFileList_Project;
     handlers.write_character = lister__write_character__file_path;
     handlers.backspace = lister__backspace_text_field__file_path;
@@ -1240,10 +1277,14 @@ F4_GetFileNameFromUser_Project(Application_Links *app, Arena *arena, String_Cons
     return(result);
 }
 
+NAMESPACE_END()
+
 CUSTOM_UI_COMMAND_SIG(f4_interactive_open_or_new_in_project)
 CUSTOM_DOC("Interactively open a file out of the file system, filtered to files only in the project.")
 {
-    for(;;)
+    using namespace nne;
+	
+	for(;;)
     {
         Scratch_Block scratch(app);
         View_ID view = get_this_ctx_view(app, Access_Always);
@@ -1295,10 +1336,14 @@ CUSTOM_DOC("Interactively open a file out of the file system, filtered to files 
     }
 }
 
+NAMESPACE_BEGIN(nne)
+
 internal void
 F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented)
 {
-    i64 cursor = *cursor_p;
+    using namespace nne;
+	
+	i64 cursor = *cursor_p;
     i64 mark = *mark_p;
     i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
     i64 mark_line = get_line_number_from_pos(app, buffer, mark);
@@ -1334,7 +1379,9 @@ F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer, i64 *cursor_
 internal void
 F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented)
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     
     i64 cursor = *cursor_p;
     i64 mark = *mark_p;
@@ -1368,7 +1415,9 @@ F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *curso
 function b32
 F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID buffer, i64 pos)
 {
-    b32 alread_has_comment = false;
+    using namespace nne;
+	
+	b32 alread_has_comment = false;
     u8 check_buffer[2];
     if(buffer_read_range(app, buffer, Ii64(pos, pos + 2), check_buffer))
     {
@@ -1383,7 +1432,9 @@ F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID buffer, i64 p
 internal void
 F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented)
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     
     i64 cursor = *cursor_p;
     i64 mark = *mark_p;
@@ -1485,10 +1536,14 @@ F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, 
     *mark_p = mark;
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_comment_selection)
 CUSTOM_DOC("Performs VS-style commenting on the selected range.")
 {
-    View_ID view = get_active_view(app, Access_ReadWriteVisible);
+    using namespace nne;
+	
+	View_ID view = get_active_view(app, Access_ReadWriteVisible);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
     i64 cursor = view_get_cursor_pos(app, view);
     i64 mark = view_get_mark_pos(app, view);
@@ -1504,7 +1559,9 @@ CUSTOM_DOC("Performs VS-style commenting on the selected range.")
 CUSTOM_COMMAND_SIG(f4_uncomment_selection)
 CUSTOM_DOC("Performs VS-style uncommenting on the selected range.")
 {
-    View_ID view = get_active_view(app, Access_ReadWriteVisible);
+    using namespace nne;
+	
+	View_ID view = get_active_view(app, Access_ReadWriteVisible);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
     i64 cursor = view_get_cursor_pos(app, view);
     i64 mark = view_get_mark_pos(app, view);
@@ -1516,8 +1573,9 @@ CUSTOM_DOC("Performs VS-style uncommenting on the selected range.")
     no_mark_snap_to_cursor(app, view);
 }
 
-struct F4_LOCInfo
-{
+NAMESPACE_BEGIN(nne)
+
+struct F4_LOCInfo {
     F4_LOCInfo *next;
     String_Const_u8 name;
     i64 lines;
@@ -1528,7 +1586,9 @@ struct F4_LOCInfo
 function F4_LOCInfo *
 F4_LOCInfoFromBuffer(Application_Links *app, Arena *arena, Buffer_ID buffer)
 {
-    F4_LOCInfo *first = 0;
+    using namespace nne;
+	
+	F4_LOCInfo *first = 0;
     F4_LOCInfo *last = 0;
     
     F4_LOCInfo *file_info = push_array_zero(arena, F4_LOCInfo, 1);
@@ -1616,17 +1676,23 @@ F4_LOCInfoFromBuffer(Application_Links *app, Arena *arena, Buffer_ID buffer)
 function int
 F4_LOCInfoCompare(const void *a_void_fuck_cplusplus, const void *b_void_fuck_cplusplus)
 {
-    F4_LOCInfo *a = (F4_LOCInfo *)a_void_fuck_cplusplus;
+    using namespace nne;
+	
+	F4_LOCInfo *a = (F4_LOCInfo *)a_void_fuck_cplusplus;
     F4_LOCInfo *b = (F4_LOCInfo *)b_void_fuck_cplusplus;
     return ((a->lines < b->lines) ? +1 :
             (a->lines > b->lines) ? -1 :
             0);
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_loc)
 CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by section, and outputs to the *loc* buffer.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     View_ID view = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     
@@ -1697,7 +1763,9 @@ CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by se
 CUSTOM_COMMAND_SIG(f4_remedy_open_cursor)
 CUSTOM_DOC("Opens the active panel's file in an actively-running RemedyBG instance, and moves to the cursor's line position.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     View_ID view = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     String8 buffer_name = push_buffer_file_name(app, scratch, buffer);
@@ -1709,9 +1777,10 @@ CUSTOM_DOC("Opens the active panel's file in an actively-running RemedyBG instan
 }
 
 CUSTOM_COMMAND_SIG(f4_bump_to_column)
-CUSTOM_DOC("Insert the required number of spaces to get to a specified column number.")
-{
-    View_ID view = get_active_view(app, Access_Always);
+CUSTOM_DOC("Insert the required number of spaces to get to a specified column number.") {
+    using namespace nne;
+	
+	View_ID view = get_active_view(app, Access_Always);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
     Face_ID face_id = get_face_id(app, buffer);
     Face_Description description = get_face_description(app, face_id);

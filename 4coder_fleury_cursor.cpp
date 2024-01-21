@@ -1,3 +1,5 @@
+NAMESPACE_BEGIN(nne)
+
 //~ NOTE(rjf): Cursor rendering
 
 global int global_cursor_count = 1;
@@ -453,3 +455,5 @@ F4_RenderMarkAnnotation(Application_Links *app, Buffer_ID buffer, Text_Layout_ID
     }
 }
 #endif
+
+NAMESPACE_END()

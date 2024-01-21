@@ -1,5 +1,6 @@
+NAMESPACE_BEGIN(nne)
 
- function void
+function void
 Plot2DBegin(Plot2DInfo *plot)
 {
     Scratch_Block scratch(plot->app);
@@ -221,3 +222,5 @@ Plot2DEnd(Plot2DInfo *plot)
     draw_rectangle_outline(plot->app, plot->screen_rect, 4.f, 3.f, fcolor_resolve(fcolor_id(defcolor_margin_active)));
     draw_set_clip(plot->app, plot->last_clip);
 }
+
+NAMESPACE_END()

@@ -3,6 +3,8 @@
 #ifndef FCODER_FLEURY_RENDER_HELPERS_H
 #define FCODER_FLEURY_RENDER_HELPERS_H
 
+NAMESPACE_BEGIN(nne)
+
 enum F4_RangeHighlightKind
 {
     F4_RangeHighlightKind_Whole,
@@ -28,5 +30,7 @@ function void F4_PushTooltip(String_Const_u8 string, ARGB_Color color);
 function void F4_PushFlash(Application_Links *app, Buffer_ID buffer, Range_i64 range, ARGB_Color color, f32 decay_rate);
 function void F4_UpdateFlashes(Application_Links *app, Frame_Info info);
 function void F4_RenderFlashes(Application_Links *app, View_ID view, Text_Layout_ID text_layout);
+
+NAMESPACE_END()
 
 #endif // FCODER_FLEURY_RENDER_HELPERS_H
