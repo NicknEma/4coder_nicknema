@@ -3,6 +3,8 @@
 #ifndef FCODER_FLEURY_CALC_H
 #define FCODER_FLEURY_CALC_H
 
+NAMESPACE_BEGIN(nne)
+
 function void F4_CLC_Tick(Frame_Info frame_info);
 function void F4_CLC_RenderCode(Application_Links *app, Buffer_ID buffer,
                                 View_ID view, Text_Layout_ID text_layout_id,
@@ -12,5 +14,7 @@ function void F4_CLC_RenderBuffer(Application_Links *app, Buffer_ID buffer, View
                                   Text_Layout_ID text_layout_id, Frame_Info frame_info);
 function void F4_CLC_RenderComments(Application_Links *app, Buffer_ID buffer, View_ID view,
                                     Text_Layout_ID text_layout_id, Frame_Info frame_info);
+
+NAMESPACE_END()
 
 #endif // FCODER_FLEURY_CALC_H

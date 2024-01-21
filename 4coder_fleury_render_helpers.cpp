@@ -1,3 +1,5 @@
+NAMESPACE_BEGIN(nne)
+
 global F4_Flash f4_flashes[64];
 
 function void
@@ -109,3 +111,5 @@ F4_RenderFlashes(Application_Links *app, View_ID view, Text_Layout_ID text_layou
         }
     }
 }
+
+NAMESPACE_END()

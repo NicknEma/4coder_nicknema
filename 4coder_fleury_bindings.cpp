@@ -1,3 +1,4 @@
+NAMESPACE_BEGIN(nne)
 
 struct Command_Map_ID_Pair
 {
@@ -5,6 +6,8 @@ struct Command_Map_ID_Pair
 	Command_Map_ID To;
 };
 static Command_Map_ID_Pair GlobalCommandMapReroute[4] = {};
+
+NAMESPACE_END()
 
 CUSTOM_COMMAND_SIG(switch_to_keybinding_0)
 CUSTOM_DOC("Switch the keybindings to mode 0.")
@@ -29,6 +32,8 @@ CUSTOM_DOC("Switch the keybindings to mode 3.")
 {
 	GlobalKeybindingMode = KeyBindingMode_3;
 }
+
+NAMESPACE_BEGIN(nne)
 
 function Implicit_Map_Result
 F4_ImplicitMap(Application_Links *app, String_ID lang, String_ID mode, Input_Event *event)
@@ -285,3 +290,5 @@ F4_SetDefaultBindings(Mapping *mapping)
     Bind(open_matching_file_cpp,     KeyCode_2, KeyCode_Alt);
     
 }
+
+NAMESPACE_END()

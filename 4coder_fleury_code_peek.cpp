@@ -1,5 +1,6 @@
+NAMESPACE_BEGIN(nne)
 
- global b32 global_code_peek_open = 0;
+global b32 global_code_peek_open = 0;
 
 function void
 F4_CodePeek_Render(Application_Links *app, View_ID view_id, Face_ID face_id,
@@ -122,16 +123,22 @@ peek_count += 1;\
     
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_code_peek)
 CUSTOM_DOC("Toggles code peek.")
 {
-    global_code_peek_open ^= 1;
+    using namespace nne;
+	
+	global_code_peek_open ^= 1;
 }
 
 CUSTOM_COMMAND_SIG(f4_code_peek_yank)
 CUSTOM_DOC("Yanks the current cursor identifier into the *peek* buffer.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     String_Const_u8 string = push_token_or_word_under_active_cursor(app, scratch);
     Code_Index_Note *note = code_index_note_from_string(string);
     Buffer_ID buffer = get_buffer_by_name(app, string_u8_litexpr("*peek*"), Access_Read | Access_Write);
@@ -145,7 +152,9 @@ CUSTOM_DOC("Yanks the current cursor identifier into the *peek* buffer.")
 CUSTOM_COMMAND_SIG(f4_code_peek_clear)
 CUSTOM_DOC("Clears the *peek* buffer.")
 {
-    Buffer_ID buffer = get_buffer_by_name(app, string_u8_litexpr("*peek*"), Access_Read | Access_Write);
+    using namespace nne;
+	
+	Buffer_ID buffer = get_buffer_by_name(app, string_u8_litexpr("*peek*"), Access_Read | Access_Write);
     if(buffer)
     {
         clear_buffer(app, buffer);

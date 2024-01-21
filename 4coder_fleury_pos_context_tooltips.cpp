@@ -1,3 +1,5 @@
+NAMESPACE_BEGIN(nne)
+
 internal Vec2_f32
 _F4_PosContext_RenderDefinitionTokens(Application_Links *app, Face_ID face,
                                       String_Const_u8 backing_string,
@@ -96,7 +98,7 @@ F4_PosContext_Render(Application_Links *app, View_ID view, Buffer_ID buffer,
     Rect_f32 view_rect = view_get_screen_rect(app, view);
     Face_ID face = global_small_code_face;
     Face_Metrics metrics = get_face_metrics(app, face);
-    F4_Language *language = F4_LanguageFromBuffer(app, buffer);
+    F4_Language *language = language_from_buffer(app, buffer);
     f32 padding = 4.f;
     
     if(language != 0)
@@ -114,18 +116,18 @@ F4_PosContext_Render(Application_Links *app, View_ID view, Buffer_ID buffer,
             global_cursor_rect.y1,
         };
         
-        F4_Language_PosContextData *ctx_list = language->PosContext(app, scratch, buffer, pos);
+		Positional_Context_Data *ctx_list = language->context_getter(app, scratch, buffer, pos);
         if(render_at_cursor == 0)
         {
             f32 height = 0;
-            for(F4_Language_PosContextData *ctx = ctx_list; ctx; ctx = ctx->next)
+            for(Positional_Context_Data *ctx = ctx_list; ctx; ctx = ctx->next)
             {
                 height += metrics.line_height + 2*padding;
             }
             tooltip_position = V2f32(view_rect.x0, view_rect.y1 - height);
         }
         
-        for(F4_Language_PosContextData *ctx = ctx_list; ctx; ctx = ctx->next)
+        for(Positional_Context_Data *ctx = ctx_list; ctx; ctx = ctx->next)
         {
             F4_Index_Note *note = ctx->relevant_note;
             if(note != 0 && note->file != 0)
@@ -266,3 +268,5 @@ F4_PosContext_Render(Application_Links *app, View_ID view, Buffer_ID buffer,
         }
     }
 }
+
+NAMESPACE_END()

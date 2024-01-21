@@ -1,3 +1,5 @@
+NAMESPACE_BEGIN(nne)
+
 static f32 global_calc_time = 0.f;
 
 function void
@@ -2517,3 +2519,5 @@ F4_CLC_RenderComments(Application_Links *app, Buffer_ID buffer, View_ID view,
         }
     }
 }
+
+NAMESPACE_END()

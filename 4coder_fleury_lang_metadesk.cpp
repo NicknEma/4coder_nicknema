@@ -1,3 +1,4 @@
+NAMESPACE_BEGIN(nne)
 
 struct F4_MD_LexerState
 {
@@ -12,7 +13,7 @@ enum F4_MD_TokenSubKind
     F4_MD_TokenSubKind_Tag,
 };
 
-internal F4_LANGUAGE_INDEXFILE(F4_MD_IndexFile)
+internal FILE_INDEXER(F4_MD_IndexFile)
 {
     for(;!ctx->done;)
     {
@@ -35,7 +36,7 @@ internal F4_LANGUAGE_INDEXFILE(F4_MD_IndexFile)
     }
 }
 
-internal F4_LANGUAGE_LEXINIT(F4_MD_LexInit)
+internal LEXER_INITTER(F4_MD_LexInit)
 {
     F4_MD_LexerState *state = (F4_MD_LexerState *)state_ptr;
     state->string = contents;
@@ -54,7 +55,7 @@ F4_MD_CharIsSymbol(u8 c)
             c == '?' || c == '|' || c == '\\');
 }
 
-internal F4_LANGUAGE_LEXFULLINPUT(F4_MD_LexFullInput)
+internal LEXER(F4_MD_LexFullInput)
 {
     b32 result = false;
     F4_MD_LexerState state_ = *(F4_MD_LexerState *)state_ptr;
@@ -305,13 +306,11 @@ internal F4_LANGUAGE_LEXFULLINPUT(F4_MD_LexFullInput)
     return result;
 }
 
-internal F4_LANGUAGE_POSCONTEXT(F4_MD_PosContext)
-{
+internal POSITIONAL_CONTEXT_GETTER(F4_MD_PosContext) {
     return 0;
 }
 
-internal F4_LANGUAGE_HIGHLIGHT(F4_MD_Highlight)
-{
+internal LANGUAGE_HIGHLIGHTER(F4_MD_Highlight) {
     Range_i64 visible_range = text_layout_get_visible_range(app, text_layout_id);
     i64 first_index = token_index_from_pos(array, visible_range.first);
     Token_Iterator_Array it = token_iterator_index(0, array, first_index);
@@ -333,3 +332,5 @@ internal F4_LANGUAGE_HIGHLIGHT(F4_MD_Highlight)
         }
     }
 }
+
+NAMESPACE_END()

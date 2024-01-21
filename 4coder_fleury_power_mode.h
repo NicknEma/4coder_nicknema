@@ -5,6 +5,8 @@
 
 //~ NOTE(rjf): Power Mode API
 
+NAMESPACE_BEGIN(nne)
+
 struct Particle
 {
     f32 x;
@@ -33,5 +35,7 @@ internal void F4_PowerMode_Spawn(Application_Links *app, View_ID view, u8 charac
 internal void F4_PowerMode_Tick(Application_Links *app, Frame_Info frame_info);
 internal void F4_PowerMode_RenderBuffer(Application_Links *app, View_ID view, Face_ID face, Frame_Info frame_info);
 internal void F4_PowerMode_RenderWholeScreen(Application_Links *app, Frame_Info frame_info);
+
+NAMESPACE_END()
 
 #endif // FCODER_FLEURY_POWER_MODE_H

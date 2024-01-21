@@ -1,5 +1,7 @@
 //~ NOTE(rjf): Buffer Render
 
+NAMESPACE_BEGIN(nne)
+
 function void
 F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
                 Buffer_ID buffer, Text_Layout_ID text_layout_id,
@@ -570,22 +572,22 @@ F4_DoFullLex_ASYNC_Inner(Async_Context *actx, Buffer_ID buffer_id)
     Token_List list = {};
     b32 canceled = false;
     
-    F4_Language *language = F4_LanguageFromBuffer(app, buffer_id);
+    F4_Language *language = language_from_buffer(app, buffer_id);
     
     // NOTE(rjf): Fall back to C++ if we don't have a proper language.
     if(language == 0)
     {
-        language = F4_LanguageFromString(S8Lit("cpp"));
+        language = language_from_string(S8Lit("cpp"));
     }
     
     if(language != 0)
     {
         void *lexing_state = push_array_zero(scratch, u8, language->lex_state_size);
-        language->LexInit(lexing_state, contents);
+        language->lexer_initter(lexing_state, contents);
         for(;;)
         {
             ProfileBlock(app, "[F4] Async Lex Block");
-            if(language->LexFullInput(scratch, &list, lexing_state, limit_factor))
+            if(language->lexer(scratch, &list, lexing_state, limit_factor))
             {
                 break;
             }
@@ -677,7 +679,7 @@ function BUFFER_HOOK_SIG(F4_BeginBuffer)
     // NOTE(rjf): Treat as code if we've identified the language of a file.
     if(treat_as_code == false)
     {
-        F4_Language *language = F4_LanguageFromBuffer(app, buffer_id);
+        F4_Language *language = language_from_buffer(app, buffer_id);
         if(language)
         {
             treat_as_code = true;
@@ -914,11 +916,11 @@ function BUFFER_EDIT_RANGE_SIG(F4_BufferEditRange)
             String_Const_u8 partial_text = push_buffer_range(app, scratch, buffer_id, relex_range);
             
             //~ NOTE(rjf): Lex
-            F4_Language *language = F4_LanguageFromBuffer(app, buffer_id);
+            F4_Language *language = language_from_buffer(app, buffer_id);
             // NOTE(rjf): Fall back to C++ if we don't have a proper language.
             if(language == 0)
             {
-                language = F4_LanguageFromString(S8Lit("cpp"));
+                language = language_from_string(S8Lit("cpp"));
             }
             Token_List relex_list = F4_Language_LexFullInput_NoBreaks(app, language, scratch, partial_text);
             //~
@@ -979,3 +981,5 @@ function BUFFER_EDIT_RANGE_SIG(F4_BufferEditRange)
     // no meaning for return
     return(0);
 }
+
+NAMESPACE_END()

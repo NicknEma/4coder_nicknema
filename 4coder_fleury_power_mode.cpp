@@ -1,11 +1,12 @@
 //~ NOTE(rjf): Power Mode Implementation
 
+NAMESPACE_BEGIN(nne)
+
 Audio_Clip f4_powermode_music = {};
 Audio_Control f4_powermode_music_ctrl = {};
 Audio_Clip f4_powermode_keystroke_sounds[10] = {};
 
-static struct
-{
+static struct {
     b32 allowed;
     b32 enabled;
     f32 enabled_t;
@@ -23,22 +24,28 @@ static struct
     keypress_history[64];
     
     f32 screen_shake;
-}
-power_mode;
+} power_mode;
 
 internal void
-F4_PowerMode_SetAllow(b32 allowed)
-{
+F4_PowerMode_SetAllow(b32 allowed) {
     power_mode.allowed = allowed;
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_powermode_allow)
-CUSTOM_DOC("Allow power mode.")
-{ F4_PowerMode_SetAllow(1); }
+CUSTOM_DOC("Allow power mode.") {
+	using namespace nne;
+	F4_PowerMode_SetAllow(1);
+}
 
 CUSTOM_COMMAND_SIG(f4_powermode_disallow)
-CUSTOM_DOC("Disallow power mode.")
-{ F4_PowerMode_SetAllow(0); }
+CUSTOM_DOC("Disallow power mode.") {
+	using namespace nne;
+	F4_PowerMode_SetAllow(0);
+}
+
+NAMESPACE_BEGIN(nne)
 
 internal b32
 F4_PowerMode_IsEnabled(void)
@@ -365,3 +372,5 @@ F4_PowerMode_RenderWholeScreen(Application_Links *app, Frame_Info frame_info)
         draw_string(app, face_id, string, V2f32(rect.x1 - advance, rect.y0), 0xffffffff);
     }
 }
+
+NAMESPACE_END()

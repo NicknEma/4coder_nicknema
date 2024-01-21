@@ -1,3 +1,5 @@
+NAMESPACE_BEGIN(nne)
+
 #define F4_MAX_LEGOS 12
 global F4_Lego f4_legos[F4_MAX_LEGOS];
 
@@ -68,10 +70,14 @@ F4_Lego_BufferPlace(Application_Links *app, View_ID view, Buffer_ID buffer, i64 
     }
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_lego_buffer_place)
 CUSTOM_DOC("Will place the lego, determined by the pressed F-key, at the cursor in the active buffer.")
 {
-    F4_Lego *lego = F4_LegoFromUserInput(get_current_input(app));
+    using namespace nne;
+	
+	F4_Lego *lego = F4_LegoFromUserInput(get_current_input(app));
     View_ID view = get_active_view(app, Access_Write);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Write);
     if(buffer)
@@ -83,7 +89,9 @@ CUSTOM_DOC("Will place the lego, determined by the pressed F-key, at the cursor 
 CUSTOM_COMMAND_SIG(f4_lego_store_token)
 CUSTOM_DOC("Will store the token under the cursor into the lego determined by the associated F-key.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     F4_Lego *lego = F4_LegoFromUserInput(get_current_input(app));
     if(lego)
     {
@@ -101,7 +109,9 @@ CUSTOM_DOC("Will store the token under the cursor into the lego determined by th
 CUSTOM_COMMAND_SIG(f4_lego_store_range)
 CUSTOM_DOC("Will store the selected range into the lego determined by the associated F-key.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     F4_Lego *lego = F4_LegoFromUserInput(get_current_input(app));
     if(lego)
     {
@@ -116,7 +126,9 @@ CUSTOM_DOC("Will store the selected range into the lego determined by the associ
 CUSTOM_COMMAND_SIG(f4_lego_store_line)
 CUSTOM_DOC("Will store the selected range into the lego determined by the associated F-key.")
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     F4_Lego *lego = F4_LegoFromUserInput(get_current_input(app));
     if(lego)
     {
@@ -130,10 +142,14 @@ CUSTOM_DOC("Will store the selected range into the lego determined by the associ
     }
 }
 
+NAMESPACE_BEGIN(nne)
+
 function void
 F4_Lego_StoreClickedToken(Application_Links *app, F4_Lego *lego)
 {
-    Scratch_Block scratch(app);
+    using namespace nne;
+	
+	Scratch_Block scratch(app);
     View_ID view = get_active_view(app, Access_Always);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
     Mouse_State mouse = get_mouse_state(app);
@@ -146,14 +162,20 @@ F4_Lego_StoreClickedToken(Application_Links *app, F4_Lego *lego)
     }
 }
 
+NAMESPACE_END()
+
 CUSTOM_COMMAND_SIG(f4_lego_click_store_token_1)
 CUSTOM_DOC("Sets the cursor to the clicked position, and then stores the token under that position into the F1 slot.")
 {
-    F4_Lego_StoreClickedToken(app, F4_LegoFromIndex(0));
+    using namespace nne;
+	
+	F4_Lego_StoreClickedToken(app, F4_LegoFromIndex(0));
 }
 
 CUSTOM_COMMAND_SIG(f4_lego_click_store_token_2)
 CUSTOM_DOC("Sets the cursor to the clicked position, and then stores the token under that position into the F2 slot.")
 {
-    F4_Lego_StoreClickedToken(app, F4_LegoFromIndex(1));
+    using namespace nne;
+	
+	F4_Lego_StoreClickedToken(app, F4_LegoFromIndex(1));
 }

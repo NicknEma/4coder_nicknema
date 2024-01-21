@@ -53,6 +53,8 @@ CUSTOM_DOC("Standardizes line endings and tabs, then saves the active buffer.")
 CUSTOM_COMMAND_SIG(casey_switch_to_keybinding_0)
 CUSTOM_DOC("WENSLEYDALE.")
 {
+	using namespace nne;
+	
 	switch_to_keybinding_0(app);
 	global_hide_region_boundary = true;
 }
@@ -60,6 +62,8 @@ CUSTOM_DOC("WENSLEYDALE.")
 CUSTOM_COMMAND_SIG(casey_switch_to_keybinding_1)
 CUSTOM_DOC("STILTON.")
 {
+	using namespace nne;
+	
 	switch_to_keybinding_1(app);
 	global_hide_region_boundary = false;
 }

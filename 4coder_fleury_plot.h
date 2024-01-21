@@ -3,6 +3,8 @@
 #ifndef FCODER_FLEURY_PLOT_H
 #define FCODER_FLEURY_PLOT_H
 
+NAMESPACE_BEGIN(nne)
+
 enum Plot2DMode
 {
     Plot2DMode_Line,
@@ -49,5 +51,7 @@ function void Plot2DBegin(Plot2DInfo *plot);
 function void Plot2DPoints(Plot2DInfo *plot, i32 style_flags, float *x_data, float *y_data, int data_count);
 function void Plot2DHistogram(Plot2DInfo *plot, float *data, int data_count);
 function void Plot2DEnd(Plot2DInfo *plot);
+
+NAMESPACE_END()
 
 #endif // FCODER_FLEURY_PLOT_H

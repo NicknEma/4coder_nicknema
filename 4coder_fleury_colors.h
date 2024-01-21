@@ -29,7 +29,11 @@ CUSTOM_ID(colors, fleury_color_lego_grab);
 CUSTOM_ID(colors, fleury_color_lego_splat);
 CUSTOM_ID(colors, fleury_color_error_annotation);
 
+NAMESPACE_BEGIN(nne)
+
 static ARGB_Color F4_ARGBFromID(Color_Table table, Managed_ID id, int subindex);
 static ARGB_Color F4_ARGBFromID(Color_Table table, Managed_ID id);
 
-#endif //4CODER_FLEURY_COLORS_H
+NAMESPACE_END()
+
+#endif // 4CODER_FLEURY_COLORS_H
