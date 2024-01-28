@@ -1,4 +1,28 @@
 
+TODO EMA
+ [ ] Finish odin parser
+  [ ] Fix some operators not being recognized
+  [ ] Fix allow directives in front of the keyword proc
+ [ ] Fix the tooltip that should be at the bottom but isn't
+ [ ] Hot reloading of themes, projects, configs and bindings
+ [ ] Maximize window by default
+ [ ] Proportional font for UI, monospaced for code
+ [ ] Odin optional semicolons
+ [ ] vsplit and hsplit bindings
+ [ ] build/run command in opposite panel binding
+ [ ] Numpad ascii codes
+ [ ] Don't auto-indent comments
+ [ ] Cursor as a line
+ [ ] Multiline editing
+ [ ] Right-click context menu
+  [ ] Peek definition, go to definition, open definition in another panel
+  [ ] Cut, copy, paste, delete
+ [ ] Display hotkey cheatsheet
+ [ ] Peek definition
+ [ ] Recursively walk imports/includes, record types, macros, constants, procedures, global variables.
+
+
+
 TODO FOR SHAWN
  [ ] Project File Opener: Ignore directories, recursively list options.
  [ ] Recent Files Menu: this isn't bad!  If it just defaulted to the first one
@@ -44,22 +68,3 @@ TODO META
  [X] Project-wide todo list (by searching for TODO and DONE comments, lister for toggling)
  [ ] Project switcher
  [ ] Plan + do modal input scheme... Identifier-mode, text-mode, semantics mode, search mode...?
-
-
-
-TODO EMA
- [ ] Maximize window by default
- [ ] Proportional font for UI, monospaced for code
- [ ] Odin optional semicolons
- [ ] vsplit and hsplit bindings
- [ ] build/run command in opposite panel binding
- [ ] Numpad ascii codes
- [ ] Don't auto-indent comments
- [ ] Cursor as a line
- [ ] Multiline editing
- [ ] Right-click context menu
-  [ ] Peek definition, go to definition, open definition in another panel
-  [ ] Cut, copy, paste, delete
- [ ] Display hotkey cheatsheet
- [ ] Peek definition
- [ ] Recursively walk imports/includes, record types, macros, constants, procedures, global variables.

@@ -127,34 +127,34 @@ F4_GetColor(Application_Links *app, ColorCtx ctx) {
         switch(ctx.token.kind) {
             case TokenBaseKind_Identifier: {
                 String_Const_u8 string = push_buffer_range(app, scratch, ctx.buffer, Ii64(ctx.token.pos, ctx.token.pos + ctx.token.size));
-                F4_Index_Note *note = F4_Index_LookupNote(string);
+                Index__Note *note = index__lookup_note(string);
                 if (note) {
                     color = 0xffff0000;
                     switch (note->kind) {
-                        case F4_Index_NoteKind_Type: {
+                        case Index__Note_Kind_Type: {
                             FillFromFlag(F4_SyntaxFlag_Types);
                             color = F4_ARGBFromID(table,
-                                                  note->flags & F4_Index_NoteFlag_SumType
+                                                  note->flags & Index__Note_Flag_Sum_Type
                                                   ? fleury_color_index_sum_type
                                                   : fleury_color_index_product_type);
                         } break;
                         
-                        case F4_Index_NoteKind_Macro: {
+                        case Index__Note_Kind_Macro: {
                             FillFromFlag(F4_SyntaxFlag_Macros);
                             color = F4_ARGBFromID(table, fleury_color_index_macro);
                         } break;
                         
-                        case F4_Index_NoteKind_Function: {
+                        case Index__Note_Kind_Function: {
                             FillFromFlag(F4_SyntaxFlag_Functions);
                             color = F4_ARGBFromID(table, fleury_color_index_function);
                         } break;
                         
-                        case F4_Index_NoteKind_Constant: {
+                        case Index__Note_Kind_Constant: {
                             FillFromFlag(F4_SyntaxFlag_Constants);
                             color = F4_ARGBFromID(table, fleury_color_index_constant);
                         } break;
                         
-                        case F4_Index_NoteKind_Decl: {
+                        case Index__Note_Kind_Decl: {
                             FillFromFlag(F4_SyntaxFlag_Constants);
                             color = F4_ARGBFromID(table, fleury_color_index_decl);
                         } break;

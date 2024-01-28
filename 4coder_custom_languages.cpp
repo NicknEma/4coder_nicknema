@@ -73,7 +73,7 @@ register_language_(String_Const_u8 name,
 }
 
 internal void
-F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, F4_Index_Note *note, Token *query, int arg_index) {
+F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, Index__Note *note, Token *query, int arg_index) {
 	Positional_Context_Data *first = *first_ptr;
 	Positional_Context_Data *last = *last_ptr;
 	Positional_Context_Data *func = push_array_zero(arena, Positional_Context_Data, 1);
@@ -92,13 +92,13 @@ F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_pt
 
 procedure void
 F4_Language_PosContext_PushData_Call(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, int param_idx) {
-    F4_Index_Note *note = F4_Index_LookupNote(string, 0);
+    Index__Note *note = index__lookup_note(string, 0);
 	F4_Language_PosContext_PushData(arena, first_ptr, last_ptr, note, 0, param_idx);
 }
 
 procedure void
 F4_Language_PosContext_PushData_Dot(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, Token *query) {
-	F4_Index_Note *note = F4_Index_LookupNote(string, 0);
+	Index__Note *note = index__lookup_note(string, 0);
     F4_Language_PosContext_PushData(arena, first_ptr, last_ptr, note, query, 0);
 }
 

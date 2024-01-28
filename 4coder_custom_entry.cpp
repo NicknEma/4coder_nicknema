@@ -52,11 +52,11 @@ typedef int socklen_t;
 #include "4coder_fleury_code_peek.h"
 #include "4coder_fleury_recent_files.h"
 #include "4coder_fleury_bindings.h"
-#include "4coder_fleury_base_commands.h"
+#include "4coder_custom_base_commands.h"
 #if OS_WINDOWS
 #include "4coder_fleury_command_server.h"
 #endif
-#include "4coder_fleury_hooks.h"
+#include "4coder_custom_hooks.h"
 
 //~ NOTE(rjf): @f4_src
 #include "4coder_custom_ubiquitous.cpp"
@@ -77,12 +77,12 @@ typedef int socklen_t;
 #include "4coder_fleury_code_peek.cpp"
 #include "4coder_fleury_recent_files.cpp"
 #include "4coder_fleury_bindings.cpp"
-#include "4coder_fleury_base_commands.cpp"
+#include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
 #include "4coder_fleury_command_server.cpp"
 #endif
 #include "4coder_fleury_casey.cpp"
-#include "4coder_fleury_hooks.cpp"
+#include "4coder_custom_hooks.cpp"
 
 //~ NOTE(rjf): Plots Demo File
 #include "4coder_fleury_plots_demo.cpp"
@@ -123,15 +123,8 @@ void custom_layer_init(Application_Links *app) {
         nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
     }
     
-    // NOTE(rjf): Set up custom code index.
-    {
-        nne::F4_Index_Initialize();
-    }
-    
-    // NOTE(rjf): Register languages.
-    {
-        nne::register_languages();
-    }
+	nne::index__initialize();
+	nne::register_languages();
 }
 
 NAMESPACE_BEGIN(nne)

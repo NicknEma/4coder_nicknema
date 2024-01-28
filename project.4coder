@@ -16,7 +16,7 @@ blacklist_patterns = {
 };
 
 load_paths_base = {
-  { "..", .relative = true, .recursive = true, },
+  { ".\...", .relative = true, .recursive = true, },
 };
 
 load_paths = {

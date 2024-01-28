@@ -7,10 +7,10 @@
 #include "generated/4coder_lexer_odin.h"
 #include "generated/4coder_lexer_odin.cpp"
 
-#include "4coder_fleury_lang_cpp.cpp"
-#include "4coder_fleury_lang_jai.cpp"
+#include "4coder_custom_lang_cpp.cpp"
+#include "4coder_custom_lang_jai.cpp"
 #include "4coder_custom_lang_odin.cpp"
-#include "4coder_fleury_lang_metadesk.cpp"
+#include "4coder_custom_lang_metadesk.cpp"
 
 NAMESPACE_BEGIN(nne)
 
