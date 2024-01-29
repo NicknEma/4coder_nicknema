@@ -196,7 +196,7 @@ F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
     
     // NOTE(rjf): Divider Comments
     {
-        F4_RenderDividerComments(app, buffer, view_id, text_layout_id);
+        render_divider_comments(app, buffer, view_id, text_layout_id);
     }
     
     // NOTE(rjf): Cursor Mark Range
