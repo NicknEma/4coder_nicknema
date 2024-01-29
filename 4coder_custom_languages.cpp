@@ -34,14 +34,13 @@ internal F4_Language *language_from_buffer(Application_Links *app, Buffer_ID buf
 #define register_language(name, IndexFile, LexInit, LexFullInput, PosContext, Highlight, lex_state_type) register_language_(name, IndexFile, (Lexer_Initter *)LexInit, (Lexer *)LexFullInput, (Positional_Context_Getter *)PosContext, (Language_Highlighter *)Highlight, sizeof(lex_state_type))
 
 // You call this procedure for each language that needs to be recognized by the editor.
-internal void
-register_language_(String_Const_u8 name,
-				   File_Indexer              *file_indexer,
-				   Lexer_Initter             *lexer_initter,
-				   Lexer                     *lexer,
-				   Positional_Context_Getter *context_getter,
-				   Language_Highlighter      *highlighter,
-				   u64 lex_state_size) {
+internal void register_language_(String_Const_u8 name,
+								 File_Indexer              *file_indexer,
+								 Lexer_Initter             *lexer_initter,
+								 Lexer                     *lexer,
+								 Positional_Context_Getter *context_getter,
+								 Language_Highlighter      *highlighter,
+								 u64 lex_state_size) {
     if (f4_langs.initialized == 0) {
         f4_langs.initialized = 1;
         f4_langs.arena = make_arena_system(KB(16));
@@ -72,8 +71,7 @@ register_language_(String_Const_u8 name,
     }
 }
 
-internal void
-F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, Index__Note *note, Token *query, int arg_index) {
+internal void F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, Index__Note *note, Token *query, int arg_index) {
 	Positional_Context_Data *first = *first_ptr;
 	Positional_Context_Data *last = *last_ptr;
 	Positional_Context_Data *func = push_array_zero(arena, Positional_Context_Data, 1);
@@ -90,20 +88,17 @@ F4_Language_PosContext_PushData(Arena *arena, Positional_Context_Data **first_pt
     *last_ptr = last;
 }
 
-procedure void
-F4_Language_PosContext_PushData_Call(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, int param_idx) {
+internal void F4_Language_PosContext_PushData_Call(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, int param_idx) {
     Index__Note *note = index__lookup_note(string, 0);
 	F4_Language_PosContext_PushData(arena, first_ptr, last_ptr, note, 0, param_idx);
 }
 
-procedure void
-F4_Language_PosContext_PushData_Dot(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, Token *query) {
+internal void F4_Language_PosContext_PushData_Dot(Arena *arena, Positional_Context_Data **first_ptr, Positional_Context_Data **last_ptr, String_Const_u8 string, Token *query) {
 	Index__Note *note = index__lookup_note(string, 0);
     F4_Language_PosContext_PushData(arena, first_ptr, last_ptr, note, query, 0);
 }
 
-procedure Token_List
-F4_Language_LexFullInput_NoBreaks(Application_Links *app, F4_Language *language, Arena *arena, String_Const_u8 text) {
+internal Token_List F4_Language_LexFullInput_NoBreaks(Application_Links *app, F4_Language *language, Arena *arena, String_Const_u8 text) {
     Token_List list = {};
     if (language != 0) {
         Scratch_Block scratch(app, arena);
