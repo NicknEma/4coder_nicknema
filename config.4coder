@@ -25,8 +25,7 @@ enable_output_wrapping = false;
 
 enable_undo_fade_out = false;
 
-// cursor_roundess is a value [0,50] setting the radius of
-// the cursor and mark's roundness as a percentage of their width
+// cursor_roundess is a value [0,50] setting the radius of the cursor and mark's roundness as a percentage of their width
 // (At 50 the left and right corners will be so round they form a semi-circle,
 //  hence 50 is the max)
 cursor_roundness = 10;
@@ -61,7 +60,7 @@ indent_width = 4;
 default_tab_width = 4;
 
 // Theme
-default_theme_name = "theme-fleury";
+default_theme_name = "theme-nord";
 highlight_line_at_cursor = true;
 
 // Font
@@ -69,13 +68,13 @@ default_font_name = "liberation-mono.ttf";
 default_font_size = 14;
 default_font_hinting = true;
 
-// aa modes:
+// anti-aliasing modes:
 //  8bit - mono-chrome 0-255 opacity channel per pixel
 //  1bit - mono-chrome 0/1 opacity channel per pixel
 default_font_aa_mode = "8bit";
 
 // User
-user_name = "rjf";
+user_name = "nicknema";
 
 // Keyboard AltGr setting
 lalt_lctrl_is_altgr = false;

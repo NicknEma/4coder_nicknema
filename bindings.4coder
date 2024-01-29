@@ -9,10 +9,11 @@ keys_global =
     { "change_active_panel",                      "Comma",  "Control"                  },
     { "change_active_panel_backwards",            "Comma",  "Control", "Shift"         },
     { "project_go_to_root_directory",             "H",      "Control"                  },
-    { "f4_toggle_compilation_expand",         "Insert"                             },
+    { "f4_toggle_compilation_expand",             "Insert"                             },
     { "change_to_build_panel",                    "Period", "Alt"                      },
     { "close_build_panel",                        "Comma",  "Alt"                      },
     { "f4_switch_syntax_option",                  "Tick",   "Control"                  },
+    // @Todo(ema): What is this last one? If useful, change the binding.
     
     // NOTE(rjf): Files
     { "interactive_new",                          "N",      "Control"                  },
@@ -38,15 +39,15 @@ keys_global =
     // NOTE(rjf): Project
     { "build_in_build_panel",                     "M",      "Alt"                      },
     { "project_command_lister",                   "X",      "Alt",     "Shift"         },
-    { "project_fkey_command",                     "F1", "Control"                      },
-    { "project_fkey_command",                     "F2", "Control"                      },
-    { "project_fkey_command",                     "F3", "Control"                      },
-    { "project_fkey_command",                     "F4", "Control"                      },
-    { "project_fkey_command",                     "F5", "Control"                      },
-    { "project_fkey_command",                     "F6", "Control"                      },
-    { "project_fkey_command",                     "F7", "Control"                      },
-    { "project_fkey_command",                     "F8", "Control"                      },
-    { "project_fkey_command",                     "F9", "Control"                      },
+    { "project_fkey_command",                     "F1",  "Control"                     },
+    { "project_fkey_command",                     "F2",  "Control"                     },
+    { "project_fkey_command",                     "F3",  "Control"                     },
+    { "project_fkey_command",                     "F4",  "Control"                     },
+    { "project_fkey_command",                     "F5",  "Control"                     },
+    { "project_fkey_command",                     "F6",  "Control"                     },
+    { "project_fkey_command",                     "F7",  "Control"                     },
+    { "project_fkey_command",                     "F8",  "Control"                     },
+    { "project_fkey_command",                     "F9",  "Control"                     },
     { "project_fkey_command",                     "F10", "Control"                     },
     { "project_fkey_command",                     "F11", "Control"                     },
     { "project_fkey_command",                     "F12", "Control"                     },
@@ -62,29 +63,31 @@ keys_global =
     { "f4_search_for_definition__project_wide", "J", "Control" },
     { "f4_search_for_definition__current_file", "J", "Control", "Shift" },
     { "jump_to_last_point", "J", "Alt" },
-    
 };
 
 keys_file =
 {
     // NOTE(rjf): None => Characters
-    //            Ctrl => Tokens
+    //    Shift + Ctrl => Token
+    //            Ctrl => Alphanumeric
     //            Alt  => Alphanumeric/Camel
     
     // NOTE(rjf): Backspace/Delete
     { "delete_char",                                  "Delete"               },
-    { "f4_delete_token_boundary",                     "Delete",    "Control" },
+    { "f4_delete_token_boundary",                     "Delete",    "Control", "Shift" },
+    { "delete_alpha_numeric_boundary",                "Delete",    "Control" },
     { "f4_delete_alpha_numeric_or_camel_boundary",    "Delete",    "Alt"     },
     { "backspace_char",                               "Backspace"            },
-    { "f4_backspace_token_boundary",                  "Backspace", "Control" },
+    { "f4_backspace_token_boundary",                  "Backspace", "Control", "Shift" },
+    { "backspace_alpha_numeric_boundary",             "Backspace", "Control" },
     { "f4_backspace_alpha_numeric_or_camel_boundary", "Backspace", "Alt"     },
     
     // NOTE(rjf): Left/Right Arrow Keys
     { "f4_move_left",                               "Left"              },
-    { "f4_move_left_token_boundary",                "Left", "Control"   },
+    { "move_left_alpha_numeric_boundary",           "Left", "Control"   },
     { "move_left_alpha_numeric_or_camel_boundary",  "Left", "Alt"       },
     { "f4_move_right",                              "Right"             },
-    { "f4_move_right_token_boundary",               "Right", "Control"  },
+    { "move_right_alpha_numeric_boundary",          "Right", "Control"  },
     { "move_right_alpha_numeric_or_camel_boundary", "Right", "Alt"      },
     
     // NOTE(rjf): Up/Down Arrow Keys
@@ -215,5 +218,4 @@ keys_code =
     { "f4_lego_store_token",        "F6" },
     { "f4_lego_store_token",        "F7" },
     { "f4_lego_store_token",        "F8" },
-    
 };
