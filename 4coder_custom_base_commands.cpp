@@ -12,6 +12,9 @@
 // - Opening files
 // - Counting lines of code
 
+// @Todo(ema): Add
+// - Switch between naming styles (camelCase, PascalCase, snake_case, Pascal_Snake_Case, UPPER_SNAKE_CASE)
+
 //~ Basic command replacements
 // Commands that already exist in basic 4coder, but here they are modified slightly.
 

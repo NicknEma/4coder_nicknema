@@ -35,15 +35,15 @@ typedef int socklen_t;
 #define COMMAND_SERVER_AUTO_LAUNCH_IF_FILE_PRESENT "project_namespaces.txt"
 
 //~ Custom layer headers
-#include "4coder_custom_ubiquitous.h"
+#include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
 #include "4coder_fleury_audio.h"
-#include "4coder_custom_languages.h"
-#include "4coder_custom_index.h"
+#include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
+#include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
 #include "4coder_fleury_colors.h"
 #include "4coder_fleury_render_helpers.h"
-#include "4coder_fleury_brace.h"
+#include "4coder_fleury_brace.h"                 // Functions for rendering braces-related stuff
 #include "4coder_fleury_error_annotations.h"
-#include "4coder_fleury_divider_comments.h"
+#include "4coder_custom_divider_comments.h"      // Functions for rendering and jumping between divider comments //~ and //-
 #include "4coder_fleury_power_mode.h"
 #include "4coder_fleury_cursor.h"
 #include "4coder_fleury_plot.h"
@@ -52,12 +52,12 @@ typedef int socklen_t;
 #include "4coder_fleury_pos_context_tooltips.h"
 #include "4coder_fleury_code_peek.h"
 #include "4coder_fleury_recent_files.h"
-#include "4coder_custom_bindings.h"
-#include "4coder_custom_base_commands.h"
+#include "4coder_custom_bindings.h"              // Maps bindings to commands
+#include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
 #if OS_WINDOWS
 # include "4coder_fleury_command_server.h"
 #endif
-#include "4coder_custom_hooks.h"
+#include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 
 //~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
@@ -68,7 +68,7 @@ typedef int socklen_t;
 #include "4coder_fleury_render_helpers.cpp"
 #include "4coder_fleury_brace.cpp"
 #include "4coder_fleury_error_annotations.cpp"
-#include "4coder_fleury_divider_comments.cpp"
+#include "4coder_custom_divider_comments.cpp"
 #include "4coder_fleury_power_mode.cpp"
 #include "4coder_fleury_cursor.cpp"
 #include "4coder_fleury_plot.cpp"
@@ -78,6 +78,7 @@ typedef int socklen_t;
 #include "4coder_fleury_code_peek.cpp"
 #include "4coder_fleury_recent_files.cpp"
 #include "4coder_custom_bindings.cpp"
+#include "4coder_custom_dynamic_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
 # include "4coder_fleury_command_server.cpp"
@@ -117,7 +118,7 @@ void custom_layer_init(Application_Links *app) {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
         nne::set_absolutely_necessary_bindings(&framework_mapping);
-        if (!dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
+        if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
             nne::set_default_bindings(&framework_mapping);
         }
 		nne::set_absolutely_necessary_bindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
@@ -125,6 +126,22 @@ void custom_layer_init(Application_Links *app) {
     
 	nne::index__initialize();
 	nne::register_languages();
+}
+
+// @Todo(ema): Reload from the current directory (not project)? Is it possible?
+
+CUSTOM_COMMAND_SIG(reload_config_file_from_project_directory)
+CUSTOM_DOC("Reload the config.4coder file from the project directory.") {
+	Face_Description description = get_face_description(app, 0);
+	load_config_and_apply(app, &global_config_arena, description.parameters.pt_size, description.parameters.hinting);
+}
+
+CUSTOM_COMMAND_SIG(reload_bindings_file_from_project_directory)
+CUSTOM_DOC("Reload the bindings.4coder file from the project directory.") {
+	if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
+		nne::set_default_bindings(&framework_mapping);
+	}
+	nne::set_absolutely_necessary_bindings(&framework_mapping);
 }
 
 NAMESPACE_BEGIN(nne)
