@@ -1,3 +1,6 @@
+#ifndef FCODER_CUSTOM_CALC_CPP
+#define FCODER_CUSTOM_CALC_CPP
+
 NAMESPACE_BEGIN(nne)
 
 static f32 global_calc_time = 0.f;
@@ -91,37 +94,37 @@ GetNextCalcToken(char *buffer)
                     token.string = buffer+i+1;
                     int j;
                     for(j = i+1; buffer[j] &&
-                        (CharIsDigit(buffer[j]) || buffer[j] == '_' ||
-                         CharIsAlpha(buffer[j]));
+                        (char_is_digit(buffer[j]) || buffer[j] == '_' ||
+                         char_is_alphabetic(buffer[j]));
                         ++j);
                     token.string_length = j - i - 1;
                     break;
                 }
-                else if(CharIsAlpha(buffer[i]))
+                else if(char_is_alphabetic(buffer[i]))
                 {
                     token.type = CalcTokenType_Identifier;
                     token.string = buffer+i;
                     int j;
                     for(j = i+1; buffer[j] &&
-                        (CharIsDigit(buffer[j]) || buffer[j] == '_' ||
-                         CharIsAlpha(buffer[j]));
+                        (char_is_digit(buffer[j]) || buffer[j] == '_' ||
+                         char_is_alphabetic(buffer[j]));
                         ++j);
                     token.string_length = j - i;
                     break;
                 }
-                else if(CharIsDigit(buffer[i]))
+                else if(char_is_digit(buffer[i]))
                 {
                     token.type = CalcTokenType_Number;
                     token.string = buffer+i;
                     int j;
                     for(j = i+1; buffer[j] &&
-                        (CharIsDigit(buffer[j]) || buffer[j] == '.' ||
-                         CharIsAlpha(buffer[j]));
+                        (char_is_digit(buffer[j]) || buffer[j] == '.' ||
+                         char_is_alphabetic(buffer[j]));
                         ++j);
                     token.string_length = j - i;
                     break;
                 }
-                else if(CharIsSymbol(buffer[i]))
+                else if(char_is_symbol(buffer[i]))
                 {
                     token.type = CalcTokenType_Symbol;
                     token.string = buffer+i;
@@ -463,7 +466,7 @@ ParseCalcUnaryExpression(Arena *arena, char **at_ptr)
     {
         NextCalcToken(at_ptr);
         expression = AllocateCalcNode(arena, CalcNodeType_Number, at_source);
-        expression->value = GetFirstDoubleFromBuffer(token.string);
+        expression->value = get_first_double_from_buffer(token.string);
     }
     else if(token.type == CalcTokenType_StringConstant)
     {
@@ -960,7 +963,7 @@ CalcSymbolTableLookup_(CalcSymbolTable *table, char *string, int length)
 {
     CalcSymbolValue *result = 0;
     
-    unsigned int hash = StringCRC32(string, length) % table->size;
+    unsigned int hash = string_crc32(string, length) % table->size;
     unsigned int original_hash = hash;
     
     CalcSymbolValue *value = 0;
@@ -970,8 +973,8 @@ CalcSymbolTableLookup_(CalcSymbolTable *table, char *string, int length)
         if(table->keys[hash].string || table->keys[hash].deleted)
         {
             if(!table->keys[hash].deleted &&
-               StringMatchCaseSensitive(table->keys[hash].string, table->keys[hash].string_length,
-                                        string, length))
+               strings_match_case_sensitive(table->keys[hash].string, table->keys[hash].string_length,
+											string, length))
             {
                 value = table->values + hash;
                 break;
@@ -1023,7 +1026,7 @@ CalcSymbolTableAdd(CalcSymbolTable *table, char *string, int string_length, Calc
 {
     CalcSymbolValue *result = 0;
     
-    unsigned int hash = StringCRC32(string, string_length) % table->size;
+    unsigned int hash = string_crc32(string, string_length) % table->size;
     unsigned int original_hash = hash;
     unsigned int found_hash = 0;
     int found = 0;
@@ -1033,8 +1036,8 @@ CalcSymbolTableAdd(CalcSymbolTable *table, char *string, int string_length, Calc
         if(table->keys[hash].string || table->keys[hash].deleted)
         {
             if(!table->keys[hash].deleted &&
-               StringMatchCaseSensitive(table->keys[hash].string, table->keys[hash].string_length,
-                                        string, string_length))
+               strings_match_case_sensitive(table->keys[hash].string, table->keys[hash].string_length,
+											string, string_length))
             {
                 found = 1;
                 found_hash = hash;
@@ -1077,7 +1080,7 @@ CalcSymbolTableAdd(CalcSymbolTable *table, char *string, int string_length, Calc
 static void
 CalcSymbolTableRemove(CalcSymbolTable *table, char *string, int length)
 {
-    unsigned int hash = StringCRC32(string, length) % table->size;
+    unsigned int hash = string_crc32(string, length) % table->size;
     unsigned int original_hash = hash;
     
     for(;;)
@@ -1085,8 +1088,8 @@ CalcSymbolTableRemove(CalcSymbolTable *table, char *string, int length)
         if(table->keys[hash].string || table->keys[hash].deleted)
         {
             if(!table->keys[hash].deleted &&
-               StringMatchCaseSensitive(table->keys[hash].string, table->keys[hash].string_length,
-                                        string, length))
+               strings_match_case_sensitive(table->keys[hash].string, table->keys[hash].string_length,
+											string, length))
             {
                 table->keys[hash].deleted = 1;
                 break;
@@ -1187,7 +1190,7 @@ GetDataFromSourceCode(Application_Links *app, Buffer_ID buffer, Text_Layout_ID t
                     float sign = is_negative ? -1.f : 1.f;
                     is_negative = 0;
                     
-                    float value = sign * (float)GetFirstDoubleFromBuffer((char *)token_buffer);
+                    float value = sign * (float)get_first_double_from_buffer((char *)token_buffer);
                     if(last_data_chunk->value_count >= ArrayCount(last_data_chunk->values))
                     {
                         DataChunk *new_chunk = push_array_zero(arena, DataChunk, 1);
@@ -1335,8 +1338,8 @@ FindUnknownForGraph(CalcSymbolTable *table, CalcNode *expression)
                     }
                     else
                     {
-                        if(!StringMatchCaseSensitive(results[i].unknown->token.string, results[i].unknown->token.string_length,
-                                                     result.unknown->token.string, result.unknown->token.string_length))
+                        if(!strings_match_case_sensitive(results[i].unknown->token.string, results[i].unknown->token.string_length,
+														 result.unknown->token.string, result.unknown->token.string_length))
                         {
                             ++result.number_unknowns;
                         }
@@ -1823,7 +1826,7 @@ CallCalcBuiltInFunction(CalcInterpretContext *context, CalcNode *root)
                     {
                         if(title_result.value.as_string.size)
                         {
-                            context->y_axis = StringStripBorderCharacters(title_result.value.as_string);
+                            context->y_axis = strip_string_border_characters(title_result.value.as_string);
                         }
                         else
                         {
@@ -1837,7 +1840,7 @@ CallCalcBuiltInFunction(CalcInterpretContext *context, CalcNode *root)
                     {
                         if(title_result.value.as_string.size)
                         {
-                            context->x_axis = StringStripBorderCharacters(title_result.value.as_string);
+                            context->x_axis = strip_string_border_characters(title_result.value.as_string);
                         }
                         else
                         {
@@ -2157,8 +2160,8 @@ InterpretCalcExpression(CalcInterpretContext *context, CalcNode *root)
                             token_string = { token_buffer, (u64)(token_range.end - token_range.start) };
                         }
                         
-                        if(StringMatchCaseSensitive((char *)token_string.str, (int)token_string.size,
-                                                    root->token.string, root->token.string_length))
+                        if(strings_match_case_sensitive((char *)token_string.str, (int)token_string.size,
+														root->token.string, root->token.string_length))
                         {
                             result.value = CalcValueSourceCodeReference(token->pos);
                             break;
@@ -2184,7 +2187,7 @@ IdentifierExistsInCalcExpression(CalcNode *root, char *string, int string_length
     
     if(root && root->type != CalcNodeType_Invalid)
     {
-        if(StringMatchCaseSensitive(root->token.string, root->token.string_length, string, string_length))
+        if(strings_match_case_sensitive(root->token.string, root->token.string_length, string, string_length))
         {
             result = 1;
         }
@@ -2521,3 +2524,5 @@ F4_CLC_RenderComments(Application_Links *app, Buffer_ID buffer, View_ID view,
 }
 
 NAMESPACE_END()
+
+#endif // FCODER_CUSTOM_CALC_CPP

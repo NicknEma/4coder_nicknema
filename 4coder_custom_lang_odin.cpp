@@ -3,63 +3,70 @@
 
 NAMESPACE_BEGIN(nne)
 
-internal void odin__parse_decl_set(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
-    F4_Index_Note *last_parent = F4_Index_PushParent(ctx, parent);
+//~ Index
+
+// @Note(ema): Parses a declaration list, such as the formal parameters of a function or the members of a struct.
+internal void odin__parse_decl_set(Index__Parse_Context *context, Index__Note *parent) {
+    Index__Note *last_parent = index__push_parent_note(context, parent);
     
-    for (; !ctx->done; ) {
+    for (; !context->done; ) {
         Token *name = 0;
-        if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, F4_Index_TokenSkipFlag_SkipWhitespace) &&
-            F4_Index_RequireToken(ctx, str8_lit(":"), F4_Index_TokenSkipFlag_SkipWhitespace)) {
-            F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Decl, 0);
+        if (index__require_token_kind(context, TokenBaseKind_Identifier, &name, Index__Token_Skip_Flag_Skip_Whitespace) &&
+            index__require_token(context, str8_lit(":"), Index__Token_Skip_Flag_Skip_Whitespace)) {
+			// <name> :
+            index__make_note(context, Ii64(name), Index__Note_Kind_Decl, 0);
             
-            for (; !ctx->done; ) {
-                Token *token = token_it_read(&ctx->it);
+            for (; !context->done; ) {
+                Token *token = token_it_read(&context->it);
+				
+				// "<ident> :," ??
                 if (token->sub_kind == TokenOdinKind_Comma ||
                     token->sub_kind == TokenOdinKind_Semicolon) {
-                    F4_Index_ParseCtx_Inc(ctx, F4_Index_TokenSkipFlag_SkipWhitespace);
+					// We saw a comma: skip it and resume the outer loop, parsing the next decl.
+                    index__parse_context_inc(context, Index__Token_Skip_Flag_Skip_Whitespace);
                     break;
                 } else if (token->kind == TokenBaseKind_ScopeClose ||
                            token->sub_kind == TokenOdinKind_ParenCl) {
+					// We saw a }. The declaration list is finished.
                     goto end;
                 }
                 
-                F4_Index_ParseCtx_Inc(ctx, F4_Index_TokenSkipFlag_SkipWhitespace);
+                index__parse_context_inc(context, Index__Token_Skip_Flag_Skip_Whitespace);
             }
-            
-        } else {
-            break;
-        }
+        } else { break; }
     }
     
     end:;
-    F4_Index_PopParent(ctx, last_parent);
+    index__pop_parent_note(context, last_parent);
 }
 
-internal void odin__parse_decl_set_braces(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
-    if (F4_Index_RequireToken(ctx, str8_lit("{"), F4_Index_TokenSkipFlag_SkipWhitespace)) {
-        odin__parse_decl_set(ctx, parent);
-        F4_Index_RequireToken(ctx, str8_lit("}"), F4_Index_TokenSkipFlag_SkipWhitespace);
+internal void odin__parse_decl_set_braces(Index__Parse_Context *context, Index__Note *parent) {
+    if (index__require_token(context, str8_lit("{"), Index__Token_Skip_Flag_Skip_Whitespace)) {
+        odin__parse_decl_set(context, parent);
+        index__require_token(context, str8_lit("}"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
 
-internal void odin__parse_decl_set_parens(F4_Index_ParseCtx *ctx, F4_Index_Note *parent) {
-    if (F4_Index_RequireToken(ctx, str8_lit("("), F4_Index_TokenSkipFlag_SkipWhitespace)) {
-        odin__parse_decl_set(ctx, parent);
-        F4_Index_RequireToken(ctx, str8_lit(")"), F4_Index_TokenSkipFlag_SkipWhitespace);
+internal void odin__parse_decl_set_parens(Index__Parse_Context *context, Index__Note *parent) {
+    if (index__require_token(context, str8_lit("("), Index__Token_Skip_Flag_Skip_Whitespace)) {
+        odin__parse_decl_set(context, parent);
+        index__require_token(context, str8_lit(")"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
+
+#define S(s) str8_lit(s)
 
 // Indexes an entire file of a language and adds stuff to the code index.
-procedure FILE_INDEXER(odin__index_file) {
+function FILE_INDEXER(odin__index_file) {
     int scope_nest = 0;
     
-    for (; !ctx->done; ) {
+    for (; !context->done; ) {
         Token *name = 0;
-        F4_Index_TokenSkipFlags flags = F4_Index_TokenSkipFlag_SkipWhitespace;
+        Index__Token_Skip_Flags flags = Index__Token_Skip_Flag_Skip_Whitespace;
         
         {
             // NOTE(rjf): Handle nests.
-            Token *token = token_it_read(&ctx->it);
+            Token *token = token_it_read(&context->it);
             if (token) {
                 if (token->kind == TokenBaseKind_ScopeOpen) {
                     scope_nest += 1;
@@ -73,72 +80,105 @@ procedure FILE_INDEXER(odin__index_file) {
             }
         }
         
-        if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier, &name, flags)) {
-            
-			// NOTE(rjf): Definitions
-            if (F4_Index_RequireToken(ctx, str8_lit("::"), flags)) {
-                
-                // Procedures
-                // @Note(ema): This only looks for the prototype of the procedure, it does not
-                // walk through the whole body.
-                
-                // @Incomplete(ema): attributes and directives
-                if ((F4_Index_RequireToken(ctx, str8_lit("proc"), flags) && F4_Index_PeekToken(ctx, str8_lit("("))) || (F4_Index_RequireToken(ctx, str8_lit("proc"), flags) &&
-                                                                                                                        F4_Index_RequireToken(ctx, str8_lit("LiteralString"), flags) &&
-                                                                                                                        F4_Index_PeekToken(ctx, str8_lit("(")))) {
-                    F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Function, 0);
-                    odin__parse_decl_set_parens(ctx, parent);
-                }
-                
-                // Structs.
-                else if (F4_Index_RequireToken(ctx, str8_lit("struct"), flags)) {
-                    F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, F4_Index_NoteFlag_ProductType);
-                    odin__parse_decl_set_braces(ctx, parent);
-                }
-                
-                // Unions.
-                else if (F4_Index_RequireToken(ctx, str8_lit("union"), flags)) {
-                    F4_Index_Note *parent = F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, F4_Index_NoteFlag_SumType);
-                    odin__parse_decl_set_braces(ctx, parent);
-                }
-                
-                // Enums.
-                else if (F4_Index_RequireToken(ctx, str8_lit("enum"), flags)) {
-                    F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Type, 0);
-                }
-                
-                // Constants.
-				// @Todo(ema): Keyword 'distinct'
-                else if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Identifier,     0, flags) || F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralInteger, 0, flags) || F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralFloat,   0, flags) || F4_Index_RequireTokenKind(ctx, TokenBaseKind_LiteralString,  0, flags)) {
-                    F4_Index_MakeNote(ctx, Ii64(name), F4_Index_NoteKind_Constant, 0);
-                }
+        if (index__require_token_kind(context, TokenBaseKind_Identifier, &name, flags)) {
+            // <name>
+			
+            if (index__require_token(context, S(":"), flags)) {
+				// <name> :
 				
-				// @Todo(ema): namespaces
-            }
-        }
-        
-#if 1
-        //~ NOTE(rjf): Comment Tags
-        // @Note(ema): Comment tags? They look like regular comments...
-        else if (F4_Index_RequireTokenKind(ctx, TokenBaseKind_Comment, &name, F4_Index_TokenSkipFlag_SkipWhitespace)) {
-            F4_Index_ParseComment(ctx, name);
-        }
-#endif
-        
-        else {
-            F4_Index_ParseCtx_Inc(ctx, flags);
-        }
-    }
+				// Skip the possible explicit type annotation.
+				if (index__peek_token_kind(context, TokenBaseKind_Identifier, 0)) {
+					// <name> : <ident>
+					
+					index__parse_context_inc(context, flags);
+				}
+				
+                if (index__require_token(context, S(":"), flags)) {
+					// <name> ::
+					
+					// Procedures
+					// @Note(ema): This only looks for the prototype of the procedure, it does not
+					// walk through the whole body.
+					if ((index__require_token(context, S("proc"), flags)) ||
+						(index__require_token_subkind(context, TokenOdinKind_ForceInline, 0, flags) &&
+						 index__require_token(context, S("proc"), flags))) {
+						// <name> :: proc
+						// <name> :: #<keyword> proc
+						
+						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Function, 0);
+						
+						// @Todo(ema): Skip eventual string before open parenthesis.
+						
+						odin__parse_decl_set_parens(context, parent);
+					}
+					
+					// Structs.
+					else if (index__require_token(context, S("struct"), flags)) {
+						// <name> :: struct
+						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Type, Index__Note_Flag_Product_Type);
+						odin__parse_decl_set_braces(context, parent);
+					}
+					
+					// Unions.
+					else if (index__require_token(context, S("union"), flags)) {
+						// <name> :: union
+						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Type, Index__Note_Flag_Sum_Type);
+						odin__parse_decl_set_braces(context, parent);
+					}
+					
+					// Enums.
+					else if (index__require_token(context, S("enum"), flags)) {
+						// <name> :: enum
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
+					}
+					
+					// Distinct types.
+					else if (index__require_token(context, S("distinct"), flags) &&
+							 index__require_token_kind(context, TokenBaseKind_Identifier, 0, flags)) {
+						// <name> :: distinct <ident>
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
+					}
+					
+					// Type directives.
+					else if (index__require_token(context, S("#type"), flags)) {
+						// <name> :: #type
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
+					}
+					
+					// Constants and type aliases.
+					else if (index__require_token_kind(context, TokenBaseKind_Identifier,     0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralInteger, 0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralFloat,   0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralString,  0, flags)) {
+						// <name> :: <ident>
+						// <name> :: <literal>
+						index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
+					}
+				} else if (index__require_token(context, str8_lit("="), flags)) {
+					// <name> :=
+					
+					index__make_note(context, Ii64(name), Index__Note_Kind_Decl, 0);
+				}
+			}
+		}
+		
+#undef S
+		
+		//~ NOTE(rjf): Comment Tags
+		// @Note(ema): When we come across a comment, we call index::parse_comment that figures out if the comment contains annotations, notes or todos.
+		else if (index__require_token_kind(context, TokenBaseKind_Comment, &name, Index__Token_Skip_Flag_Skip_Whitespace)) {
+			index__parse_comment(context, name);
+		}
+		
+		// Nothing meaningful, just advance by one.
+		else {
+			index__parse_context_inc(context, flags);
+		}
+	}
 }
 
-//
-// Positional context:
-//
+//~ Positional context:
 
 internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 pos, Token *decl_name) {
-    Token *result = 0; cast(void)result;
-#if 0
     Scratch_Block scratch(app);
+	Token *result = 0;
     
     int scope_nest = 0;
     String_Const_u8 decl_name_str = push_buffer_range(app, scratch, buffer, Ii64(decl_name));
@@ -148,7 +188,7 @@ internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 
         Token *token = token_it_read(&it);
         if (token) {
             if (scope_nest == 0 &&
-				token->sub_kind == TokenJaiKind_Colon &&
+				token->sub_kind == TokenOdinKind_Colon &&
 				token_it_dec_non_whitespace(&it)) {
                 Token *name_candidate = token_it_read(&it);
                 if (name_candidate && name_candidate->kind == TokenBaseKind_Identifier) {
@@ -158,9 +198,9 @@ internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 
                         break;
                     }
                 }
-            } else if (token->sub_kind == TokenJaiKind_BraceCl) {
+            } else if (token->sub_kind == TokenOdinKind_BraceCl) {
                 scope_nest += 1;
-            } else if (token->sub_kind == TokenJaiKind_BraceOp) {
+            } else if (token->sub_kind == TokenOdinKind_BraceOp) {
                 scope_nest -= 1;
             }
         } else { break; }
@@ -169,7 +209,7 @@ internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 
             break;
         }
     }
-#endif
+	
     return result;
 }
 
@@ -178,11 +218,10 @@ internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 
 // position in a buffer. For example, what type I am accessing, what function I am
 // calling, which parameter am I accessing, etc.
 function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
-    int count = 0; cast(void)count;
+    int count = 0;
 	Positional_Context_Data *first = 0;
-	Positional_Context_Data *last = 0; cast(void)last;
+	Positional_Context_Data *last  = 0;
     
-#if 1
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     
     // NOTE(rjf): Search for left parentheses (function call or macro invocation).
@@ -195,18 +234,18 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
         for (int i = 0; count < 4; i += 1) {
             Token *token = token_it_read(&it);
             if (token) {
-                if (paren_nest == 0 && token->sub_kind == TokenJaiKind_ParenOp && token_it_dec_non_whitespace(&it)) {
+                if (paren_nest == 0 && token->sub_kind == TokenOdinKind_ParenOp && token_it_dec_non_whitespace(&it)) {
                     Token *name = token_it_read(&it);
                     if (name && name->kind == TokenBaseKind_Identifier) {
                         F4_Language_PosContext_PushData_Call(arena, &first, &last, push_buffer_range(app, arena, buffer, Ii64(name)), arg_idx);
 						count  += 1;
                         arg_idx = 0;
                     }
-                } else if (token->sub_kind == TokenJaiKind_ParenOp) {
+                } else if (token->sub_kind == TokenOdinKind_ParenOp) {
                     paren_nest -= 1;
-                } else if (token->sub_kind == TokenJaiKind_ParenCl && i > 0) {
+                } else if (token->sub_kind == TokenOdinKind_ParenCl && i > 0) {
                     paren_nest += 1;
-                } else if (token->sub_kind == TokenJaiKind_Comma && i > 0 && paren_nest == 0) {
+                } else if (token->sub_kind == TokenOdinKind_Comma && i > 0 && paren_nest == 0) {
                     arg_idx += 1;
                 }
             } else {
@@ -230,27 +269,25 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
             if (token) {
                 if (i == 0 && token->kind == TokenBaseKind_Identifier) {
                     last_query_candidate = token;
-                } else if ((i == 0 || i == 1) && token->sub_kind == TokenJaiKind_Dot && token_it_dec_non_whitespace(&it)) {
+                } else if ((i == 0 || i == 1) && token->sub_kind == TokenOdinKind_Dot && token_it_dec_non_whitespace(&it)) {
                     Token *decl_name = token_it_read(&it);
                     if (decl_name && decl_name->kind == TokenBaseKind_Identifier) {
-                        Token *decl_start = _F4_Jai_FindDecl(app, buffer, decl_name->pos, decl_name);
+                        Token *decl_start = _F4_Odin_FindDecl(app, buffer, decl_name->pos, decl_name);
                         if (decl_start) {
                             Token_Iterator_Array it2 = token_iterator_pos(0, &tokens, decl_start->pos);
-                            b32 found_colon = 0;
+                            b32    found_colon = false;
                             Token *base_type = 0;
                             for (;;) {
                                 Token *token2 = token_it_read(&it2);
                                 if (token2) {
-                                    if (token2->sub_kind == TokenJaiKind_Colon) {
-                                        found_colon = 1;
+                                    if (token2->sub_kind == TokenOdinKind_Colon) {
+                                        found_colon = true;
                                     } else if (found_colon && token2->kind == TokenBaseKind_Identifier) {
                                         base_type = token2;
                                     } else if (found_colon && token2->kind == TokenBaseKind_StatementClose) {
                                         break;
                                     }
-                                } else {
-                                    break;
-                                }
+                                } else { break; }
                                 
                                 if (!token_it_inc_non_whitespace(&it2)) {
                                     break;
@@ -271,7 +308,6 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
             }
         }
     }
-#endif
     
     return first;
 }

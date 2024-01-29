@@ -1,7 +1,5 @@
-/* date = January 29th 2021 7:51 pm */
-
-#ifndef FCODER_FLEURY_BRACE_H
-#define FCODER_FLEURY_BRACE_H
+#ifndef FCODER_CUSTOM_BRACE_H
+#define FCODER_CUSTOM_BRACE_H
 
 NAMESPACE_BEGIN(nne)
 
@@ -11,4 +9,4 @@ function void F4_Brace_RenderLines(Application_Links *app, Buffer_ID buffer, Vie
 
 NAMESPACE_END()
 
-#endif //4CODER_FLEURY_BRACE_H
+#endif // 4CODER_CUSTOM_BRACE_H

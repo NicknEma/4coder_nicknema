@@ -129,13 +129,13 @@ F4_PosContext_Render(Application_Links *app, View_ID view, Buffer_ID buffer,
         
         for(Positional_Context_Data *ctx = ctx_list; ctx; ctx = ctx->next)
         {
-            F4_Index_Note *note = ctx->relevant_note;
+            Index__Note *note = ctx->relevant_note;
             if(note != 0 && note->file != 0)
             {
                 
                 //~ NOTE(rjf): Function arguments.
-                if(note->kind == F4_Index_NoteKind_Function ||
-                   note->kind == F4_Index_NoteKind_Macro)
+                if(note->kind == Index__Note_Kind_Function ||
+                   note->kind == Index__Note_Kind_Macro)
                 {
                     
                     // NOTE(rjf): Find range of definition + params
@@ -218,10 +218,10 @@ F4_PosContext_Render(Application_Links *app, View_ID view, Buffer_ID buffer,
                     f32 advance = draw_rect.y1 - draw_rect.y0;
                     tooltip_position.y += advance;
                 }
-                else if(note->kind == F4_Index_NoteKind_Type)
+                else if(note->kind == Index__Note_Kind_Type)
                 {
                     Token_Array defbuffer_tokens = get_token_array_from_buffer(app, note->file->buffer);
-                    for(F4_Index_Note *member = note->first_child; member; member = member->next_sibling)
+                    for(Index__Note *member = note->first_child; member; member = member->next_sibling)
                     {
                         
                         Range_i64 member_range = member->range;

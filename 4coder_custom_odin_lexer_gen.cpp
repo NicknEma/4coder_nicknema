@@ -53,12 +53,13 @@ internal void build_language_model(void) {
     
     sm_select_base_kind(TokenBaseKind_LiteralString);
     sm_direct_token_kind("LiteralString");
-    // sm_direct_token_kind("LiteralStringRaw"); // @Todo(ema): Unnecessary, since we emit a LiteralString anyways.
     sm_direct_token_kind("LiteralCharacter");
     sm_direct_token_kind("PackageName");
     
     sm_select_base_kind(TokenBaseKind_Keyword);
-    sm_direct_token_kind("KeywordGeneric");
+    sm_direct_token_kind("KeywordGeneric"); // @Note(ema): This is never used. What's the point?
+	sm_direct_token_kind("DirectiveGeneric");
+	sm_direct_token_kind("AttributeGeneric");
     
     //~ Odin Operators.
     
@@ -129,7 +130,7 @@ internal void build_language_model(void) {
 		sm_op("%=");
 		
 		// Other operators:
-		sm_op("::");  // Alias
+		// sm_op("::");  // Alias
 		sm_op(":=");  // Initialization
 		sm_op("->");  // Member function shorthand
 		sm_op("..");
@@ -150,7 +151,7 @@ internal void build_language_model(void) {
     sm_select_base_kind(TokenBaseKind_StatementClose);
     sm_op(",");
     
-    // @Todo(ema): Builtin procedures? Types?
+    // @Todo(ema): Builtin procedures?
     
     //~ Odin Keywords.
     
@@ -225,7 +226,7 @@ internal void build_language_model(void) {
 	
     sm_select_base_kind(TokenBaseKind_LiteralInteger);
     {
-		sm_key("LiteralTrue", "true");
+		sm_key("LiteralTrue",  "true");
 		sm_key("LiteralFalse", "false");
     }
 	
@@ -235,8 +236,10 @@ internal void build_language_model(void) {
     //~ Odin Preprocessor Directives.
     
     Keyword_Set *directive_set = sm_begin_key_set("directives");
-    
-    sm_select_base_kind(TokenBaseKind_Identifier);
+    // @Note(ema): When later you emit a directive, you check in this set if what you're about to emit
+	// matches one of the elements. If it doesn't, you emit the fallback.
+	
+    sm_select_base_kind(TokenBaseKind_Keyword);
     {
 		sm_key("Assert",        "assert");
 		sm_key("Panic",         "panic");
@@ -266,16 +269,17 @@ internal void build_language_model(void) {
 		sm_key("Load",          "load");
 		sm_key("LoadOr",        "load_or");
 		sm_key("LoadHash",      "load_hash");
+		sm_key("ForceInline",   "force_inline");
     }
 	
-    sm_select_base_kind(TokenBaseKind_LexError);
-    sm_key_fallback("PPUnknown");
+	// sm_select_base_kind(TokenBaseKind_LexError);
+    sm_key_fallback("DirectiveGeneric");
     
     //~ Odin Attributes.
     
     Keyword_Set *attribute_set = sm_begin_key_set("attributes");
     
-    sm_select_base_kind(TokenBaseKind_Identifier);
+    sm_select_base_kind(TokenBaseKind_Keyword);
     {
 		sm_key("AtPrivate", "private");
 		sm_key("AtRequire", "require");
@@ -307,6 +311,9 @@ internal void build_language_model(void) {
 		sm_key("AtEnableTargetFeature", "enable_target_feature");
     }
 	
+	// sm_select_base_kind(TokenBaseKind_LexError);
+    sm_key_fallback("AttributeGeneric");
+	
     //~ State Definitions.
     
     State *root = sm_begin_state_machine();
@@ -321,11 +328,11 @@ internal void build_language_model(void) {
     AddState(identifier);
     AddState(whitespace);
     
-    AddState(operator_or_fnumber_dot);   // For when we don't know if it's a floating point number or a namespace/struct access
-    AddState(operator_or_comment_slash); // For when we don't know if it's a division or the start of a comment
+    AddState(operator_or_fnumber_dot);   // @Note(ema): For when we don't know if it's a floating point number or a namespace/struct access
+    AddState(operator_or_comment_slash); // @Note(ema): For when we don't know if it's a division or the start of a comment
     
     AddState(number);
-    AddState(pre_number); // For numbers that start with 0, since they could be 0. 0x 0o or 0b
+    AddState(pre_number); // @Note(ema): For numbers that start with 0, since they could be 0. 0x 0o or 0b
     
     AddState(fnumber_decimal);
     AddState(fnumber_exponent);

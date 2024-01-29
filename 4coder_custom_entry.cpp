@@ -7,11 +7,10 @@
 #define procedure static
 #define cast(t) (t)
 
-#pragma warning(push)
-#pragma warning(disable: 4102)
-#pragma warning(disable: 4702)
+#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
+#pragma warning(disable: 4702) // Unreachable code was detected.
 
-//~ NOTE(rjf): For DION team docs server stuff.
+//~ For DION team docs server stuff.
 // {
 #if OS_WINDOWS
 #include <WinSock2.h>
@@ -22,27 +21,29 @@ typedef int socklen_t;
 #endif
 // }
 
-//~ NOTE(rjf): Macros and pragmase stuff that have to be put here for various reasons.
+//~ Default headers
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "4coder_default_include.cpp"
-#pragma warning(disable : 4706)
-#pragma warning(disable : 4456)
+
+//~ Macros and pragmase stuff that have to be put here for various reasons.
+#pragma warning(disable: 4706) // Assignment within conditional expression. @Cleanup(ema): Where? If in the custom layer, remove. If in the base editor, explain.
+#pragma warning(disable: 4456) // Declaration of 'identifier' hides previous local declaration. @Cleanup(ema): Where? Should probabily be fixed.
 #define COMMAND_SERVER_PORT 4041
 #define COMMAND_SERVER_UPDATE_PERIOD_MS 200
 #define COMMAND_SERVER_AUTO_LAUNCH_IF_FILE_PRESENT "project_namespaces.txt"
 
-//~ NOTE(rjf): @f4_headers
-#include "4coder_custom_ubiquitous.h"
+//~ Custom layer headers
+#include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
 #include "4coder_fleury_audio.h"
-#include "4coder_custom_languages.h"
-#include "4coder_custom_index.h"
+#include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
+#include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
 #include "4coder_fleury_colors.h"
 #include "4coder_fleury_render_helpers.h"
-#include "4coder_fleury_brace.h"
+#include "4coder_fleury_brace.h"                 // Functions for rendering braces-related stuff
 #include "4coder_fleury_error_annotations.h"
-#include "4coder_fleury_divider_comments.h"
+#include "4coder_custom_divider_comments.h"      // Functions for rendering and jumping between divider comments //~ and //-
 #include "4coder_fleury_power_mode.h"
 #include "4coder_fleury_cursor.h"
 #include "4coder_fleury_plot.h"
@@ -51,14 +52,14 @@ typedef int socklen_t;
 #include "4coder_fleury_pos_context_tooltips.h"
 #include "4coder_fleury_code_peek.h"
 #include "4coder_fleury_recent_files.h"
-#include "4coder_fleury_bindings.h"
-#include "4coder_fleury_base_commands.h"
+#include "4coder_custom_bindings.h"              // Maps bindings to commands
+#include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
 #if OS_WINDOWS
-#include "4coder_fleury_command_server.h"
+# include "4coder_fleury_command_server.h"
 #endif
-#include "4coder_fleury_hooks.h"
+#include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 
-//~ NOTE(rjf): @f4_src
+//~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
 #include "4coder_fleury_audio.cpp"
 #include "4coder_custom_languages.cpp"
@@ -67,7 +68,7 @@ typedef int socklen_t;
 #include "4coder_fleury_render_helpers.cpp"
 #include "4coder_fleury_brace.cpp"
 #include "4coder_fleury_error_annotations.cpp"
-#include "4coder_fleury_divider_comments.cpp"
+#include "4coder_custom_divider_comments.cpp"
 #include "4coder_fleury_power_mode.cpp"
 #include "4coder_fleury_cursor.cpp"
 #include "4coder_fleury_plot.cpp"
@@ -76,13 +77,14 @@ typedef int socklen_t;
 #include "4coder_fleury_pos_context_tooltips.cpp"
 #include "4coder_fleury_code_peek.cpp"
 #include "4coder_fleury_recent_files.cpp"
-#include "4coder_fleury_bindings.cpp"
-#include "4coder_fleury_base_commands.cpp"
+#include "4coder_custom_bindings.cpp"
+#include "4coder_custom_dynamic_bindings.cpp"
+#include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
-#include "4coder_fleury_command_server.cpp"
+# include "4coder_fleury_command_server.cpp"
 #endif
 #include "4coder_fleury_casey.cpp"
-#include "4coder_fleury_hooks.cpp"
+#include "4coder_custom_hooks.cpp"
 
 //~ NOTE(rjf): Plots Demo File
 #include "4coder_fleury_plots_demo.cpp"
@@ -90,11 +92,11 @@ typedef int socklen_t;
 //~ NOTE(rjf): 4coder Stuff
 #include "generated/managed_id_metadata.cpp"
 
-//~ NOTE(rjf): @f4_custom_layer_initialization
+//~ Custom layer initialization
 
 void custom_layer_init(Application_Links *app) {
     default_framework_init(app);
-    global_frame_arena = make_arena(get_base_allocator_system());
+    nne::global_frame_arena = make_arena(get_base_allocator_system());
     permanent_arena = make_arena(get_base_allocator_system());
     
     // NOTE(rjf): Set up hooks.
@@ -113,35 +115,41 @@ void custom_layer_init(Application_Links *app) {
     
     // NOTE(rjf): Set up mapping.
     {
-        Thread_Context *tctx = get_thread_context(app);
-        mapping_init(tctx, &framework_mapping);
-        String_Const_u8 bindings_file = string_u8_litexpr("bindings.4coder");
-        nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
-        if (!dynamic_binding_load_from_file(app, &framework_mapping, bindings_file)) {
-            nne::F4_SetDefaultBindings(&framework_mapping);
+        mapping_init(get_thread_context(app), &framework_mapping);
+		
+        nne::set_absolutely_necessary_bindings(&framework_mapping);
+        if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
+            nne::set_default_bindings(&framework_mapping);
         }
-        nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
+		nne::set_absolutely_necessary_bindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
     }
     
-    // NOTE(rjf): Set up custom code index.
-    {
-        nne::F4_Index_Initialize();
-    }
-    
-    // NOTE(rjf): Register languages.
-    {
-        nne::register_languages();
-    }
+	nne::index__initialize();
+	nne::register_languages();
+}
+
+// @Todo(ema): Reload from the current directory (not project)? Is it possible?
+// Probaily use def_search_normal_load_list() to get the executable directory (the so-called BinPath?)
+
+// @Todo(ema): With the same strategy also add a command that goes to the executable directory (sets it as the current directory). It's the parallel to Ctrl+H that goes to the project directory.
+
+CUSTOM_COMMAND_SIG(reload_config_file_from_project_directory)
+CUSTOM_DOC("Reload the config.4coder file from the project directory.") {
+	Face_Description description = get_face_description(app, 0);
+	load_config_and_apply(app, &global_config_arena, description.parameters.pt_size, description.parameters.hinting);
+}
+
+CUSTOM_COMMAND_SIG(reload_bindings_file_from_project_directory)
+CUSTOM_DOC("Reload the bindings.4coder file from the project directory.") {
+	if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
+		nne::set_default_bindings(&framework_mapping);
+	}
+	nne::set_absolutely_necessary_bindings(&framework_mapping);
 }
 
 NAMESPACE_BEGIN(nne)
 
-//~ NOTE(rjf): @f4_startup Whenever 4coder's core is ready for the custom layer to start up,
-// this is called.
-
-// TODO(rjf): This is only being used to check if a font file exists because
-// there's a bug in try_create_new_face that crashes the program if a font is
-// not found. This function is only necessary until that is fixed.
+// TODO(rjf): This is only being used to check if a font file exists because there's a bug in try_create_new_face that crashes the program if a font is not found. This function is only necessary until that is fixed.
 function b32 is_file_readable(String_Const_u8 path) {
     b32 result = false;
     FILE *file = fopen(cast(char *)path.str, "r");
@@ -154,7 +162,9 @@ function b32 is_file_readable(String_Const_u8 path) {
 
 NAMESPACE_END()
 
-CUSTOM_COMMAND_SIG(fleury_startup)
+//~ Whenever 4coder's core is ready for the custom layer to start up, this is called.
+// In the custom layer entry point above, where the bindings are set, this is passed as a pointer to the editor core. See the bindings.cpp file for more info.
+CUSTOM_COMMAND_SIG(custom_startup)
 CUSTOM_DOC("Custom startup event") {
     ProfileScope(app, "default startup");
     
@@ -342,8 +352,3 @@ CUSTOM_DOC("Custom startup event") {
         clear_all_layouts(app);
     }
 }
-
-#undef procedure
-#undef cast
-
-#pragma warning(pop)

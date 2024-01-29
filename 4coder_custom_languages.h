@@ -3,10 +3,10 @@
 
 NAMESPACE_BEGIN(nne)
 
-struct F4_Index_ParseCtx;
+struct Index__Parse_Context;
 
 //~ NOTE(rjf): Indexes an entire file of a language and adds stuff to the code index.
-#define FILE_INDEXER(name) void name(F4_Index_ParseCtx *ctx)
+#define FILE_INDEXER(name) void name(Index__Parse_Context *context)
 typedef FILE_INDEXER(File_Indexer);
 
 //~ NOTE(rjf): Initializes lexer state.
@@ -23,10 +23,10 @@ typedef LEXER(Lexer);
 // position in a buffer. For example, what type I am accessing, what function I am
 // calling which parameter am I accessing, etc.
 
-struct F4_Index_Note;
+struct Index__Note;
 struct Positional_Context_Data {
     Positional_Context_Data *next;
-    F4_Index_Note *relevant_note;
+    Index__Note *relevant_note;
     Token *query_token;
     int argument_index;
 };

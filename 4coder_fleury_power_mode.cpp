@@ -1,4 +1,5 @@
-//~ NOTE(rjf): Power Mode Implementation
+#ifndef FCODER_CUSTOM_POWER_MODE_CPP
+#define FCODER_CUSTOM_POWER_MODE_CPP
 
 NAMESPACE_BEGIN(nne)
 
@@ -157,10 +158,10 @@ F4_PowerMode_Spawn(Application_Links *app, View_ID view, u8 character)
             String_Const_u8 string = {};
             ARGB_Color color = 0xffffffff;
             f32 decay_rate = 1.f;
-            f32 scale = RandomF32(0.5f, 6.f);
-            if(RandomF32(0, 1) < 0.01f)
+            f32 scale = random_f32(0.5f, 6.f);
+            if(random_f32(0, 1) < 0.01f)
             {
-                f32 random = RandomF32(0, 1);
+                f32 random = random_f32(0, 1);
                 if(random < 0.03f)
                 {
                     string = string_u8_litexpr("CRITICAL HIT!!!");
@@ -185,15 +186,15 @@ F4_PowerMode_Spawn(Application_Links *app, View_ID view, u8 character)
                 }
             }
             
-            f32 movement_angle = RandomF32(-3.1415926535897f*3.f/2.f, 3.1415926535897f*1.f/3.f);
-            f32 velocity_magnitude = RandomF32(20.f, 180.f);
+            f32 movement_angle = random_f32(-3.1415926535897f*3.f/2.f, 3.1415926535897f*1.f/3.f);
+            f32 velocity_magnitude = random_f32(20.f, 180.f);
             f32 velocity_x = cosf(movement_angle)*velocity_magnitude;
             f32 velocity_y = sinf(movement_angle)*velocity_magnitude;
             Particle *p = F4_PowerMode_Particle(global_cursor_rect.x0 + 4 + camera.x,
                                                 global_cursor_rect.y0 + 8 + camera.y,
                                                 velocity_x, velocity_y, decay_rate,
                                                 color,
-                                                RandomF32(1.5f, 8.f),
+                                                random_f32(1.5f, 8.f),
                                                 scale,
                                                 string);
             if(i < 30 && character)
@@ -203,7 +204,7 @@ F4_PowerMode_Spawn(Application_Links *app, View_ID view, u8 character)
             }
         }
         
-        power_mode.screen_shake += RandomF32(6.f, 16.f);
+        power_mode.screen_shake += random_f32(6.f, 16.f);
     }
 }
 
@@ -374,3 +375,5 @@ F4_PowerMode_RenderWholeScreen(Application_Links *app, Frame_Info frame_info)
 }
 
 NAMESPACE_END()
+
+#endif // FCODER_CUSTOM_POWER_MODE_CPP
