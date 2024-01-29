@@ -35,19 +35,19 @@ global Arena permanent_arena = {};
 
 NAMESPACE_BEGIN(nne)
 
-internal String_Const_u8 StringStripBorderCharacters(String_Const_u8 string);
-internal f32 RandomF32(f32 low, f32 high);
-internal f32 MinimumF32(f32 a, f32 b);
-internal f32 MaximumF32(f32 a, f32 b);
-internal b32 CharIsAlpha(int c);
-internal b32 CharIsDigit(int c);
-internal b32 CharIsSymbol(int c);
-internal double GetFirstDoubleFromBuffer(char *buffer);
-internal b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_length);
-internal unsigned int CRC32(unsigned char *buf, int len);
-internal unsigned int StringCRC32(char *string, int string_length);
-internal unsigned int CStringCRC32(char *string);
-internal u64 BitOffset(u64 value);
+internal String_Const_u8 strip_string_border_characters(String_Const_u8 string);
+internal f32 random_f32(f32 low, f32 high);
+internal f32 min_f32(f32 a, f32 b);
+internal f32 max_f32(f32 a, f32 b);
+internal b32 char_is_alphabetic(int c);
+internal b32 char_is_digit(int c);
+internal b32 char_is_symbol(int c);
+internal double get_first_double_from_buffer(char *buffer);
+internal b32 strings_match_case_sensitive(char *a, int a_length, char *b, int b_length);
+internal unsigned int crc32(unsigned char *buf, int len);
+internal unsigned int string_crc32(char *string, int string_length);
+internal unsigned int cstring_crc32(char *string);
+internal u64 get_single_bit_offset(u64 value);
 
 NAMESPACE_END()
 

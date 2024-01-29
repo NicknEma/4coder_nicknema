@@ -1,3 +1,6 @@
+#ifndef FCODER_CUSTOM_COLORS_CPP
+#define FCODER_CUSTOM_COLORS_CPP
+
 NAMESPACE_BEGIN(nne)
 
 typedef u32 F4_SyntaxFlags;
@@ -31,13 +34,11 @@ global F4_SyntaxOptions f4_syntax_opts[] = {
 };
 global i32 f4_active_syntax_opt_idx = 0;
 
-function b32
-F4_ARGBIsValid(ARGB_Color color) {
-    return color != 0xFF990099;
+internal b32 F4_ARGBIsValid(ARGB_Color color) {
+    return color != 0xFF990099; // @Cleanup(ema): What? Explain...
 }
 
-internal void
-F4_TickColors(Application_Links *app, Frame_Info frame_info) {
+internal void F4_TickColors(Application_Links *app, Frame_Info frame_info) {
     F4_SyntaxOptions opts = f4_syntax_opts[f4_active_syntax_opt_idx];
     for (int i = 0; i < sizeof(F4_SyntaxFlags)*8; i += 1) {
         f32 delta = ((f32)!!(opts.flags & (1<<i)) - f4_syntax_flag_transitions[i]) * frame_info.animation_dt * 8.f;
@@ -58,8 +59,7 @@ CUSTOM_DOC("Switches the syntax highlighting mode.") {
 
 NAMESPACE_BEGIN(nne)
 
-internal String8
-F4_SyntaxOptionString(void) {
+internal String8 F4_SyntaxOptionString(void) {
     return f4_syntax_opts[f4_active_syntax_opt_idx].name;
 }
 
@@ -76,24 +76,21 @@ struct ColorCtx {
     keybinding_mode mode;
 };
 
-internal ColorCtx
-ColorCtx_Token(Token token, Buffer_ID buffer) {
+internal ColorCtx ColorCtx_Token(Token token, Buffer_ID buffer) {
     ColorCtx ctx = {};
     ctx.token    = token;
     ctx.buffer   = buffer;
     return ctx;
 }
 
-internal ColorCtx
-ColorCtx_Cursor(ColorFlags flags, keybinding_mode mode) {
+internal ColorCtx ColorCtx_Cursor(ColorFlags flags, keybinding_mode mode) {
     ColorCtx ctx = {};
     ctx.flags    = flags;
     ctx.mode     = mode;
     return ctx;
 }
 
-static ARGB_Color
-F4_ARGBFromID(Color_Table table, Managed_ID id, int subindex) {
+internal ARGB_Color F4_ARGBFromID(Color_Table table, Managed_ID id, int subindex) {
     ARGB_Color result = 0;
     FColor color = fcolor_id(id);
     if (color.a_byte == 0){
@@ -106,19 +103,17 @@ F4_ARGBFromID(Color_Table table, Managed_ID id, int subindex) {
     return(result);
 }
 
-static ARGB_Color
-F4_ARGBFromID(Color_Table table, Managed_ID id) {
+internal ARGB_Color F4_ARGBFromID(Color_Table table, Managed_ID id) {
     return F4_ARGBFromID(table, id, 0);
 }
 
-internal ARGB_Color
-F4_GetColor(Application_Links *app, ColorCtx ctx) {
+internal ARGB_Color F4_GetColor(Application_Links *app, ColorCtx ctx) {
     Color_Table table = active_color_table;
     ARGB_Color default_color = F4_ARGBFromID(table, defcolor_text_default);
     ARGB_Color color = default_color;
     f32 t = 1;
     
-#define FillFromFlag(flag) do{ t = f4_syntax_flag_transitions[BitOffset(flag)]; }while(0)
+#define FillFromFlag(flag) do{ t = f4_syntax_flag_transitions[get_single_bit_offset(flag)]; }while(0)
     
     //~ NOTE(rjf): Token Color
     if (ctx.token.size != 0) {
@@ -183,7 +178,7 @@ F4_GetColor(Application_Links *app, ColorCtx ctx) {
             case TokenBaseKind_ParentheticalClose:
             case TokenBaseKind_StatementClose: {
                 color = F4_ARGBFromID(table, fleury_color_syntax_crap);
-                if(!F4_ARGBIsValid(color)) {
+                if (!F4_ARGBIsValid(color)) {
 					color = default_color;
 				}
                 break;
@@ -230,8 +225,7 @@ F4_GetColor(Application_Links *app, ColorCtx ctx) {
     return color_blend(default_color, t, color);
 }
 
-static void
-F4_SyntaxHighlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_Array *array) {
+static void F4_SyntaxHighlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_Array *array) {
     Color_Table table = active_color_table;
     Buffer_ID buffer = text_layout_get_buffer(app, text_layout_id);
     Range_i64 visible_range = text_layout_get_visible_range(app, text_layout_id);
@@ -279,3 +273,5 @@ F4_SyntaxHighlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_
 }
 
 NAMESPACE_END()
+
+#endif // FCODER_CUSTOM_COLORS_CPP

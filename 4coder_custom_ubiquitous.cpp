@@ -1,6 +1,8 @@
 #ifndef FCODER_CUSTOM_UBIQUITOUS_CPP
 #define FCODER_CUSTOM_UBIQUITOUS_CPP
 
+// @Cleanup(ema): Why doesn't this file use the short type names (u8, i64...)
+
 NAMESPACE_BEGIN(nne)
 
 global struct {
@@ -10,33 +12,33 @@ global struct {
 global int global_tooltip_count = 0;
 global Arena global_frame_arena;
 
-internal String_Const_u8 StringStripBorderCharacters(String_Const_u8 string) {
+internal String_Const_u8 strip_string_border_characters(String_Const_u8 string) {
     string.str  += 1;
     string.size -= 2;
     return string;
 }
 
-internal f32 RandomF32(f32 low, f32 high) {
-    return low + (high - low) * (((int)rand() % 10000) / 10000.f);
+internal f32 random_f32(f32 low, f32 high) {
+    return low + (high - low) * ((cast(int)rand() % 10000) / 10000.f); // Eww... rand...
 }
 
-internal f32 MinimumF32(f32 a, f32 b) {
+internal f32 min_f32(f32 a, f32 b) {
     return a < b ? a : b;
 }
 
-internal f32 MaximumF32(f32 a, f32 b) {
+internal f32 max_f32(f32 a, f32 b) {
     return a > b ? a : b;
 }
 
-internal b32 CharIsAlpha(int c) {
+internal b32 char_is_alphabetic(int c) {
     return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
 }
 
-internal b32 CharIsDigit(int c) {
+internal b32 char_is_digit(int c) {
     return (c >= '0' && c <= '9');
 }
 
-internal b32 CharIsSymbol(int c) {
+internal b32 char_is_symbol(int c) {
     return (c == '~' || c == '`' || c == '!' || c == '#' ||
             c == '$' || c == '%' || c == '^' || c == '&' ||
             c == '*' || c == '(' || c == ')' || c == '-' ||
@@ -46,12 +48,12 @@ internal b32 CharIsSymbol(int c) {
             c == '?' || c == '/');
 }
 
-internal double GetFirstDoubleFromBuffer(char *buffer) {
+internal double get_first_double_from_buffer(char *buffer) {
     char number_str[256];
     int number_write_pos = 0;
     double value = 0;
     for (int i = 0; buffer[i] && number_write_pos < sizeof(number_str); i += 1) {
-        if (CharIsDigit(buffer[i]) || buffer[i] == '.' || buffer[i] == '-') {
+        if (char_is_digit(buffer[i]) || buffer[i] == '.' || buffer[i] == '-') {
             number_str[number_write_pos++] = buffer[i];
         } else {
             number_str[number_write_pos++] = 0;
@@ -63,7 +65,7 @@ internal double GetFirstDoubleFromBuffer(char *buffer) {
     return value;
 }
 
-internal b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_length) {
+internal b32 strings_match_case_sensitive(char *a, int a_length, char *b, int b_length) {
 	b32 match = false;
     if (a && b && a[0] && b[0] && a_length == b_length) {
         match = true;
@@ -77,7 +79,8 @@ internal b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_leng
     return match;
 }
 
-internal unsigned int CRC32(unsigned char *buf, int len) {
+// @Note(ema): CRC = Cyclic Redundancy Check
+internal unsigned int crc32(unsigned char *buf, int len) {
     static unsigned int init = 0xffffffff;
     static const unsigned int crc32_table[] =
     {
@@ -155,18 +158,18 @@ internal unsigned int CRC32(unsigned char *buf, int len) {
     return crc;
 }
 
-internal unsigned int StringCRC32(char *string, int string_length) {
-    unsigned int hash = CRC32((unsigned char *)string, string_length);
+internal unsigned int string_crc32(char *string, int string_length) {
+    unsigned int hash = crc32(cast(unsigned char *)string, string_length);
     return hash;
 }
 
-internal unsigned int CStringCRC32(char *string) {
-    int string_length = (int)CalculateCStringLength(string);
-    unsigned int hash = CRC32((unsigned char *)string, string_length);
+internal unsigned int cstring_crc32(char *string) {
+    int string_length = cast(int)CalculateCStringLength(string);
+    unsigned int hash = crc32(cast(unsigned char *)string, string_length);
     return hash;
 }
 
-internal u64 BitOffset(u64 value) {
+internal u64 get_single_bit_offset(u64 value) {
     u64 offset = 0;
     for (u64 i = 0; i < 64; i += 1) {
         if (value == ((u64)1 << i)) {
