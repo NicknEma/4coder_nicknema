@@ -1,8 +1,8 @@
-# Ryan Fleury's Personal 4coder Custom Layer
+# My fork of Ryan Fleury's personal 4coder custom layer
 
 1. `cd path/to/4coder/custom`
-2. `git clone https://github.com/dion-systems/4coder_fleury`
-3. `cd 4coder_fleury && build`
+2. `git clone https://github.com/NicknEma/4coder_nicknema`
+3. `cd 4coder_nicknema && build`
 
 ## Customizing 4coder
 
