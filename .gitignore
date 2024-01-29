@@ -1,3 +1,5 @@
 
 *.pdb
 *.dll
+*.sln
+.vs
