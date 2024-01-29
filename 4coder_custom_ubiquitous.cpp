@@ -1,6 +1,8 @@
 #ifndef FCODER_CUSTOM_UBIQUITOUS_CPP
 #define FCODER_CUSTOM_UBIQUITOUS_CPP
 
+NAMESPACE_BEGIN(nne)
+
 global struct {
     String_Const_u8 string;
     ARGB_Color color;
@@ -8,34 +10,33 @@ global struct {
 global int global_tooltip_count = 0;
 global Arena global_frame_arena;
 
-procedure String_Const_u8
-StringStripBorderCharacters(String_Const_u8 string) {
+internal String_Const_u8 StringStripBorderCharacters(String_Const_u8 string) {
     string.str  += 1;
     string.size -= 2;
     return string;
 }
 
-function f32 RandomF32(f32 low, f32 high) {
+internal f32 RandomF32(f32 low, f32 high) {
     return low + (high - low) * (((int)rand() % 10000) / 10000.f);
 }
 
-function f32 MinimumF32(f32 a, f32 b) {
+internal f32 MinimumF32(f32 a, f32 b) {
     return a < b ? a : b;
 }
 
-function f32 MaximumF32(f32 a, f32 b) {
+internal f32 MaximumF32(f32 a, f32 b) {
     return a > b ? a : b;
 }
 
-function b32 CharIsAlpha(int c) {
+internal b32 CharIsAlpha(int c) {
     return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
 }
 
-function b32 CharIsDigit(int c) {
+internal b32 CharIsDigit(int c) {
     return (c >= '0' && c <= '9');
 }
 
-function b32 CharIsSymbol(int c) {
+internal b32 CharIsSymbol(int c) {
     return (c == '~' || c == '`' || c == '!' || c == '#' ||
             c == '$' || c == '%' || c == '^' || c == '&' ||
             c == '*' || c == '(' || c == ')' || c == '-' ||
@@ -45,7 +46,7 @@ function b32 CharIsSymbol(int c) {
             c == '?' || c == '/');
 }
 
-function double GetFirstDoubleFromBuffer(char *buffer) {
+internal double GetFirstDoubleFromBuffer(char *buffer) {
     char number_str[256];
     int number_write_pos = 0;
     double value = 0;
@@ -62,11 +63,7 @@ function double GetFirstDoubleFromBuffer(char *buffer) {
     return value;
 }
 
-static unsigned int CStringCRC32(char *string);
-static unsigned int StringCRC32(char *string, int string_length);
-static unsigned int CRC32(unsigned char *buf, int len);
-
-function b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_length) {
+internal b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_length) {
 	b32 match = false;
     if (a && b && a[0] && b[0] && a_length == b_length) {
         match = true;
@@ -80,8 +77,7 @@ function b32 StringMatchCaseSensitive(char *a, int a_length, char *b, int b_leng
     return match;
 }
 
-static unsigned int
-CRC32(unsigned char *buf, int len) {
+internal unsigned int CRC32(unsigned char *buf, int len) {
     static unsigned int init = 0xffffffff;
     static const unsigned int crc32_table[] =
     {
@@ -159,14 +155,12 @@ CRC32(unsigned char *buf, int len) {
     return crc;
 }
 
-static unsigned int
-StringCRC32(char *string, int string_length) {
+internal unsigned int StringCRC32(char *string, int string_length) {
     unsigned int hash = CRC32((unsigned char *)string, string_length);
     return hash;
 }
 
-static unsigned int
-CStringCRC32(char *string) {
+internal unsigned int CStringCRC32(char *string) {
     int string_length = (int)CalculateCStringLength(string);
     unsigned int hash = CRC32((unsigned char *)string, string_length);
     return hash;
@@ -182,5 +176,7 @@ internal u64 BitOffset(u64 value) {
     }
     return offset;
 }
+
+NAMESPACE_END()
 
 #endif // FCODER_CUSTOM_UBIQUITOUS_CPP
