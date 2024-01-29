@@ -1,7 +1,19 @@
 #ifndef FCODER_CUSTOM_BASE_COMMANDS_CPP
 #define FCODER_CUSTOM_BASE_COMMANDS_CPP
 
-//~ NOTE(rjf): @f4_base_commands
+// This file implements some of the custom layer's commands. They will be listed in the command lister (by default opened with Alt + X) and they can be bound to a key, either in code or via the bindings.4coder file. Some of the commands are not in this file, but in places closer to related functionality. The startup command is in entry.cpp, and the bindings-related commands are in bindings.cpp
+
+// The file contains commands for:
+// - Searching for strings
+// - Jumping to identifier definitions
+// - Moving the cursor in different ways
+// - Auto-indenting and auto-completing
+// - Commenting and uncommenting ranges
+// - Opening files
+// - Counting lines of code
+
+//~ Basic command replacements
+// Commands that already exist in basic 4coder, but here they are modified slightly.
 
 // TODO(rjf): Remove once Allen adds official version.
 CUSTOM_COMMAND_SIG(f4_leave_event_unhandled)
@@ -11,9 +23,10 @@ CUSTOM_DOC("when bound to keystroke, ensures the event falls through to text ins
 
 NAMESPACE_BEGIN(nne)
 
-internal void
-search(Application_Links *app, Scan_Direction dir) {
+// @Rename(ema): Searches in the current buffer. Make it explicit?
+internal void search(Application_Links *app, Scan_Direction dir) {
     Scratch_Block scratch(app);
+	
     View_ID   view   = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     if (view && buffer) {
@@ -28,7 +41,6 @@ search(Application_Links *app, Scan_Direction dir) {
 
 NAMESPACE_END()
 
-// @Note(ema): Why are there new search commands? Do they work differently than the base one?
 CUSTOM_COMMAND_SIG(f4_search)
 CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, will fill search query with it.") {
     nne::search(app, Scan_Forward);
@@ -39,36 +51,28 @@ CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, 
     nne::search(app, Scan_Backward);
 }
 
-// @Note(ema): What's the point of this exactly?
+// @Note(ema): What's the point of this exactly? Power mode? @Todo(ema): Write a better command doc and a comment that explains it.
 CUSTOM_COMMAND_SIG(f4_write_text_input)
 CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
-    using namespace nne;
+    write_text_input(app);
 	
-	write_text_input(app);
-    F4_PowerMode_CharacterPressed();
+    nne::F4_PowerMode_CharacterPressed();
     User_Input      in     = get_current_input(app);
     String_Const_u8 insert = to_writable(&in);
-    F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
+    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
 }
 
 CUSTOM_COMMAND_SIG(f4_write_text_and_auto_indent)
 CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.") {
-    using namespace nne;
+    write_text_and_auto_indent(app);
 	
-	write_text_and_auto_indent(app);
-    F4_PowerMode_CharacterPressed();
-    User_Input in = get_current_input(app);
-    String_Const_u8 insert = to_writable(&in);
-    F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
-}
-
-CUSTOM_COMMAND_SIG(f4_write_zero_struct)
-CUSTOM_DOC("At the cursor, insert a ' = {0};'.") {
-    write_string(app, string_u8_litexpr(" = {0};"));
     nne::F4_PowerMode_CharacterPressed();
-    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), 0);
+    User_Input      in     = get_current_input(app);
+    String_Const_u8 insert = to_writable(&in);
+    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
 }
 
+// @Note(ema): The difference between this and the 4coder default one is that this actually goes to the beginning of the line.
 CUSTOM_COMMAND_SIG(f4_home)
 CUSTOM_DOC("Goes to the beginning of the line.") {
 	using namespace nne;
@@ -80,31 +84,41 @@ CUSTOM_DOC("Goes to the beginning of the line.") {
     view_set_buffer_scroll(app, view, scroll, SetBufferScroll_NoCursorChange);
 }
 
-CUSTOM_COMMAND_SIG(f4_toggle_battery_saver)
-CUSTOM_DOC("Toggles battery saving mode.") {
-	using namespace nne;
-	
-    global_battery_saver = !global_battery_saver;
+//~ Util commands.
+
+CUSTOM_COMMAND_SIG(f4_write_zero_struct)
+CUSTOM_DOC("At the cursor, insert a ' = {0};'.") {
+    write_string(app, string_u8_litexpr(" = {0};"));
+    nne::F4_PowerMode_CharacterPressed();
+    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), 0);
 }
 
+// @Note(ema): In battery saving mode, the cursor isn't animated. The global_battery_saver variable is in ubiquitous.h
+CUSTOM_COMMAND_SIG(f4_toggle_battery_saver)
+CUSTOM_DOC("Toggles battery saving mode.") {
+	global_battery_saver = !global_battery_saver;
+}
+
+// @Note(ema): global_compilation_view and global_compilation_view_expanded are defined in ubiquitous.h
 CUSTOM_COMMAND_SIG(f4_toggle_compilation_expand)
 CUSTOM_DOC("Expand the compilation window.") {
-	using namespace nne;
+	// using namespace nne;
 	
     Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
     Face_ID face_id = get_face_id(app, buffer);
     Face_Metrics metrics = get_face_metrics(app, face_id);
     if (global_compilation_view_expanded ^= 1) {
-        view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*32.f));
+        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*32.f));
     } else {
-        view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*4.f));
+        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*4.f));
     }
 }
 
+//~ Jumping to definitions
+
 NAMESPACE_BEGIN(nne)
 
-internal void
-F4_GoToDefinition(Application_Links *app, Index__Note *note, b32 same_panel) {
+internal void F4_GoToDefinition(Application_Links *app, Index__Note *note, b32 same_panel) {
     if (note != 0 && note->file != 0) {
         View_ID view = get_active_view(app, Access_Always);
         Rect_f32 region = view_get_buffer_region(app, view);
@@ -126,8 +140,7 @@ F4_GoToDefinition(Application_Links *app, Index__Note *note, b32 same_panel) {
     }
 }
 
-internal Index__Note *
-F4_FindMostIntuitiveNoteInDuplicateChain(Index__Note *note, Buffer_ID cursor_buffer, i64 cursor_pos) {
+internal Index__Note *F4_FindMostIntuitiveNoteInDuplicateChain(Index__Note *note, Buffer_ID cursor_buffer, i64 cursor_pos) {
     using namespace nne;
 	
 	Index__Note *result = note;
@@ -191,10 +204,11 @@ CUSTOM_DOC("Goes to the definition of the identifier under the cursor in the sam
     F4_GoToDefinition(app, note, 1);
 }
 
+//~ Listing definitions
+
 NAMESPACE_BEGIN(nne)
 
-internal void
-_F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister, Index__Note *note) {
+internal void _F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister, Index__Note *note) {
 	using namespace nne;
 	
     if (note && note->file) {
@@ -241,8 +255,7 @@ _F4_PushListerOptionForNote(Application_Links *app, Arena *arena, Lister *lister
     }
 }
 
-internal void
-F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID buffer, i64 pos) {
+internal void F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID buffer, i64 pos) {
 	using namespace nne;
 	
     // NOTE(rjf): This function was ripped from 4coder's jump_to_location. It was copied
@@ -275,8 +288,7 @@ CUSTOM_DOC("List all definitions in the index and jump to the one selected by th
     
     index__lock();
     {
-        for (Buffer_ID buffer = get_buffer_next(app, 0, Access_Always);
-             buffer != 0; buffer = get_buffer_next(app, buffer, Access_Always)) {
+        for (Buffer_ID buffer = get_buffer_next(app, 0, Access_Always); buffer != 0; buffer = get_buffer_next(app, buffer, Access_Always)) {
             Index__File *file = index__lookup_file(app, buffer);
             if (file != 0) {
                 for (Index__Note *note = file->first_note; note; note = note->next_sibling) {
@@ -338,6 +350,7 @@ CUSTOM_DOC("List all definitions in the current file and jump to the one selecte
     }
 }
 
+// @Note(ema): Figure out if this is udeful. Maybe @Rename(ema) to toggle_parenthetical_side? Or either way find a better name.
 CUSTOM_COMMAND_SIG(f4_toggle_enclosure_side)
 CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the closest enclosure.") {
 	using namespace nne;
@@ -388,6 +401,8 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
     }
 }
 
+//~ Working with projects
+
 CUSTOM_UI_COMMAND_SIG(f4_open_project)
 CUSTOM_DOC("Open a project by navigating to the project file.") {
 	using namespace nne;
@@ -436,6 +451,7 @@ CUSTOM_DOC("Open a project by navigating to the project file.") {
     }
 }
 
+// @Todo(ema): Make another one of these. Preserve the original one in case somebody wants to use the r4 version.
 CUSTOM_COMMAND_SIG(f4_setup_new_project)
 CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
 	using namespace nne;
@@ -450,16 +466,14 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
         path_bar.prompt = string_u8_litexpr("Absolute Path To Project Folder: ");
         path_bar.string = SCu8(project_folder_absolute, (u64)0);
         path_bar.string_capacity = sizeof(project_folder_absolute);
-        if(query_user_string(app, &path_bar))
-        {
+        if (query_user_string(app, &path_bar)) {
             String_Const_u8 full_file_name = push_u8_stringf(scratch, "%.*s/",
                                                              string_expand(path_bar.string));
             set_hot_directory(app, full_file_name);
             
             String_Const_u8 project_file_path = push_u8_stringf(scratch, "%.*s/project.4coder", string_expand(path_bar.string));
             FILE *file = fopen((char *)project_file_path.str, "wb");
-            if(file)
-            {
+            if (file) {
                 
                 char *string = R"PROJ(version(1);
                   
@@ -529,9 +543,7 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
                 fprintf(file, "%s", string);
                 fclose(file);
                 load_project(app);
-            }
-            else
-            {
+            } else {
                 // TODO(rjf): Error.
             }
         }
@@ -540,11 +552,12 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
     load_project(app);
 }
 
+//~ Moving the cursor
+
 NAMESPACE_BEGIN(nne)
 
-function i64
-F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
-                               Side side, Scan_Direction direction, i64 pos)
+function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
+											Side side, Scan_Direction direction, i64 pos)
 {
 	using namespace nne;
 	
@@ -659,9 +672,8 @@ F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer,
 }
 
 // TODO(rjf): Replace with the final one from Jack's layer.
-function i64
-F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
-                                        Side side, Scan_Direction direction, i64 pos)
+function i64 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
+													 Side side, Scan_Direction direction, i64 pos)
 {
 	using namespace nne;
 	
@@ -740,112 +752,97 @@ F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer
 
 NAMESPACE_END()
 
+// @Note(ema): They are probabily different only in notepad mode, since in emacs mode I didn't notice any difference.
+
 CUSTOM_COMMAND_SIG(f4_move_left)
-CUSTOM_DOC("Moves the cursor one character to the left.")
-{
-    using namespace nne;
+CUSTOM_DOC("Moves the cursor one character to the left.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
     View_ID view = get_active_view(app, Access_ReadVisible);
-    if(fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) ||
-       has_modifier(&mods, KeyCode_Shift))
-    {
+    
+	if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
         view_set_cursor_by_character_delta(app, view, -1);
     }
     no_mark_snap_to_cursor_if_shift(app, view);
 }
 
 CUSTOM_COMMAND_SIG(f4_move_right)
-CUSTOM_DOC("Moves the cursor one character to the right.")
-{
-    using namespace nne;
+CUSTOM_DOC("Moves the cursor one character to the right.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
     View_ID view = get_active_view(app, Access_ReadVisible);
-    if(fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) ||
-       has_modifier(&mods, KeyCode_Shift))
-    {
+    if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
         view_set_cursor_by_character_delta(app, view, +1);
     }
     no_mark_snap_to_cursor_if_shift(app, view);
 }
 
 CUSTOM_COMMAND_SIG(f4_move_up_token_occurrence)
-CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.")
-{
-    using namespace nne;
+CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_CursorTokenOrBlankLine_TEST));
+    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_down_token_occurrence)
-CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.")
-{
-    using namespace nne;
+CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_CursorTokenOrBlankLine_TEST));
+    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_right_token_boundary)
-CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.")
-{
-    using namespace nne;
+CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
+    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_left_token_boundary)
-CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.")
-{
-    using namespace nne;
+CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
+    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_token_boundary)
-CUSTOM_DOC("Deletes left to a token boundary.")
-{
-    using namespace nne;
+CUSTOM_DOC("Deletes left to a token boundary.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
+    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_delete_token_boundary)
-CUSTOM_DOC("Deletes right to a token boundary.")
-{
-    using namespace nne;
+CUSTOM_DOC("Deletes right to a token boundary.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, F4_Boundary_TokenAndWhitespace));
+    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_alpha_numeric_or_camel_boundary)
-CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.")
-{
-    using namespace nne;
+CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch,
-                                                                        boundary_alpha_numeric,
-                                                                        boundary_alpha_numeric_camel));
+    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
 }
 
 CUSTOM_COMMAND_SIG(f4_delete_alpha_numeric_or_camel_boundary)
-CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.")
-{
-    using namespace nne;
+CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch,
-                                                                       boundary_alpha_numeric,
-                                                                       boundary_alpha_numeric_camel));
+    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
 }
 
 CUSTOM_COMMAND_SIG(f4_home_first_non_whitespace)
@@ -919,10 +916,11 @@ CUSTOM_DOC("Goes to the beginning of the line.")
     }
 }
 
+//~ Indentation and autocomplete
+
 NAMESPACE_BEGIN(nne)
 
-function void
-F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_delta)
+function void F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_delta)
 {
     using namespace nne;
 	
@@ -1336,8 +1334,8 @@ CUSTOM_DOC("Interactively open a file out of the file system, filtered to files 
 
 NAMESPACE_BEGIN(nne)
 
-internal void
-F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
+// @Note(ema): The first "Line" refers to the style of comment (// vs /*) and the second "Line" refers to a line in the source code.
+internal void F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
     i64 cursor      = *cursor_p;
     i64 mark        = *mark_p;
     i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
@@ -1366,34 +1364,28 @@ F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer, i64 *cursor_
     *mark_p = mark;
 }
 
-internal void
-F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
-    using namespace nne;
+internal void F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
     
-    i64 cursor = *cursor_p;
-    i64 mark = *mark_p;
-    Range_i64 range = Ii64(cursor, mark);
+    i64       cursor = *cursor_p;
+    i64       mark   = *mark_p;
+    Range_i64 range  = Ii64(cursor, mark);
     
-    if(commented)
-    {
+    if (commented) {
         buffer_replace_range(app, buffer, Ii64(range.max, range.max), S8Lit("*/"));
         buffer_replace_range(app, buffer, Ii64(range.min, range.min), S8Lit("/*"));
-        if(cursor > mark) { cursor += 4; }
-        else              { mark   += 4; }
-    }
-    else if(range.max - range.min >= 2)
-    {
+        if (cursor > mark) { cursor += 4; }
+        else               { mark   += 4; }
+    } else if (range.max - range.min >= 2) {
         String_Const_u8 opener = push_buffer_range(app, scratch, buffer, Ii64(range.min, range.min+2));
         String_Const_u8 closer = push_buffer_range(app, scratch, buffer, Ii64(range.max-2, range.max));
-        if(string_match(opener, S8Lit("/*")) &&
-           string_match(closer, S8Lit("*/")))
-        {
+        if (string_match(opener, S8Lit("/*")) && string_match(closer, S8Lit("*/"))) {
             buffer_replace_range(app, buffer, Ii64(range.max-2, range.max), S8Lit(""));
             buffer_replace_range(app, buffer, Ii64(range.min, range.min+2), S8Lit(""));
-            if(cursor > mark) { cursor -= 4; }
-            if(mark > cursor) { mark -= 4; }
+            if (cursor > mark) { cursor -= 4; }
+            if (mark > cursor) { mark   -= 4; }
         }
     }
     
@@ -1401,120 +1393,98 @@ F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *curso
     *mark_p = mark;
 }
 
-function b32
-F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID buffer, i64 pos)
-{
-    using namespace nne;
+function b32 F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID buffer, i64 pos) {
+    // using namespace nne;
 	
 	b32 alread_has_comment = false;
-    u8 check_buffer[2];
-    if(buffer_read_range(app, buffer, Ii64(pos, pos + 2), check_buffer))
-    {
-        if(check_buffer[0] == '/' && check_buffer[1] == '*')
-        {
+    u8  check_buffer[2];
+    if (buffer_read_range(app, buffer, Ii64(pos, pos + 2), check_buffer)) {
+        if (check_buffer[0] == '/' && check_buffer[1] == '*') {
             alread_has_comment = true;
         }
     }
-    return(alread_has_comment);
+	
+    return alread_has_comment;
 }
 
-internal void
-F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented)
-{
-    using namespace nne;
+internal void F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
     
-    i64 cursor = *cursor_p;
-    i64 mark = *mark_p;
-    Range_i64 range = Ii64(cursor, mark);
-    Range_i64 line_range = F4_LineRangeFromPosRange(app, buffer, range);
+    i64         cursor = *cursor_p;
+    i64         mark   = *mark_p;
+    Range_i64   range  = Ii64(cursor, mark);
+    Range_i64   line_range = F4_LineRangeFromPosRange(app, buffer, range);
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     
-    // NOTE(rjf): No selection
-    if(range.min == range.max)
-    {
+    if (range.min == range.max) {                  // NOTE(rjf): No selection
         F4_SetLineCommentedOnLine(app, buffer, &cursor, &mark, commented);
-    }
-    
-    // NOTE(rjf): Single-Line Selection
-    else if(line_range.min == line_range.max)
-    {
+    } else if (line_range.min == line_range.max) { // NOTE(rjf): Single-Line Selection
         Token *min_token = get_token_from_pos(app, &tokens, (u64)range.min);
         Token *max_token = get_token_from_pos(app, &tokens, (u64)range.max);
         
-        // NOTE(rjf): Selection is inside comment
-        if(min_token == max_token && min_token && min_token->kind == TokenBaseKind_Comment)
-        {
+        if (min_token == max_token && min_token && min_token->kind == TokenBaseKind_Comment) {
+			// Selection is inside comment
+			
+#if 0
+			// @Cleanup(ema): Check if this works the same way. Remove the other, less clear line.
+			if (commented) {
+				comment_line(app);
+			} else {
+				uncomment_line(app);
+			}
+#else
             (commented ? comment_line : uncomment_line)(app);
+#endif
+        } else {
+			// Selection is not inside comment
+            
+			F4_SetBlockCommentedOnRange(app, buffer, &cursor, &mark, commented);
         }
-        
-        // NOTE(rjf): Selection is not inside comment
-        else 
-        {
-            F4_SetBlockCommentedOnRange(app, buffer, &cursor, &mark, commented);
-        }
-    }
-    
-    // NOTE(rjf): Multi-Line Selection
-    else if(line_range.min != line_range.max)
-    {
-        if(commented)
-        {
+    } else if (line_range.min != line_range.max) { // NOTE(rjf): Multi-Line Selection
+        if (commented) {
             i64 min_pos = Min(cursor, mark);
             i64 line = get_line_number_from_pos(app, buffer, min_pos);
             i64 start_of_line = get_line_start_pos(app, buffer, line);
             
-            // NOTE(rjf): Selection starts on first column.
-            if(min_pos == start_of_line)
-            {
-                for(i64 i = line_range.min; i <= line_range.max; i += 1)
-                {
+            if (min_pos == start_of_line) {
+                // NOTE(rjf): Selection starts on first column.
+				
+				for (i64 i = line_range.min; i <= line_range.max; i += 1) {
                     i64 cursor2 = get_line_start_pos(app, buffer, i);
-                    i64 mark2 = get_line_end_pos(app, buffer, i);
+                    i64 mark2   = get_line_end_pos(app, buffer, i);
                     F4_SetLineCommentedOnLine(app, buffer, &cursor2, &mark2, commented);
                 }
-                if(cursor < mark)
-                {
+				
+                if (cursor < mark) {
                     cursor = get_line_start_pos(app, buffer, line_range.min);
-                    mark = get_line_end_pos(app, buffer, line_range.max);
-                }
-                else
-                {
-                    mark = get_line_start_pos(app, buffer, line_range.min);
+                    mark   = get_line_end_pos(app, buffer, line_range.max);
+                } else {
+                    mark   = get_line_start_pos(app, buffer, line_range.min);
                     cursor = get_line_end_pos(app, buffer, line_range.max);
                 }
+            } else {
+                // NOTE(rjf): Selection does not start on first column.
+				
+				F4_SetBlockCommentedOnRange(app, buffer, &cursor, &mark, 1);
             }
-            
-            // NOTE(rjf): Selection does not start on first column.
-            else
-            {
-                F4_SetBlockCommentedOnRange(app, buffer, &cursor, &mark, 1);
-            }
-        }
-        else
-        {
+        } else {
             b32 starts_with_block_comment = F4_CBlockCommentStartsAtPosition(app, buffer, range.min);
-            if(starts_with_block_comment)
-            {
+            if (starts_with_block_comment) {
                 F4_SetBlockCommentedOnRange(app, buffer, &cursor, &mark, 0);
-            }
-            else
-            {
-                for(i64 i = line_range.min; i <= line_range.max; i += 1)
-                {
+            } else {
+                for (i64 i = line_range.min; i <= line_range.max; i += 1) {
                     i64 cursor2 = get_line_start_pos(app, buffer, i);
-                    i64 mark2 = get_line_start_pos(app, buffer, i);
+                    i64 mark2   = get_line_start_pos(app, buffer, i);
                     F4_SetLineCommentedOnLine(app, buffer, &cursor2, &mark2, 0);
                 }
-                if(cursor < mark)
-                {
+				
+                if (cursor < mark) {
                     cursor = get_line_start_pos(app, buffer, line_range.min);
-                    mark = get_line_end_pos(app, buffer, line_range.max);
-                }
-                else
-                {
-                    mark = get_line_start_pos(app, buffer, line_range.min);
+                    mark   = get_line_end_pos(app, buffer, line_range.max);
+                } else {
+                    mark   = get_line_start_pos(app, buffer, line_range.min);
                     cursor = get_line_end_pos(app, buffer, line_range.max);
                 }
             }
@@ -1527,6 +1497,7 @@ F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, 
 
 NAMESPACE_END()
 
+// @Rename(ema): Remove f4_ prefix
 CUSTOM_COMMAND_SIG(f4_comment_selection)
 CUSTOM_DOC("Performs VS-style commenting on the selected range.") {
     View_ID   view   = get_active_view(app, Access_ReadWriteVisible);
@@ -1569,9 +1540,8 @@ struct LOC_Info {
     i64 open_brace_only_lines;
 };
 
-function LOC_Info *
-LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
-    using namespace nne;
+function LOC_Info *LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
+    // using namespace nne;
 	
 	LOC_Info *first = 0;
     LOC_Info *last  = 0;
@@ -1589,14 +1559,14 @@ LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
             line.size -= 1;
         }
         
-        //- rjf: begin a section if we find a root divider comment here
+        // rjf: begin a section if we find a root divider comment here
         if (line.size >= 3 && line.str[0] == '/' && line.str[1] == '/' && line.str[2] == '~') {
             active_info = push_array_zero(arena, LOC_Info, 1);
             active_info->name = push_string_copy(arena, string_substring(line, Ii64(3, line.size)));
             sll_queue_push(first, last, active_info);
         }
         
-        //- rjf: find out if this is a line with only whitespace
+        // rjf: find out if this is a line with only whitespace
         b32 is_only_whitespace = true;
         {
             for (u64 i = 0; i < line.size; i += 1) {
@@ -1607,7 +1577,7 @@ LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
             }
         }
         
-        //- rjf: find out if this is a line with only whitespace and an open brace
+        // rjf: find out if this is a line with only whitespace and an open brace
         b32 is_only_open_brace = false;
         if (is_only_whitespace == false) {
             for (u64 i = 0; i < line.size; i += 1) {
@@ -1620,7 +1590,7 @@ LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
             }
         }
         
-        //- rjf: increment line counts
+        // rjf: increment line counts
         {
             file_info->lines += 1;
             if (active_info != 0) {
@@ -1646,8 +1616,8 @@ LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
     return first;
 }
 
-function int
-compare_LOC_Info(const void *a_void, const void *b_void) { // @Note(ema): For qsort
+// @Note(ema): For qsort
+function int compare_LOC_Info(const void *a_void, const void *b_void) {
     nne::LOC_Info *a = cast(nne::LOC_Info *)a_void;
     nne::LOC_Info *b = cast(nne::LOC_Info *)b_void;
 	
@@ -1659,21 +1629,22 @@ compare_LOC_Info(const void *a_void, const void *b_void) { // @Note(ema): For qs
 
 NAMESPACE_END()
 
-//- Count Lines of Code
+// Count Lines of Code
 // @Rename(ema): Something more meaningful
 
 CUSTOM_COMMAND_SIG(f4_loc)
 CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by section, and outputs to the *loc* buffer.") {
-    using namespace nne;
+    // using namespace nne;
+	using nne::LOC_Info;
 	
 	Scratch_Block scratch(app);
     View_ID   view   = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     
-    //- rjf: get all sections and counts from buffer
+    // rjf: get all sections and counts from buffer
     LOC_Info *infos_list = nne::LOC_Info_from_buffer(app, scratch, buffer);
     
-    //- rjf: build unsorted info in array form
+    // rjf: build unsorted info in array form
     int info_count = 0;
     LOC_Info *info_array = 0;
     {
@@ -1685,10 +1656,10 @@ CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by se
         }
     }
     
-    //- rjf: sort array
+    // rjf: sort array
     qsort(info_array, info_count, sizeof(LOC_Info), nne::compare_LOC_Info);
     
-    //- rjf: print loc info
+    // rjf: print loc info
     Buffer_ID loc_buffer = get_buffer_by_name(app, str8_lit("*loc*"), AccessFlag_Write);
     if (loc_buffer != 0) {
         clear_buffer(app, loc_buffer);
@@ -1726,28 +1697,31 @@ CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by se
 }
 
 CUSTOM_COMMAND_SIG(f4_remedy_open_cursor)
-CUSTOM_DOC("Opens the active panel's file in an actively-running RemedyBG instance, and moves to the cursor's line position.")
-{
-    using namespace nne;
+CUSTOM_DOC("Opens the active panel's file in an actively-running RemedyBG instance, and moves to the cursor's line position.") {
+    // using namespace nne;
 	
 	Scratch_Block scratch(app);
-    View_ID view = get_active_view(app, Access_Read);
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
-    String8 buffer_name = push_buffer_file_name(app, scratch, buffer);
-    i64 pos = view_get_cursor_pos(app, view);
+	
+    View_ID   view        = get_active_view(app, Access_Read);
+    Buffer_ID buffer      = view_get_buffer(app, view, Access_Read);
+    String8   buffer_name = push_buffer_file_name(app, scratch, buffer);
+	
+    i64 pos  = view_get_cursor_pos(app, view);
     i64 line = get_line_number_from_pos(app, buffer, pos);
+	
     String8 hot_directory = push_hot_directory(app, scratch);
-    Child_Process_ID child_id = create_child_process(app, hot_directory, push_stringf(scratch, "remedybg.exe open-file %.*s %i", string_expand(buffer_name), (int)line));
-    (void)child_id;
+	
+    Child_Process_ID child_id = create_child_process(app, hot_directory, push_stringf(scratch, "remedybg.exe open-file %.*s %i", string_expand(buffer_name), cast(int)line));
+    cast(void)child_id;
 }
 
 CUSTOM_COMMAND_SIG(f4_bump_to_column)
 CUSTOM_DOC("Insert the required number of spaces to get to a specified column number.") {
-    using namespace nne;
+    // using namespace nne;
 	
-	View_ID view = get_active_view(app, Access_Always);
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
-    Face_ID face_id = get_face_id(app, buffer);
+	View_ID   view    = get_active_view(app, Access_Always);
+    Buffer_ID buffer  = view_get_buffer(app, view, Access_Always);
+    Face_ID   face_id = get_face_id(app, buffer);
     Face_Description description = get_face_description(app, face_id);
     
     Query_Bar_Group group(app);
@@ -1756,18 +1730,19 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
     bar.prompt = string_u8_litexpr("Column Number: ");
     bar.string = SCu8(string_space, (u64)0);
     bar.string_capacity = sizeof(string_space);
-    if(query_user_number(app, &bar))
-    {
+    
+	if (query_user_number(app, &bar)) {
         i64 column_number = (i64)string_to_integer(bar.string, 10);
         i64 cursor = view_get_cursor_pos(app, view);
         i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
         i64 cursor_column = cursor - get_line_start_pos(app, buffer, cursor_line) + 1;
         i64 spaces_to_insert = column_number - cursor_column;
         History_Group group = history_group_begin(app, buffer);
-        for(i64 i = 0; i < spaces_to_insert; i += 1)
-        {
+		
+        for (i64 i = 0; i < spaces_to_insert; i += 1) {
             buffer_replace_range(app, buffer, Ii64(cursor, cursor), str8_lit(" "));
         }
+		
         view_set_cursor(app, view, seek_pos(cursor+spaces_to_insert));
         view_set_mark(app, view, seek_pos(cursor+spaces_to_insert));
         history_group_end(group);
