@@ -144,7 +144,7 @@ NAMESPACE_END()
 
 //~ Whenever 4coder's core is ready for the custom layer to start up, this is called.
 // In the custom layer entry point above, where the bindings are set, this is passed as a pointer to the editor core. See the bindings.cpp file for more info.
-CUSTOM_COMMAND_SIG(fleury_startup)
+CUSTOM_COMMAND_SIG(custom_startup)
 CUSTOM_DOC("Custom startup event") {
     ProfileScope(app, "default startup");
     
@@ -332,6 +332,3 @@ CUSTOM_DOC("Custom startup event") {
         clear_all_layouts(app);
     }
 }
-
-#undef procedure
-#undef cast

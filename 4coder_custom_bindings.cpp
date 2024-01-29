@@ -81,7 +81,7 @@ function void set_absolutely_necessary_bindings(Mapping *mapping) {
     
 	// Global bindings (affecting the whole editor)
     SelectMap(global_map_id);
-    BindCore(fleury_startup,   CoreCode_Startup);
+    BindCore(custom_startup,   CoreCode_Startup);
     BindCore(default_try_exit, CoreCode_TryExit);
     Bind(exit_4coder,          KeyCode_F4, KeyCode_Alt);
     BindMouseWheel(mouse_wheel_scroll);
