@@ -7,11 +7,10 @@
 #define procedure static
 #define cast(t) (t)
 
-#pragma warning(push)
-#pragma warning(disable: 4102)
-#pragma warning(disable: 4702)
+#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
+#pragma warning(disable: 4702) // Unreachable code was detected.
 
-//~ NOTE(rjf): For DION team docs server stuff.
+//~ For DION team docs server stuff.
 // {
 #if OS_WINDOWS
 #include <WinSock2.h>
@@ -22,18 +21,20 @@ typedef int socklen_t;
 #endif
 // }
 
-//~ NOTE(rjf): Macros and pragmase stuff that have to be put here for various reasons.
+//~ Default headers
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "4coder_default_include.cpp"
-#pragma warning(disable : 4706)
-#pragma warning(disable : 4456)
+
+//~ Macros and pragmase stuff that have to be put here for various reasons.
+#pragma warning(disable: 4706) // Assignment within conditional expression. @Cleanup(ema): Where? If in the custom layer, remove. If in the base editor, explain.
+#pragma warning(disable: 4456) // Declaration of 'identifier' hides previous local declaration. @Cleanup(ema): Where? Should probabily be fixed.
 #define COMMAND_SERVER_PORT 4041
 #define COMMAND_SERVER_UPDATE_PERIOD_MS 200
 #define COMMAND_SERVER_AUTO_LAUNCH_IF_FILE_PRESENT "project_namespaces.txt"
 
-//~ NOTE(rjf): @f4_headers
+//~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"
 #include "4coder_fleury_audio.h"
 #include "4coder_custom_languages.h"
@@ -54,11 +55,11 @@ typedef int socklen_t;
 #include "4coder_fleury_bindings.h"
 #include "4coder_custom_base_commands.h"
 #if OS_WINDOWS
-#include "4coder_fleury_command_server.h"
+# include "4coder_fleury_command_server.h"
 #endif
 #include "4coder_custom_hooks.h"
 
-//~ NOTE(rjf): @f4_src
+//~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
 #include "4coder_fleury_audio.cpp"
 #include "4coder_custom_languages.cpp"
@@ -79,7 +80,7 @@ typedef int socklen_t;
 #include "4coder_fleury_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
-#include "4coder_fleury_command_server.cpp"
+# include "4coder_fleury_command_server.cpp"
 #endif
 #include "4coder_fleury_casey.cpp"
 #include "4coder_custom_hooks.cpp"
@@ -90,7 +91,7 @@ typedef int socklen_t;
 //~ NOTE(rjf): 4coder Stuff
 #include "generated/managed_id_metadata.cpp"
 
-//~ NOTE(rjf): @f4_custom_layer_initialization
+//~ Custom layer initialization
 
 void custom_layer_init(Application_Links *app) {
     default_framework_init(app);
@@ -113,14 +114,13 @@ void custom_layer_init(Application_Links *app) {
     
     // NOTE(rjf): Set up mapping.
     {
-        Thread_Context *tctx = get_thread_context(app);
-        mapping_init(tctx, &framework_mapping);
-        String_Const_u8 bindings_file = string_u8_litexpr("bindings.4coder");
+        mapping_init(get_thread_context(app), &framework_mapping);
+		
         nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
-        if (!dynamic_binding_load_from_file(app, &framework_mapping, bindings_file)) {
+        if (!dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
             nne::F4_SetDefaultBindings(&framework_mapping);
         }
-        nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
+		nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
     }
     
 	nne::index__initialize();
@@ -129,12 +129,7 @@ void custom_layer_init(Application_Links *app) {
 
 NAMESPACE_BEGIN(nne)
 
-//~ NOTE(rjf): @f4_startup Whenever 4coder's core is ready for the custom layer to start up,
-// this is called.
-
-// TODO(rjf): This is only being used to check if a font file exists because
-// there's a bug in try_create_new_face that crashes the program if a font is
-// not found. This function is only necessary until that is fixed.
+// TODO(rjf): This is only being used to check if a font file exists because there's a bug in try_create_new_face that crashes the program if a font is not found. This function is only necessary until that is fixed.
 function b32 is_file_readable(String_Const_u8 path) {
     b32 result = false;
     FILE *file = fopen(cast(char *)path.str, "r");
@@ -147,6 +142,8 @@ function b32 is_file_readable(String_Const_u8 path) {
 
 NAMESPACE_END()
 
+//~ Whenever 4coder's core is ready for the custom layer to start up, this is called.
+// In the custom layer entry point above, where the bindings are set, this is passed as a pointer to the editor core. See the bindings.cpp file for more info.
 CUSTOM_COMMAND_SIG(fleury_startup)
 CUSTOM_DOC("Custom startup event") {
     ProfileScope(app, "default startup");
@@ -338,5 +335,3 @@ CUSTOM_DOC("Custom startup event") {
 
 #undef procedure
 #undef cast
-
-#pragma warning(pop)
