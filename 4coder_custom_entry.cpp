@@ -52,7 +52,7 @@ typedef int socklen_t;
 #include "4coder_fleury_pos_context_tooltips.h"
 #include "4coder_fleury_code_peek.h"
 #include "4coder_fleury_recent_files.h"
-#include "4coder_fleury_bindings.h"
+#include "4coder_custom_bindings.h"
 #include "4coder_custom_base_commands.h"
 #if OS_WINDOWS
 # include "4coder_fleury_command_server.h"
@@ -77,7 +77,7 @@ typedef int socklen_t;
 #include "4coder_fleury_pos_context_tooltips.cpp"
 #include "4coder_fleury_code_peek.cpp"
 #include "4coder_fleury_recent_files.cpp"
-#include "4coder_fleury_bindings.cpp"
+#include "4coder_custom_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
 # include "4coder_fleury_command_server.cpp"
@@ -116,11 +116,11 @@ void custom_layer_init(Application_Links *app) {
     {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
-        nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping);
+        nne::set_absolutely_necessary_bindings(&framework_mapping);
         if (!dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
-            nne::F4_SetDefaultBindings(&framework_mapping);
+            nne::set_default_bindings(&framework_mapping);
         }
-		nne::F4_SetAbsolutelyNecessaryBindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
+		nne::set_absolutely_necessary_bindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
     }
     
 	nne::index__initialize();
