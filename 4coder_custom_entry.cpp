@@ -129,6 +129,9 @@ void custom_layer_init(Application_Links *app) {
 }
 
 // @Todo(ema): Reload from the current directory (not project)? Is it possible?
+// Probaily use def_search_normal_load_list() to get the executable directory (the so-called BinPath?)
+
+// @Todo(ema): With the same strategy also add a command that goes to the executable directory (sets it as the current directory). It's the parallel to Ctrl+H that goes to the project directory.
 
 CUSTOM_COMMAND_SIG(reload_config_file_from_project_directory)
 CUSTOM_DOC("Reload the config.4coder file from the project directory.") {

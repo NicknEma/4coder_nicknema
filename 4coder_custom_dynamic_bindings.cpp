@@ -45,7 +45,7 @@ internal String_Const_u8 search_get_full_path(Arena *arena, List_String_Const_u8
 
 // @Copypaste(ema): From 4coder_dynamic_bindings.cpp
 // The only (meaningful) difference is the call to a different version def_search_get_full_path() that checks for a backslash before inserting one. This fix might not be necessary if we switch to a community-maintained fork of 4coder that solves it. If it still isn't solved, we could push the change ourselves.
-internal b32 dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_Const_u8 filename){
+internal b32 dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_Const_u8 filename) {
     b32 result = false;
     
     Scratch_Block scratch(app);
@@ -69,7 +69,8 @@ internal b32 dynamic_binding_load_from_file(Application_Links *app, Mapping *map
         String_Const_u8 data = dump_file_handle(scratch, file);
         Config *parsed = def_config_from_text(app, scratch, filename, data);
 		fclose(file);
-        
+        // @Cleanup(ema): Decouple the two: make one that takes just the contents string, and a wrapper that takes the filename and then call the other. Also give the ability to specify the desired priority for the folders (executable dir, project dir, user dir).
+		
         if (parsed) {
             result = true;
             
