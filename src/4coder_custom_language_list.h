@@ -2,10 +2,10 @@
 #define FCODER_CUSTOM_LANGUAGE_LIST_H
 
 // NOTE(rjf): Include language files here.
-#include "generated/4coder_lexer_jai.h"
-#include "generated/4coder_lexer_jai.cpp"
-#include "generated/4coder_lexer_odin.h"
-#include "generated/4coder_lexer_odin.cpp"
+#include "generated/4coder_custom_lexer_jai.h"
+#include "generated/4coder_custom_lexer_jai.cpp"
+#include "generated/4coder_custom_lexer_odin.h"
+#include "generated/4coder_custom_lexer_odin.cpp"
 
 #include "4coder_custom_lang_cpp.cpp"
 #include "4coder_custom_lang_jai.cpp"

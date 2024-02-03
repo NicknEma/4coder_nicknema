@@ -1,11 +1,10 @@
 version(2);
-project_name = "4coder_nicknema";
+project_name = "custom_nicknema";
 
 patterns = {
-  "*.cpp",
-  "*.hpp",
   "*.c",
   "*.h",
+  "*.cpp",
   "*.bat",
   "*.sh",
   "*.4coder",
@@ -16,8 +15,7 @@ blacklist_patterns = {
 };
 
 load_paths_base = {
-  { .path = ".", .relative = true, .recursive = true, },
-  { .path = "../4coder", .relative = true, .recursive = true, },
+  { ".", .relative = true, .recursive = true, },
 };
 
 load_paths = {
@@ -31,6 +29,12 @@ commands = {
     .win   =   "build.bat",
     .linux = "./build.sh",
     .mac   = "./build.sh",
+  },
+
+  .build_lexers = { .out = "*lexers compilation*", .footer_panel = true, .save_dirty_files = true,
+    .win   =   "build_lexers.bat",
+    .linux = "./build_lexers.sh",
+    .mac   = "./build_lexers.sh",
   },
 
   .check_statics = { .out = "*statics check*", .footer_panel = false, .save_dirty_files = false,
@@ -49,6 +53,7 @@ commands = {
 
 fkey_command = {
   .F1 = "build",
-  .F2 = "check_statics",
-  .F3 = "check_notes",
+  .F2 = "build_lexers",
+  .F3 = "check_statics",
+  .F4 = "check_notes",
 };
