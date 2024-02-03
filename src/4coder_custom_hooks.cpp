@@ -21,7 +21,7 @@ F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
     Token_Array token_array = get_token_array_from_buffer(app, buffer);
     if(token_array.tokens != 0)
     {
-        F4_SyntaxHighlight(app, text_layout_id, &token_array);
+        do_syntax_highlight(app, text_layout_id, &token_array);
         
         // NOTE(allen): Scan for TODOs and NOTEs
         b32 use_comment_keywords = def_get_config_b32(vars_save_string_lit("use_comment_keywords"));
@@ -56,7 +56,7 @@ F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
     // NOTE(rjf): Brace highlight
     {
         Color_Array colors = finalize_color_array(fleury_color_brace_highlight);
-        if(colors.count >= 1 && F4_ARGBIsValid(colors.vals[0]))
+        if(colors.count >= 1 && argb_is_valid(colors.vals[0]))
         {
             F4_Brace_RenderHighlight(app, buffer, text_layout_id, cursor_pos,
                                      colors.vals, colors.count);
@@ -309,7 +309,7 @@ F4_RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
     {
         Rect_f32 view_rect = view_get_screen_rect(app, view_id);
         ARGB_Color color = fcolor_resolve(fcolor_id(fleury_color_inactive_pane_overlay));
-        if(F4_ARGBIsValid(color))
+        if(argb_is_valid(color))
         {
             draw_rectangle(app, view_rect, 0.f, color);
         }
@@ -388,7 +388,7 @@ F4_DrawFileBar(Application_Links *app, View_ID view_id, Buffer_ID buffer, Face_I
     }
     
     push_fancy_string(scratch, &list, base_color, S8Lit(" Syntax Mode: "));
-    push_fancy_string(scratch, &list, base_color, F4_SyntaxOptionString());
+    push_fancy_string(scratch, &list, base_color, read_syntax_options_string());
     
     Vec2_f32 p = bar.p0 + V2f32(2.f, 2.f);
     draw_fancy_line(app, face_id, fcolor_zero(), &list, p);
@@ -404,7 +404,7 @@ F4_DrawFileBar(Application_Links *app, View_ID view_id, Buffer_ID buffer, Face_I
             bar.y1,
         };
         ARGB_Color progress_bar_color = fcolor_resolve(fcolor_id(fleury_color_file_progress_bar));
-        if(F4_ARGBIsValid(progress_bar_color))
+        if(argb_is_valid(progress_bar_color))
         {
             draw_rectangle(app, progress_bar_rect, 0, progress_bar_color);
         }
@@ -440,7 +440,7 @@ F4_Render(Application_Links *app, Frame_Info frame_info, View_ID view_id)
         else if(is_active_view == 0)
         {
             ARGB_Color inactive_bg_color = fcolor_resolve(fcolor_id(fleury_color_inactive_pane_background));
-            if(F4_ARGBIsValid(inactive_bg_color))
+            if(argb_is_valid(inactive_bg_color))
             {
                 color = inactive_bg_color;
             }
@@ -455,8 +455,8 @@ F4_Render(Application_Links *app, Frame_Info frame_info, View_ID view_id)
         if(def_get_config_b32(vars_save_string_lit("f4_margin_use_mode_color")) &&
            is_active_view)
         {
-            color = F4_GetColor(app, ColorCtx_Cursor(power_mode.enabled ? ColorFlag_PowerMode : 0,
-                                                     GlobalKeybindingMode));
+            color = get_color(app, make_cursor_color_context(power_mode.enabled ? Color_Flag_PowerMode : 0,
+															 GlobalKeybindingMode));
         }
         draw_margin(app, view_rect, region, color);
     }
@@ -844,7 +844,7 @@ F4_Tick(Application_Links *app, Frame_Info frame_info)
     linalloc_clear(&global_frame_arena);
     global_tooltip_count = 0;
     
-    F4_TickColors(app, frame_info);
+    tick_colors(app, frame_info);
     index__tick(app);
     F4_CLC_Tick(frame_info);
     F4_PowerMode_Tick(app, frame_info);

@@ -154,7 +154,7 @@ F4_Brace_RenderCloseBraceAnnotation(Application_Links *app, Buffer_ID buffer, Te
             {
                 ARGB_Color color = finalize_color(defcolor_comment, 0);
                 Color_Array colors = finalize_color_array(fleury_color_brace_annotation);
-                if (colors.count >= 1 && F4_ARGBIsValid(colors.vals[0])) {
+                if (colors.count >= 1 && argb_is_valid(colors.vals[0])) {
                     color = colors.vals[(ranges.count - i - 1) % colors.count];
                 }
                 
@@ -294,7 +294,7 @@ F4_Brace_RenderLines(Application_Links *app, Buffer_ID buffer, View_ID view,
             line_rect.y1 = y_end;
             
             Color_Array colors = finalize_color_array(fleury_color_brace_line);
-            if (colors.count >= 1 && F4_ARGBIsValid(colors.vals[0])) {
+            if (colors.count >= 1 && argb_is_valid(colors.vals[0])) {
                 draw_rectangle(app, line_rect, 0.5f, 
                                colors.vals[(ranges.count - i - 1) % colors.count]);
             }

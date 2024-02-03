@@ -39,7 +39,7 @@ typedef int socklen_t;
 #include "4coder_fleury_audio.h"
 #include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
 #include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
-#include "4coder_fleury_colors.h"
+#include "4coder_custom_colors.h"                // Syntax highlighting and color animations
 #include "4coder_fleury_render_helpers.h"
 #include "4coder_fleury_brace.h"                 // Functions for rendering braces-related stuff
 #include "4coder_fleury_error_annotations.h"
@@ -64,7 +64,7 @@ typedef int socklen_t;
 #include "4coder_fleury_audio.cpp"
 #include "4coder_custom_languages.cpp"
 #include "4coder_custom_index.cpp"
-#include "4coder_fleury_colors.cpp"
+#include "4coder_custom_colors.cpp"
 #include "4coder_fleury_render_helpers.cpp"
 #include "4coder_fleury_brace.cpp"
 #include "4coder_fleury_error_annotations.cpp"

@@ -101,7 +101,7 @@ peek_count += 1;\
                     Token_Array match_token_array = get_token_array_from_buffer(app, match_buffer);
                     if(match_token_array.tokens != 0)
                     {
-                        F4_SyntaxHighlight(app, text_layout_id, &match_token_array);
+                        do_syntax_highlight(app, text_layout_id, &match_token_array);
                     }
                     else
                     {

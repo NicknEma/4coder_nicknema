@@ -269,7 +269,7 @@ internal LANGUAGE_HIGHLIGHTER(metadesk__highlight) {
         }
 		
         if (token->sub_kind == Metadesk_Token_SubKind_Tag) {
-            paint_text_color(app, text_layout_id, Ii64(token), F4_ARGBFromID(color_table, fleury_color_index_comment_tag, 0));
+            paint_text_color(app, text_layout_id, Ii64(token), argb_from_id(color_table, fleury_color_index_comment_tag, 0));
         }
 		
         if (!token_it_inc_all(&it)) {
