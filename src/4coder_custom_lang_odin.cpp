@@ -5,8 +5,8 @@ NAMESPACE_BEGIN(nne)
 
 //~ Index
 
-// @Note(ema): Parses a declaration list, such as the formal parameters of a function or the members of a struct.
-internal void odin__parse_decl_set(Index__Parse_Context *context, Index__Note *parent) {
+// Parses a declaration list, such as the formal parameters of a function or the members of a struct.
+internal void odin__parse_decl_list(Index__Parse_Context *context, Index__Note *parent) {
     Index__Note *last_parent = index__push_parent_note(context, parent);
     
     for (; !context->done; ) {
@@ -19,10 +19,9 @@ internal void odin__parse_decl_set(Index__Parse_Context *context, Index__Note *p
             for (; !context->done; ) {
                 Token *token = token_it_read(&context->it);
 				
-				// "<ident> :," ??
                 if (token->sub_kind == TokenOdinKind_Comma ||
                     token->sub_kind == TokenOdinKind_Semicolon) {
-					// We saw a comma: skip it and resume the outer loop, parsing the next decl.
+					// We saw a comma or a semicolon: skip it and resume the outer loop, parsing the next decl.
                     index__parse_context_inc(context, Index__Token_Skip_Flag_Skip_Whitespace);
                     break;
                 } else if (token->kind == TokenBaseKind_ScopeClose ||
@@ -40,16 +39,16 @@ internal void odin__parse_decl_set(Index__Parse_Context *context, Index__Note *p
     index__pop_parent_note(context, last_parent);
 }
 
-internal void odin__parse_decl_set_braces(Index__Parse_Context *context, Index__Note *parent) {
+internal void odin__parse_decl_list_in_braces(Index__Parse_Context *context, Index__Note *parent) {
     if (index__require_token(context, str8_lit("{"), Index__Token_Skip_Flag_Skip_Whitespace)) {
-        odin__parse_decl_set(context, parent);
+        odin__parse_decl_list(context, parent);
         index__require_token(context, str8_lit("}"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
 
-internal void odin__parse_decl_set_parens(Index__Parse_Context *context, Index__Note *parent) {
+internal void odin__parse_decl_list_in_parens(Index__Parse_Context *context, Index__Note *parent) {
     if (index__require_token(context, str8_lit("("), Index__Token_Skip_Flag_Skip_Whitespace)) {
-        odin__parse_decl_set(context, parent);
+        odin__parse_decl_list(context, parent);
         index__require_token(context, str8_lit(")"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
@@ -65,7 +64,7 @@ function FILE_INDEXER(odin__index_file) {
         Index__Token_Skip_Flags flags = Index__Token_Skip_Flag_Skip_Whitespace;
         
         {
-            // NOTE(rjf): Handle nests.
+            // Handle nests.
             Token *token = token_it_read(&context->it);
             if (token) {
                 if (token->kind == TokenBaseKind_ScopeOpen) {
@@ -93,37 +92,35 @@ function FILE_INDEXER(odin__index_file) {
 					index__parse_context_inc(context, flags);
 				}
 				
+				Token *rhs_name = 0;
                 if (index__require_token(context, S(":"), flags)) {
 					// <name> ::
 					
-					// Procedures
+					// Procedures.
 					// @Note(ema): This only looks for the prototype of the procedure, it does not
 					// walk through the whole body.
 					if ((index__require_token(context, S("proc"), flags)) ||
-						(index__require_token_subkind(context, TokenOdinKind_ForceInline, 0, flags) &&
+						(index__require_token(context, S("#force_inline"), flags) &&
 						 index__require_token(context, S("proc"), flags))) {
 						// <name> :: proc
-						// <name> :: #<keyword> proc
+						// <name> :: #force_inline proc
 						
 						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Function, 0);
-						
-						// @Todo(ema): Skip eventual string before open parenthesis.
-						
-						odin__parse_decl_set_parens(context, parent);
+						odin__parse_decl_list_in_parens(context, parent);
 					}
 					
 					// Structs.
 					else if (index__require_token(context, S("struct"), flags)) {
 						// <name> :: struct
 						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Type, Index__Note_Flag_Product_Type);
-						odin__parse_decl_set_braces(context, parent);
+						odin__parse_decl_list_in_braces(context, parent);
 					}
 					
 					// Unions.
 					else if (index__require_token(context, S("union"), flags)) {
 						// <name> :: union
 						Index__Note *parent = index__make_note(context, Ii64(name), Index__Note_Kind_Type, Index__Note_Flag_Sum_Type);
-						odin__parse_decl_set_braces(context, parent);
+						odin__parse_decl_list_in_braces(context, parent);
 					}
 					
 					// Enums.
@@ -134,22 +131,46 @@ function FILE_INDEXER(odin__index_file) {
 					
 					// Distinct types.
 					else if (index__require_token(context, S("distinct"), flags) &&
-							 index__require_token_kind(context, TokenBaseKind_Identifier, 0, flags)) {
+							 index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
 						// <name> :: distinct <ident>
-						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
+						
+						Index__Note_Flags flags = 0;
+						Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
+						if (rhs_note) {
+							flags = rhs_note->flags;
+						}
+						
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, flags);
 					}
 					
 					// Type directives.
 					else if (index__require_token(context, S("#type"), flags)) {
 						// <name> :: #type
+						
+						// @Incomplete: what kind of type?
 						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
 					}
 					
-					// Constants and type aliases.
-					else if (index__require_token_kind(context, TokenBaseKind_Identifier,     0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralInteger, 0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralFloat,   0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralString,  0, flags)) {
-						// <name> :: <ident>
+					// Literal constants.
+					else if (index__require_token_kind(context, TokenBaseKind_LiteralInteger, 0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralFloat, 0, flags) || index__require_token_kind(context, TokenBaseKind_LiteralString,  0, flags)) {
 						// <name> :: <literal>
 						index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
+					}
+					
+					// Aliases.
+					else if (index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
+						// <name> :: <ident>
+						
+						Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
+						if (rhs_note) {
+							if (rhs_note->kind == Index__Note_Kind_Type) {
+								index__make_note(context, Ii64(name), Index__Note_Kind_Type, rhs_note->flags);
+							} else {
+								index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
+							}
+						} else {
+							index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
+						}
 					}
 				} else if (index__require_token(context, str8_lit("="), flags)) {
 					// <name> :=
@@ -161,7 +182,7 @@ function FILE_INDEXER(odin__index_file) {
 		
 #undef S
 		
-		//~ NOTE(rjf): Comment Tags
+		//~ Comment Tags.
 		// @Note(ema): When we come across a comment, we call index::parse_comment that figures out if the comment contains annotations, notes or todos.
 		else if (index__require_token_kind(context, TokenBaseKind_Comment, &name, Index__Token_Skip_Flag_Skip_Whitespace)) {
 			index__parse_comment(context, name);
@@ -224,8 +245,8 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
     
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     
-    // NOTE(rjf): Search for left parentheses (function call or macro invocation).
-    // @Note(ema): Why?
+    // Search for left parentheses (function call or macro invocation).
+    // The corresponding line will be used to display the tooltip.
     {
         Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
         
@@ -259,7 +280,7 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
     }
     
     // NOTE(rjf): Search for *.* pattern (accessing a type)
-    // @Note(ema): Again, why?
+    // The corresponding line will be used to display the tooltip.
     {
         Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
         
