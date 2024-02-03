@@ -1,7 +1,7 @@
 #ifndef FCODER_CUSTOM_LANGUAGE_LIST_H
 #define FCODER_CUSTOM_LANGUAGE_LIST_H
 
-// NOTE(rjf): Include language files here.
+// Include language files here.
 #include "generated/4coder_custom_lexer_jai.h"
 #include "generated/4coder_custom_lexer_jai.cpp"
 #include "generated/4coder_custom_lexer_odin.h"
@@ -14,9 +14,9 @@
 
 NAMESPACE_BEGIN(nne)
 
-// NOTE(rjf): @f4_register_languages Register languages.
+// This procedure just calls register_language for each implemented language.
 procedure void register_languages(void) {
-    // C/C++
+    // C/C++.
     {
         String_Const_u8 extensions[] = {
             S8Lit("cpp"), S8Lit("cc"), S8Lit("c"), S8Lit("cxx"),
@@ -34,7 +34,7 @@ procedure void register_languages(void) {
         }
     }
     
-    // Jai
+    // Jai.
     {
         register_language(S8Lit("jai"),
 						  F4_Jai_IndexFile,
@@ -45,7 +45,7 @@ procedure void register_languages(void) {
 						  Lex_State_Jai);
     }
     
-    // Odin
+    // Odin.
     {
         register_language(S8Lit("odin"),
 						  odin__index_file,
@@ -56,7 +56,7 @@ procedure void register_languages(void) {
 						  Lex_State_Odin);
     }
     
-    // Metadesk
+    // Metadesk.
     {
         String_Const_u8 extensions[] = {
             // TODO(rjf): Maybe find a config-driven way to specify these? "mc" was sort of
@@ -66,11 +66,11 @@ procedure void register_languages(void) {
 		
         for (int i = 0; i < ArrayCount(extensions); i += 1) {
             register_language(extensions[i],
-							  F4_MD_IndexFile,
+							  metadesk__index_file,
 							  lex_full_input_cpp_init,
 							  lex_full_input_cpp_breaks,
-							  F4_MD_PosContext,
-							  F4_MD_Highlight,
+							  metadesk__get_positional_context,
+							  metadesk__highlight,
 							  Lex_State_Cpp);
         }
     }
