@@ -53,6 +53,22 @@ CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, 
     nne::search_current_buffer(app, Scan_Backward);
 }
 
+CUSTOM_COMMAND_SIG(write_backtick)
+CUSTOM_DOC("Inserts a ` at the cursor.") {
+	View_ID   view   = get_active_view(app, Access_ReadWriteVisible);
+	Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
+	i64       cursor = view_get_cursor_pos(app, view);
+	buffer_replace_range(app, buffer, Ii64(cursor), string_u8_litexpr("`"));
+}
+
+CUSTOM_COMMAND_SIG(write_tilde)
+CUSTOM_DOC("Inserts a ~ at the cursor.") {
+	View_ID   view   = get_active_view(app, Access_ReadWriteVisible);
+	Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
+	i64       cursor = view_get_cursor_pos(app, view);
+	buffer_replace_range(app, buffer, Ii64(cursor), string_u8_litexpr("~"));
+}
+
 // @Note(ema): The point of this is explained in notes.h; it's just for enabling power mode.
 CUSTOM_COMMAND_SIG(f4_write_text_input)
 CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
