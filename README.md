@@ -8,7 +8,7 @@
 2. Clone this repository wherever you want.
 3. Open `path_to.4coder` and write the exact path to the 4coder editor.
 
-_NOTE: On Windows, the path_to.4coder string has to use backslashes (\) instead of forward slashes (/) because the 'copy' utility doesn't accept those._
+_NOTE: On Windows, the path_to.4coder string has to use backslashes (\\) instead of forward slashes (/) because the 'copy' utility doesn't accept those._
 
 4. Run `scripts\build.bat`.
 5. If you want to use the provided config and bindings, , run `scripts\unnamed.bat`.
