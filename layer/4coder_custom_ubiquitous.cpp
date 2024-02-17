@@ -180,4 +180,16 @@ function u64 get_single_bit_offset(u64 value) {
     return offset;
 }
 
+// @Todo: This is only being used to check if a font file exists because there's a bug in try_create_new_face that
+// crashes the program if a font is not found. This function is only necessary until that is fixed.
+function b32 is_file_readable(String_Const_u8 path) {
+    b32 result = false;
+    FILE *file = fopen(cast(char *)path.str, "r");
+    if (file) {
+        result = true;
+        fclose(file);
+    }
+    return result;
+}
+
 #endif // FCODER_CUSTOM_UBIQUITOUS_CPP

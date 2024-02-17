@@ -134,7 +134,7 @@ CUSTOM_DOC("If the current file is a *.cpp or *.h, attempts to open the correspo
 CUSTOM_COMMAND_SIG(casey_go_to_code_peek)
 CUSTOM_DOC("Jumps to the most likely thing you'd want to see for the identifier you're on.")
 {
-    fleury_go_to_definition(app);
+    f4_go_to_definition(app);
 }
 
 BUFFER_HOOK_SIG(casey_new_file)

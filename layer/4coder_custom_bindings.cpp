@@ -181,7 +181,6 @@ function void set_default_bindings(Mapping *mapping) {
         Bind(close_panel, KeyCode_P, KeyCode_Control, KeyCode_Shift);
         Bind(f4_search_for_definition__project_wide, KeyCode_J, KeyCode_Control);
         Bind(f4_search_for_definition__current_file, KeyCode_J, KeyCode_Control, KeyCode_Shift);
-        Bind(f4_toggle_battery_saver, KeyCode_Tick, KeyCode_Alt);
         Bind(move_right_token_boundary, KeyCode_Right, KeyCode_Shift, KeyCode_Control);
         Bind(move_left_token_boundary, KeyCode_Left, KeyCode_Shift, KeyCode_Control);
     }
@@ -248,7 +247,6 @@ function void set_default_bindings(Mapping *mapping) {
     
     // Custom bindings.
     {
-        Bind(f4_write_zero_struct,  KeyCode_0, KeyCode_Control);
         Bind(move_right_token_boundary, KeyCode_Right, KeyCode_Shift, KeyCode_Control);
         Bind(move_left_token_boundary, KeyCode_Left, KeyCode_Shift, KeyCode_Control);
     }

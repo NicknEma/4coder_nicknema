@@ -76,21 +76,21 @@ void custom_layer_init(Application_Links *app) {
     global_frame_arena = make_arena(get_base_allocator_system());
     global_custom_permanent_arena = make_arena(get_base_allocator_system());
     
-    // Set up hooks.
+    //- Set up hooks.
     {
         set_all_default_hooks(app);
         //t $          ($  , $                             , $                     );
-        set_custom_hook(app, HookID_Tick,                    nne::F4_Tick);
-        set_custom_hook(app, HookID_RenderCaller,            nne::F4_Render);
-        set_custom_hook(app, HookID_BeginBuffer,             nne::F4_BeginBuffer);
-        set_custom_hook(app, HookID_Layout,                  nne::F4_Layout);
-        set_custom_hook(app, HookID_WholeScreenRenderCaller, nne::F4_WholeScreenRender);
-        set_custom_hook(app, HookID_DeltaRule,               nne::F4_DeltaRule);
-        set_custom_hook(app, HookID_BufferEditRange,         nne::F4_BufferEditRange);
+        set_custom_hook(app, HookID_Tick,                    nne::tick);
+        set_custom_hook(app, HookID_RenderCaller,            nne::render);
+        set_custom_hook(app, HookID_BeginBuffer,             nne::begin_buffer);
+        set_custom_hook(app, HookID_Layout,                  nne::layout);
+        set_custom_hook(app, HookID_WholeScreenRenderCaller, nne::whole_screen_render);
+        set_custom_hook(app, HookID_DeltaRule,               nne::delta_rule);
+        set_custom_hook(app, HookID_BufferEditRange,         nne::buffer_edit_range);
         set_custom_hook_memory_size(app, HookID_DeltaRule, delta_ctx_size(sizeof(Vec2_f32)));
     }
     
-    // Set up mapping.
+    //- Set up mapping.
     {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
@@ -106,18 +106,6 @@ void custom_layer_init(Application_Links *app) {
 }
 
 NAMESPACE_BEGIN(nne)
-
-// @Todo: This is only being used to check if a font file exists because there's a bug in try_create_new_face that
-// crashes the program if a font is not found. This function is only necessary until that is fixed.
-internal b32 is_file_readable(String_Const_u8 path) {
-    b32 result = false;
-    FILE *file = fopen(cast(char *)path.str, "r");
-    if (file) {
-        result = true;
-        fclose(file);
-    }
-    return result;
-}
 
 #if OS_WINDOWS
 #pragma comment(lib, "user32.lib")
@@ -312,7 +300,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_styled_title_face = try_create_new_face(app, &desc);
             } else {
                 global_styled_title_face = face_that_should_totally_be_there;
@@ -330,7 +318,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_styled_label_face = try_create_new_face(app, &desc);
             } else {
                 global_styled_label_face = face_that_should_totally_be_there;
@@ -350,7 +338,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_small_code_face = try_create_new_face(app, &desc);
             } else {
                 global_small_code_face = face_that_should_totally_be_there;

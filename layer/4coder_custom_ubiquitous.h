@@ -50,5 +50,6 @@ function u32  crc32(unsigned char *buf, int len);
 function u32 string_crc32(char *string, int string_length);
 function u32 cstring_crc32(char *string);
 function u64 get_single_bit_offset(u64 value);
+function b32 is_file_readable(String_Const_u8 path);
 
 #endif // FCODER_CUSTOM_UBIQUITOUS_H
