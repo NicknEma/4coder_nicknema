@@ -1,3 +1,5 @@
+#ifndef FCODER_CUSTOM_AUDIO_CPP
+#define FCODER_CUSTOM_AUDIO_CPP
 
 function b32
 F4_AudioClipIsValid(Audio_Clip clip)
@@ -28,3 +30,5 @@ F4_RequireWAV(Application_Links *app, Audio_Clip *clip, char *filename)
         }
     }
 }
+
+#endif // FCODER_CUSTOM_AUDIO_CPP

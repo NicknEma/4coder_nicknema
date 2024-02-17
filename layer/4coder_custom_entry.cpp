@@ -41,61 +41,61 @@ typedef int socklen_t;
 
 //~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
-#include "4coder_fleury_audio.h"
+#include "4coder_custom_audio.h"
 #include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
 #include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
 #include "4coder_custom_colors.h"                // Syntax highlighting and color animations
-#include "4coder_fleury_render_helpers.h"
-#include "4coder_fleury_brace.h"                 // Functions for rendering braces-related stuff
-#include "4coder_fleury_error_annotations.h"
+#include "4coder_custom_render_helpers.h"
+#include "4coder_custom_brace.h"                 // Functions for rendering braces-related stuff
+#include "4coder_custom_error_annotations.h"
 #include "4coder_custom_divider_comments.h"      // Functions for rendering and jumping between divider comments //~ and //-
-#include "4coder_fleury_power_mode.h"
-#include "4coder_fleury_cursor.h"
-#include "4coder_fleury_plot.h"
+#include "4coder_custom_power_mode.h"
+#include "4coder_custom_cursor.h"
+#include "4coder_custom_plot.h"
 #include "4coder_custom_calc.h"
-#include "4coder_fleury_lego.h"
-#include "4coder_fleury_pos_context_tooltips.h"
-#include "4coder_fleury_code_peek.h"
-#include "4coder_fleury_recent_files.h"
+#include "4coder_custom_lego.h"
+#include "4coder_custom_pos_context_tooltips.h"
+#include "4coder_custom_code_peek.h"
+#include "4coder_custom_recent_files.h"
 #include "4coder_custom_bindings.h"              // Maps bindings to commands
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
 #if OS_WINDOWS
-# include "4coder_fleury_command_server.h"
+# include "4coder_custom_command_server.h"
 #endif
 #include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 
 //~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
-#include "4coder_fleury_audio.cpp"
+#include "4coder_custom_audio.cpp"
 #include "4coder_custom_languages.cpp"
 #include "4coder_custom_index.cpp"
 #include "4coder_custom_colors.cpp"
-#include "4coder_fleury_render_helpers.cpp"
-#include "4coder_fleury_brace.cpp"
-#include "4coder_fleury_error_annotations.cpp"
+#include "4coder_custom_render_helpers.cpp"
+#include "4coder_custom_brace.cpp"
+#include "4coder_custom_error_annotations.cpp"
 #include "4coder_custom_divider_comments.cpp"
-#include "4coder_fleury_power_mode.cpp"
-#include "4coder_fleury_cursor.cpp"
-#include "4coder_fleury_plot.cpp"
+#include "4coder_custom_power_mode.cpp"
+#include "4coder_custom_cursor.cpp"
+#include "4coder_custom_plot.cpp"
 #include "4coder_custom_calc.cpp"
-#include "4coder_fleury_lego.cpp"
-#include "4coder_fleury_pos_context_tooltips.cpp"
-#include "4coder_fleury_code_peek.cpp"
-#include "4coder_fleury_recent_files.cpp"
+#include "4coder_custom_lego.cpp"
+#include "4coder_custom_pos_context_tooltips.cpp"
+#include "4coder_custom_code_peek.cpp"
+#include "4coder_custom_recent_files.cpp"
 #include "4coder_custom_bindings.cpp"
 #include "4coder_custom_dynamic_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
 #if OS_WINDOWS
-# include "4coder_fleury_command_server.cpp"
+# include "4coder_custom_command_server.cpp"
 #endif
-#include "4coder_fleury_casey.cpp"
+#include "4coder_custom_casey.cpp"
 #include "4coder_custom_hooks.cpp"
 #include "4coder_custom_load.cpp"
 #include "4coder_custom_auto_indent.cpp"
 
 //~ Plots Demo File
-#include "4coder_fleury_plots_demo.cpp"
+#include "4coder_custom_plots_demo.cpp"
 
 //~ 4coder Stuff
 #include "generated/managed_id_metadata.cpp"

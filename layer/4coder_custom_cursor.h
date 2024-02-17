@@ -1,5 +1,3 @@
-/* date = January 29th 2021 7:57 pm */
-
 #ifndef FCODER_FLEURY_CURSOR_H
 #define FCODER_FLEURY_CURSOR_H
 

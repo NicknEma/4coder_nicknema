@@ -1,3 +1,6 @@
+#ifndef FCODER_CUSTOM_CODE_PEEK_CPP
+#define FCODER_CUSTOM_CODE_PEEK_CPP
+
 NAMESPACE_BEGIN(nne)
 
 global b32 global_code_peek_open = 0;
@@ -160,3 +163,5 @@ CUSTOM_DOC("Clears the *peek* buffer.")
         clear_buffer(app, buffer);
     }
 }
+
+#endif // FCODER_CUSTOM_CODE_PEEK_CPP

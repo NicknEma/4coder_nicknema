@@ -1,5 +1,3 @@
-/* date = January 29th 2021 8:14 pm */
-
 #ifndef FCODER_FLEURY_POS_CONTEXT_TOOLTIPS_H
 #define FCODER_FLEURY_POS_CONTEXT_TOOLTIPS_H
 

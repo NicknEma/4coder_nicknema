@@ -1,3 +1,6 @@
+#ifndef FCODER_CUSTOM_CASEY_CPP
+#define FCODER_CUSTOM_CASEY_CPP
+
 Audio_Clip PowerWAV = {};
 Audio_Clip HitWAV = {};
 Audio_Control PowerWAVControl = {};
@@ -154,3 +157,4 @@ BUFFER_HOOK_SIG(casey_new_file)
     return(0);
 }
 
+#endif // FCODER_CUSTOM_CASEY_CPP

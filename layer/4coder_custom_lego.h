@@ -1,5 +1,3 @@
-/* date = February 19th 2021 1:26 pm */
-
 #ifndef FCODER_FLEURY_LEGO_H
 #define FCODER_FLEURY_LEGO_H
 

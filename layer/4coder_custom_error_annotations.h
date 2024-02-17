@@ -1,5 +1,3 @@
-/* date = January 29th 2021 7:53 pm */
-
 #ifndef FCODER_FLEURY_ERROR_ANNOTATIONS_H
 #define FCODER_FLEURY_ERROR_ANNOTATIONS_H
 

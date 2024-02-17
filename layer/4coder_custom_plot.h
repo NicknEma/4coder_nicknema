@@ -1,5 +1,3 @@
-/* date = January 29th 2021 8:10 pm */
-
 #ifndef FCODER_FLEURY_PLOT_H
 #define FCODER_FLEURY_PLOT_H
 

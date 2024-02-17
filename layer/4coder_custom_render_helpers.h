@@ -1,5 +1,3 @@
-/* date = January 29th 2021 7:54 pm */
-
 #ifndef FCODER_FLEURY_RENDER_HELPERS_H
 #define FCODER_FLEURY_RENDER_HELPERS_H
 

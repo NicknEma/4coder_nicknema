@@ -1,5 +1,3 @@
-/* date = January 29th 2021 8:01 pm */
-
 #ifndef FCODER_FLEURY_POWER_MODE_H
 #define FCODER_FLEURY_POWER_MODE_H
 
