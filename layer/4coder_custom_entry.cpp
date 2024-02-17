@@ -1,30 +1,6 @@
-#if 1
-#define NAMESPACE_BEGIN(name) namespace name {
-#define NAMESPACE_END() }
-#else
-#define NAMESPACE_BEGIN(name)
-#define NAMESPACE_END()
-#endif
-
-#define Allow_Break() Assert(1)
-#define Force_Break() Assert(0)
-
-#define procedure static
-#define cast(t) (t)
-
-#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
-#pragma warning(disable: 4702) // Unreachable code was detected.
-
-//~ For DION team docs server stuff.
-// {
 #if OS_WINDOWS
-#include <WinSock2.h>
-#include <Ws2tcpip.h>
 #include <windows.h>
-typedef int socklen_t;
-#pragma comment(lib, "Ws2_32.lib")
 #endif
-// }
 
 //~ Default headers
 #include <stdlib.h>
@@ -33,69 +9,60 @@ typedef int socklen_t;
 #include "4coder_default_include.cpp"
 
 //~ Macros and pragmase stuff that have to be put here for various reasons.
-#pragma warning(disable: 4706) // Assignment within conditional expression. @Cleanup(ema): Where? If in the custom layer, remove. If in the base editor, explain.
-#pragma warning(disable: 4456) // Declaration of 'identifier' hides previous local declaration. @Cleanup(ema): Where? Should probabily be fixed.
-#define COMMAND_SERVER_PORT 4041
-#define COMMAND_SERVER_UPDATE_PERIOD_MS 200
-#define COMMAND_SERVER_AUTO_LAUNCH_IF_FILE_PRESENT "project_namespaces.txt"
+#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
+#pragma warning(disable: 4702) // Unreachable code was detected.
+
+// Right now the organization of the code is not very consistent. Some files only contain one or two helper functions (eg. code_peek or divider_comments) while others
+// implement entire sybsystems (like calc or index).
 
 //~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
-#include "4coder_fleury_audio.h"
+#include "4coder_custom_audio.h"
 #include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
 #include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
 #include "4coder_custom_colors.h"                // Syntax highlighting and color animations
-#include "4coder_fleury_render_helpers.h"
-#include "4coder_fleury_brace.h"                 // Functions for rendering braces-related stuff
-#include "4coder_fleury_error_annotations.h"
+#include "4coder_custom_render_helpers.h"        // Rendering functions that are used in the render hook
+#include "4coder_custom_error_annotations.h"     // A render helper for error annotations.
 #include "4coder_custom_divider_comments.h"      // Functions for rendering and jumping between divider comments //~ and //-
-#include "4coder_fleury_power_mode.h"
-#include "4coder_fleury_cursor.h"
-#include "4coder_fleury_plot.h"
+#include "4coder_custom_power_mode.h"
+#include "4coder_custom_cursor.h"                // Render helpers for the two styles of cursor
+#include "4coder_custom_plot.h"
 #include "4coder_custom_calc.h"
-#include "4coder_fleury_lego.h"
-#include "4coder_fleury_pos_context_tooltips.h"
-#include "4coder_fleury_code_peek.h"
-#include "4coder_fleury_recent_files.h"
-#include "4coder_custom_bindings.h"              // Maps bindings to commands
+#include "4coder_custom_lego.h"                  // If I understand correctly, it's a "smart clipboard", a way to copy and paste text that is context-aware. Never tried it though.
+#include "4coder_custom_pos_context_tooltips.h"  // Function to render the tooltips at the cursor or at the bottom of the view
+#include "4coder_custom_code_peek.h"             // Render helper and commands for code peek
+#include "4coder_custom_recent_files.h"          // Command to open the recent files lister and interact with it
+#include "4coder_custom_bindings.h"              // Functions to set hardcoded default bindings or to load them from a file
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
-#if OS_WINDOWS
-# include "4coder_fleury_command_server.h"
-#endif
-#include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
+#include "4coder_custom_hooks.h"                 // Implementation of custom hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 
 //~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
-#include "4coder_fleury_audio.cpp"
+#include "4coder_custom_audio.cpp"
 #include "4coder_custom_languages.cpp"
 #include "4coder_custom_index.cpp"
 #include "4coder_custom_colors.cpp"
-#include "4coder_fleury_render_helpers.cpp"
-#include "4coder_fleury_brace.cpp"
-#include "4coder_fleury_error_annotations.cpp"
+#include "4coder_custom_render_helpers.cpp"
+#include "4coder_custom_error_annotations.cpp"
 #include "4coder_custom_divider_comments.cpp"
-#include "4coder_fleury_power_mode.cpp"
-#include "4coder_fleury_cursor.cpp"
-#include "4coder_fleury_plot.cpp"
+#include "4coder_custom_power_mode.cpp"
+#include "4coder_custom_cursor.cpp"
+#include "4coder_custom_plot.cpp"
 #include "4coder_custom_calc.cpp"
-#include "4coder_fleury_lego.cpp"
-#include "4coder_fleury_pos_context_tooltips.cpp"
-#include "4coder_fleury_code_peek.cpp"
-#include "4coder_fleury_recent_files.cpp"
+#include "4coder_custom_lego.cpp"
+#include "4coder_custom_pos_context_tooltips.cpp"
+#include "4coder_custom_code_peek.cpp"
+#include "4coder_custom_recent_files.cpp"
 #include "4coder_custom_bindings.cpp"
-#include "4coder_custom_dynamic_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
-#if OS_WINDOWS
-# include "4coder_fleury_command_server.cpp"
-#endif
-#include "4coder_fleury_casey.cpp"
+#include "4coder_custom_casey.cpp"
 #include "4coder_custom_hooks.cpp"
 #include "4coder_custom_load.cpp"
 #include "4coder_custom_auto_indent.cpp"
 
 //~ Plots Demo File
-#include "4coder_fleury_plots_demo.cpp"
+#include "4coder_custom_plots_demo.cpp"
 
 //~ 4coder Stuff
 #include "generated/managed_id_metadata.cpp"
@@ -104,24 +71,24 @@ typedef int socklen_t;
 
 void custom_layer_init(Application_Links *app) {
     default_framework_init(app);
-    nne::global_frame_arena = make_arena(get_base_allocator_system());
-    permanent_arena = make_arena(get_base_allocator_system());
+    global_frame_arena = make_arena(get_base_allocator_system());
+    global_custom_permanent_arena = make_arena(get_base_allocator_system());
     
-    // Set up hooks.
+    //- Set up hooks.
     {
         set_all_default_hooks(app);
         //t $          ($  , $                             , $                     );
-        set_custom_hook(app, HookID_Tick,                    nne::F4_Tick);
-        set_custom_hook(app, HookID_RenderCaller,            nne::F4_Render);
-        set_custom_hook(app, HookID_BeginBuffer,             nne::F4_BeginBuffer);
-        set_custom_hook(app, HookID_Layout,                  nne::F4_Layout);
-        set_custom_hook(app, HookID_WholeScreenRenderCaller, nne::F4_WholeScreenRender);
-        set_custom_hook(app, HookID_DeltaRule,               nne::F4_DeltaRule);
-        set_custom_hook(app, HookID_BufferEditRange,         nne::F4_BufferEditRange);
+        set_custom_hook(app, HookID_Tick,                    nne::tick);
+        set_custom_hook(app, HookID_RenderCaller,            nne::render);
+        set_custom_hook(app, HookID_BeginBuffer,             nne::begin_buffer);
+        set_custom_hook(app, HookID_Layout,                  nne::layout);
+        set_custom_hook(app, HookID_WholeScreenRenderCaller, nne::whole_screen_render);
+        set_custom_hook(app, HookID_DeltaRule,               nne::delta_rule);
+        set_custom_hook(app, HookID_BufferEditRange,         nne::buffer_edit_range);
         set_custom_hook_memory_size(app, HookID_DeltaRule, delta_ctx_size(sizeof(Vec2_f32)));
     }
     
-    // Set up mapping.
+    //- Set up mapping.
     {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
@@ -137,18 +104,6 @@ void custom_layer_init(Application_Links *app) {
 }
 
 NAMESPACE_BEGIN(nne)
-
-// @Todo: This is only being used to check if a font file exists because there's a bug in try_create_new_face that
-// crashes the program if a font is not found. This function is only necessary until that is fixed.
-internal b32 is_file_readable(String_Const_u8 path) {
-    b32 result = false;
-    FILE *file = fopen(cast(char *)path.str, "r");
-    if (file) {
-        result = true;
-        fclose(file);
-    }
-    return result;
-}
 
 #if OS_WINDOWS
 #pragma comment(lib, "user32.lib")
@@ -343,7 +298,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_styled_title_face = try_create_new_face(app, &desc);
             } else {
                 global_styled_title_face = face_that_should_totally_be_there;
@@ -361,7 +316,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_styled_label_face = try_create_new_face(app, &desc);
             } else {
                 global_styled_label_face = face_that_should_totally_be_there;
@@ -381,7 +336,7 @@ CUSTOM_DOC("Custom startup event") {
                 desc.parameters.hinting = 0;
             }
             
-            if (nne::is_file_readable(desc.font.file_name)) {
+            if (is_file_readable(desc.font.file_name)) {
                 global_small_code_face = try_create_new_face(app, &desc);
             } else {
                 global_small_code_face = face_that_should_totally_be_there;

@@ -1,5 +1,0 @@
-#import "Basic.jai"
-
-main :: () {
-	
-}

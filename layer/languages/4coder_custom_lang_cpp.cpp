@@ -42,7 +42,7 @@ internal b32 F4_CPP_SkipParseBody(Index__Parse_Context *context) {
     return body_found;
 }
 
-procedure b32 F4_CPP_ParseDecl(Index__Parse_Context *context, Token **name) {
+function b32 F4_CPP_ParseDecl(Index__Parse_Context *context, Token **name) {
     Token *base_type = 0;
     return (index__parse_pattern(context, "%k%o%k%o%t",
 								 TokenBaseKind_Identifier, &base_type,
@@ -62,7 +62,7 @@ procedure b32 F4_CPP_ParseDecl(Index__Parse_Context *context, Token **name) {
 								 "="));
 }
 
-procedure void F4_CPP_ParseStructOrUnionBody(Index__Parse_Context *context, Index__Note_Flags note_flags) {
+function void F4_CPP_ParseStructOrUnionBody(Index__Parse_Context *context, Index__Note_Flags note_flags) {
     Token *name = 0;
     b32 valid = false;
     b32 need_end_name = false;
@@ -122,7 +122,7 @@ function b32 F4_CPP_ParseFunctionBody(Index__Parse_Context *context, b32 *protot
     return valid;
 }
 
-procedure void F4_CPP_ParseEnumBody(Index__Parse_Context *context) {
+function void F4_CPP_ParseEnumBody(Index__Parse_Context *context) {
     if (index__parse_pattern(context, "%t", "{")) {
         for (; !context->done; ) {
             Token *constant = 0;

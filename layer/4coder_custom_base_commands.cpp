@@ -53,6 +53,16 @@ CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, 
     nne::search_current_buffer(app, Scan_Backward);
 }
 
+CUSTOM_COMMAND_SIG(write_backtick)
+CUSTOM_DOC("Inserts a ` at the cursor.") {
+	write_string(app, string_u8_litexpr("`"));
+}
+
+CUSTOM_COMMAND_SIG(write_tilde)
+CUSTOM_DOC("Inserts a ~ at the cursor.") {
+	write_string(app, string_u8_litexpr("~"));
+}
+
 // @Note(ema): The point of this is explained in notes.h; it's just for enabling power mode.
 CUSTOM_COMMAND_SIG(f4_write_text_input)
 CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
@@ -77,9 +87,7 @@ CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if a
 // @Note(ema): The difference between this and the 4coder default one is that this actually goes to the beginning of the line.
 CUSTOM_COMMAND_SIG(f4_home)
 CUSTOM_DOC("Goes to the beginning of the line.") {
-	using namespace nne;
-	
-    seek_pos_of_visual_line(app, Side_Min);
+	seek_pos_of_visual_line(app, Side_Min);
     View_ID view = get_active_view(app, Access_ReadWriteVisible);
     Buffer_Scroll scroll = view_get_buffer_scroll(app, view);
     scroll.target.pixel_shift.x = 0;
@@ -88,15 +96,8 @@ CUSTOM_DOC("Goes to the beginning of the line.") {
 
 //~ Util commands.
 
-CUSTOM_COMMAND_SIG(f4_write_zero_struct)
-CUSTOM_DOC("At the cursor, insert a ' = {0};'.") {
-    write_string(app, string_u8_litexpr(" = {0};"));
-    nne::F4_PowerMode_CharacterPressed();
-    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), 0);
-}
-
 // @Note(ema): In battery saving mode, the cursor isn't animated. The global_battery_saver variable is in ubiquitous.h
-CUSTOM_COMMAND_SIG(f4_toggle_battery_saver)
+CUSTOM_COMMAND_SIG(toggle_battery_saver)
 CUSTOM_DOC("Toggles battery saving mode.") {
 	global_battery_saver = !global_battery_saver;
 }
@@ -1719,7 +1720,7 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
         i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
         i64 cursor_column = cursor - get_line_start_pos(app, buffer, cursor_line) + 1;
         i64 spaces_to_insert = column_number - cursor_column;
-        History_Group group = history_group_begin(app, buffer);
+        History_Group history_group = history_group_begin(app, buffer);
 		
         for (i64 i = 0; i < spaces_to_insert; i += 1) {
             buffer_replace_range(app, buffer, Ii64(cursor, cursor), str8_lit(" "));
@@ -1727,25 +1728,8 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
 		
         view_set_cursor(app, view, seek_pos(cursor+spaces_to_insert));
         view_set_mark(app, view, seek_pos(cursor+spaces_to_insert));
-        history_group_end(group);
+        history_group_end(history_group);
     }
 }
-
-//~ NOTE(rjf): Deprecated names:
-CUSTOM_COMMAND_SIG(fleury_write_zero_struct)
-CUSTOM_DOC("Deprecated name. Please update to f4_write_zero_struct.")
-{f4_write_zero_struct(app);}
-CUSTOM_COMMAND_SIG(fleury_toggle_battery_saver)
-CUSTOM_DOC("Deprecated name. Please update to f4_toggle_battery_saver.")
-{f4_toggle_battery_saver(app);}
-CUSTOM_COMMAND_SIG(fleury_toggle_compilation_expand)
-CUSTOM_DOC("Deprecated name. Please update to f4_toggle_compilation_expand.")
-{f4_toggle_compilation_expand(app);}
-CUSTOM_COMMAND_SIG(fleury_go_to_definition)
-CUSTOM_DOC("Deprecated name. Please update to f4_go_to_definition.")
-{f4_go_to_definition(app);}
-CUSTOM_COMMAND_SIG(fleury_go_to_definition_same_panel)
-CUSTOM_DOC("Deprecated name. Please update to f4_go_to_definition_same_panel.")
-{f4_go_to_definition_same_panel(app);}
 
 #endif // FCODER_CUSTOM_BASE_COMMANDS_CPP

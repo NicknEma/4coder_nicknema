@@ -134,13 +134,13 @@ function FILE_INDEXER(odin__index_file) {
 							 index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
 						// <name> :: distinct <ident>
 						
-						Index__Note_Flags flags = 0;
+						Index__Note_Flags note_flags = 0;
 						Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
 						if (rhs_note) {
-							flags = rhs_note->flags;
+							note_flags = rhs_note->flags;
 						}
 						
-						index__make_note(context, Ii64(name), Index__Note_Kind_Type, flags);
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, note_flags);
 					}
 					
 					// Type directives.
