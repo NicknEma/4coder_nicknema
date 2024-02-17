@@ -64,7 +64,7 @@ F4_Lego_BufferPlace(Application_Links *app, View_ID view, Buffer_ID buffer, i64 
             view_set_mark(app, view, seek_pos(pos));
             view_set_cursor_and_preferred_x(app, view, seek_pos(pos + (i32)lego->string.size));
             
-            F4_PushFlash(app, buffer, Ii64(pos, pos+lego->string.size), fcolor_resolve(fcolor_id(fleury_color_lego_splat)), 0.8f);
+            push_flash(app, buffer, Ii64(pos, pos+lego->string.size), fcolor_resolve(fcolor_id(fleury_color_lego_splat)), 0.8f);
         }break;
         default: break;
     }
@@ -101,7 +101,7 @@ CUSTOM_DOC("Will store the token under the cursor into the lego determined by th
         if(token != 0)
         {
             F4_Lego_Store(lego, F4_LegoKind_String, push_token_lexeme(app, scratch, buffer, token));
-            F4_PushFlash(app, buffer, Ii64(token), fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
+            push_flash(app, buffer, Ii64(token), fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
         }
     }
 }
@@ -119,7 +119,7 @@ CUSTOM_DOC("Will store the selected range into the lego determined by the associ
         Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
         Range_i64 range = Ii64(view_get_cursor_pos(app, view), view_get_mark_pos(app, view));
         F4_Lego_Store(lego, F4_LegoKind_String, push_buffer_range(app, scratch, buffer, range));
-        F4_PushFlash(app, buffer, range, fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
+        push_flash(app, buffer, range, fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
     }
 }
 
@@ -138,7 +138,7 @@ CUSTOM_DOC("Will store the selected range into the lego determined by the associ
         i64 line_num = get_line_number_from_pos(app, buffer, cursor_pos);
         Range_i64 range = get_line_pos_range(app, buffer, line_num);
         F4_Lego_Store(lego, F4_LegoKind_String, push_buffer_range(app, scratch, buffer, range));
-        F4_PushFlash(app, buffer, range, fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
+        push_flash(app, buffer, range, fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
     }
 }
 
@@ -158,7 +158,7 @@ F4_Lego_StoreClickedToken(Application_Links *app, F4_Lego *lego)
     if(token != 0)
     {
         F4_Lego_Store(lego, F4_LegoKind_String, push_token_lexeme(app, scratch, buffer, token));
-        F4_PushFlash(app, buffer, Ii64(token), fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
+        push_flash(app, buffer, Ii64(token), fcolor_resolve(fcolor_id(fleury_color_lego_grab)), 0.8f);
     }
 }
 

@@ -27,29 +27,29 @@ CUSTOM_ID(colors, fleury_color_lego_grab);
 CUSTOM_ID(colors, fleury_color_lego_splat);
 CUSTOM_ID(colors, fleury_color_error_annotation);
 
-NAMESPACE_BEGIN(nne)
-
-typedef u32 Color_Flags;
-enum {
-    Color_Flag_Macro     = (1<<0),
-    Color_Flag_PowerMode = (1<<1),
-};
-
-struct Color_Context {
-    Token token;
-    Buffer_ID buffer;
-    Color_Flags flags;
-    Keybinding_Mode mode;
-};
-
-internal void tick_colors(Application_Links *app, Frame_Info frame_info);
-internal ARGB_Color argb_from_id(Color_Table table, Managed_ID id, int subindex);
-internal ARGB_Color argb_from_id(Color_Table table, Managed_ID id);
-internal Color_Context make_token_color_context(Token token, Buffer_ID buffer);
-internal Color_Context make_cursor_color_context(Color_Flags flags, Keybinding_Mode mode);
-internal ARGB_Color get_color(Application_Links *app, Color_Context ctx);
-internal void do_syntax_highlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_Array *array);
-
-NAMESPACE_END()
+namespace nne {
+	
+	typedef u32 Color_Flags;
+	enum {
+		Color_Flag_Macro     = (1<<0),
+		Color_Flag_PowerMode = (1<<1),
+	};
+	
+	struct Color_Context {
+		Token token;
+		Buffer_ID buffer;
+		Color_Flags flags;
+		Keybinding_Mode mode;
+	};
+	
+	function void tick_colors(Application_Links *app, Frame_Info frame_info);
+	function ARGB_Color argb_from_id(Color_Table table, Managed_ID id, int subindex);
+	function ARGB_Color argb_from_id(Color_Table table, Managed_ID id);
+	function Color_Context make_token_color_context(Token token, Buffer_ID buffer);
+	function Color_Context make_cursor_color_context(Color_Flags flags, Keybinding_Mode mode);
+	function ARGB_Color get_color(Application_Links *app, Color_Context ctx);
+	function void do_syntax_highlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_Array *array);
+	
+}
 
 #endif // 4CODER_CUSTOM_COLORS_H

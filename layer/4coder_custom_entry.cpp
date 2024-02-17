@@ -12,27 +12,29 @@
 #pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
 #pragma warning(disable: 4702) // Unreachable code was detected.
 
+// Right now the organization of the code is not very consistent. Some files only contain one or two helper functions (eg. code_peek or divider_comments) while others
+// implement entire sybsystems (like calc or index).
+
 //~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
 #include "4coder_custom_audio.h"
 #include "4coder_custom_languages.h"             // The generic language interface that will be used by the index to communicate to language-specific parsers
 #include "4coder_custom_index.h"                 // Dictionary that contains info on every identifier in the loaded project, allowing for syntax highlighting, tooltips, etc.
 #include "4coder_custom_colors.h"                // Syntax highlighting and color animations
-#include "4coder_custom_render_helpers.h"
-#include "4coder_custom_brace.h"                 // Functions for rendering braces-related stuff
-#include "4coder_custom_error_annotations.h"
+#include "4coder_custom_render_helpers.h"        // Rendering functions that are used in the render hook
+#include "4coder_custom_error_annotations.h"     // A render helper for error annotations.
 #include "4coder_custom_divider_comments.h"      // Functions for rendering and jumping between divider comments //~ and //-
 #include "4coder_custom_power_mode.h"
-#include "4coder_custom_cursor.h"
+#include "4coder_custom_cursor.h"                // Render helpers for the two styles of cursor
 #include "4coder_custom_plot.h"
 #include "4coder_custom_calc.h"
-#include "4coder_custom_lego.h"
-#include "4coder_custom_pos_context_tooltips.h"
-#include "4coder_custom_code_peek.h"
-#include "4coder_custom_recent_files.h"
-#include "4coder_custom_bindings.h"              // Maps bindings to commands
+#include "4coder_custom_lego.h"                  // If I understand correctly, it's a "smart clipboard", a way to copy and paste text that is context-aware. Never tried it though.
+#include "4coder_custom_pos_context_tooltips.h"  // Function to render the tooltips at the cursor or at the bottom of the view
+#include "4coder_custom_code_peek.h"             // Render helper and commands for code peek
+#include "4coder_custom_recent_files.h"          // Command to open the recent files lister and interact with it
+#include "4coder_custom_bindings.h"              // Functions to set hardcoded default bindings or to load them from a file
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
-#include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
+#include "4coder_custom_hooks.h"                 // Implementation of custom hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 
 //~ Custom layer implementation
@@ -42,7 +44,6 @@
 #include "4coder_custom_index.cpp"
 #include "4coder_custom_colors.cpp"
 #include "4coder_custom_render_helpers.cpp"
-#include "4coder_custom_brace.cpp"
 #include "4coder_custom_error_annotations.cpp"
 #include "4coder_custom_divider_comments.cpp"
 #include "4coder_custom_power_mode.cpp"
@@ -54,7 +55,6 @@
 #include "4coder_custom_code_peek.cpp"
 #include "4coder_custom_recent_files.cpp"
 #include "4coder_custom_bindings.cpp"
-#include "4coder_custom_dynamic_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
 #include "4coder_custom_casey.cpp"
 #include "4coder_custom_hooks.cpp"

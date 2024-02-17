@@ -1,12 +1,10 @@
-#ifndef FCODER_FLEURY_ERROR_ANNOTATIONS_H
-#define FCODER_FLEURY_ERROR_ANNOTATIONS_H
+#ifndef FCODER_CUSTOM_ERROR_ANNOTATIONS_H
+#define FCODER_CUSTOM_ERROR_ANNOTATIONS_H
 
-NAMESPACE_BEGIN(nne)
+namespace nne {
+	
+	function void render_error_annotations(Application_Links *app, Buffer_ID buffer, Text_Layout_ID text_layout_id, Buffer_ID jump_buffer);
+	
+}
 
-function void F4_RenderErrorAnnotations(Application_Links *app, Buffer_ID buffer,
-                                        Text_Layout_ID text_layout_id,
-                                        Buffer_ID jump_buffer);
-
-NAMESPACE_END()
-
-#endif // 4CODER_FLEURY_ERROR_ANNOTATIONS_H
+#endif // 4CODER_CUSTOM_ERROR_ANNOTATIONS_H
