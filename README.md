@@ -1,12 +1,21 @@
 # My fork of Ryan Fleury's personal 4coder custom layer
 
-1. `cd <wherever you want>`
-2. `git clone https://github.com/NicknEma/4coder_nicknema`
-3. Go into `build.bat` and `build_lexers.bat` and change `editor_loc` to be the location of 4ed.exe
-4. Go into `project.4coder` and change the 2nd of the `load_paths_base` to be the location of 4ed.exe
-5. `build`
+## Build
+
+### Windows
+
+1. Install MSVC and run a developer command prompt.
+2. Clone this repository wherever you want.
+3. Open `path_to.4coder` and write the exact path to the 4coder editor.
 
 _NOTE: On Windows, the path_to.4coder string has to use backslashes (\) instead of forward slashes (/) because the 'copy' utility doesn't accept those._
+
+4. Run `scripts\build.bat`.
+5. If you want to use the provided config and bindings, , run `scripts\unnamed.bat`.
+
+## Run
+
+- If you want the full codebase to be loaded with the project, go into `project.4coder` and change the 2nd of the `load_paths_base` to be the location of 4ed.exe
 
 ## Customizing 4coder
 
