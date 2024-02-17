@@ -24,10 +24,10 @@ internal void F4_RenderRangeHighlight(Application_Links *app, View_ID view_id, T
     Rect_f32 range_start_rect = text_layout_character_on_screen(app, text_layout_id, range.start);
     Rect_f32 range_end_rect = text_layout_character_on_screen(app, text_layout_id, range.end-1);
     Rect_f32 total_range_rect = {0};
-    total_range_rect.x0 = min_f32(range_start_rect.x0, range_end_rect.x0);
-    total_range_rect.y0 = min_f32(range_start_rect.y0, range_end_rect.y0);
-    total_range_rect.x1 = max_f32(range_start_rect.x1, range_end_rect.x1);
-    total_range_rect.y1 = max_f32(range_start_rect.y1, range_end_rect.y1);
+    total_range_rect.x0 = min_of(range_start_rect.x0, range_end_rect.x0);
+    total_range_rect.y0 = min_of(range_start_rect.y0, range_end_rect.y0);
+    total_range_rect.x1 = max_of(range_start_rect.x1, range_end_rect.x1);
+    total_range_rect.y1 = max_of(range_start_rect.y1, range_end_rect.y1);
     
     switch (kind) {
         case F4_RangeHighlightKind_Underline: {

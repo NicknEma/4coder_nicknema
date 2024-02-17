@@ -1,30 +1,6 @@
-#if 1
-#define NAMESPACE_BEGIN(name) namespace name {
-#define NAMESPACE_END() }
-#else
-#define NAMESPACE_BEGIN(name)
-#define NAMESPACE_END()
-#endif
-
-#define Allow_Break() Assert(1)
-#define Force_Break() Assert(0)
-
-#define procedure static
-#define cast(t) (t)
-
-#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
-#pragma warning(disable: 4702) // Unreachable code was detected.
-
-//~ For DION team docs server stuff.
-// {
 #if OS_WINDOWS
-#include <WinSock2.h>
-#include <Ws2tcpip.h>
 #include <windows.h>
-typedef int socklen_t;
-#pragma comment(lib, "Ws2_32.lib")
 #endif
-// }
 
 //~ Default headers
 #include <stdlib.h>
@@ -33,11 +9,10 @@ typedef int socklen_t;
 #include "4coder_default_include.cpp"
 
 //~ Macros and pragmase stuff that have to be put here for various reasons.
+#pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
+#pragma warning(disable: 4702) // Unreachable code was detected.
 #pragma warning(disable: 4706) // Assignment within conditional expression. @Cleanup(ema): Where? If in the custom layer, remove. If in the base editor, explain.
 #pragma warning(disable: 4456) // Declaration of 'identifier' hides previous local declaration. @Cleanup(ema): Where? Should probabily be fixed.
-#define COMMAND_SERVER_PORT 4041
-#define COMMAND_SERVER_UPDATE_PERIOD_MS 200
-#define COMMAND_SERVER_AUTO_LAUNCH_IF_FILE_PRESENT "project_namespaces.txt"
 
 //~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere
@@ -59,9 +34,6 @@ typedef int socklen_t;
 #include "4coder_custom_recent_files.h"
 #include "4coder_custom_bindings.h"              // Maps bindings to commands
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
-#if OS_WINDOWS
-# include "4coder_custom_command_server.h"
-#endif
 #include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 
@@ -86,9 +58,6 @@ typedef int socklen_t;
 #include "4coder_custom_bindings.cpp"
 #include "4coder_custom_dynamic_bindings.cpp"
 #include "4coder_custom_base_commands.cpp"
-#if OS_WINDOWS
-# include "4coder_custom_command_server.cpp"
-#endif
 #include "4coder_custom_casey.cpp"
 #include "4coder_custom_hooks.cpp"
 #include "4coder_custom_load.cpp"
@@ -104,8 +73,8 @@ typedef int socklen_t;
 
 void custom_layer_init(Application_Links *app) {
     default_framework_init(app);
-    nne::global_frame_arena = make_arena(get_base_allocator_system());
-    permanent_arena = make_arena(get_base_allocator_system());
+    global_frame_arena = make_arena(get_base_allocator_system());
+    global_custom_permanent_arena = make_arena(get_base_allocator_system());
     
     // Set up hooks.
     {

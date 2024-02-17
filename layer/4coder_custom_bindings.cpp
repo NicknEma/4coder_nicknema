@@ -7,22 +7,22 @@
 
 CUSTOM_COMMAND_SIG(switch_to_keybinding_0)
 CUSTOM_DOC("Switch the keybindings to mode 0.") {
-	GlobalKeybindingMode = KeyBindingMode_0;
+	global_keybinding_mode = Keybinding_Mode_0;
 }
 
 CUSTOM_COMMAND_SIG(switch_to_keybinding_1)
 CUSTOM_DOC("Switch the keybindings to mode 1.") {
-	GlobalKeybindingMode = KeyBindingMode_1;
+	global_keybinding_mode = Keybinding_Mode_1;
 }
 
 CUSTOM_COMMAND_SIG(switch_to_keybinding_2)
 CUSTOM_DOC("Switch the keybindings to mode 2.") {
-	GlobalKeybindingMode = KeyBindingMode_2;
+	global_keybinding_mode = Keybinding_Mode_2;
 }
 
 CUSTOM_COMMAND_SIG(switch_to_keybinding_3)
 CUSTOM_DOC("Switch the keybindings to mode 3.") {
-	GlobalKeybindingMode = KeyBindingMode_3;
+	global_keybinding_mode = Keybinding_Mode_3;
 }
 
 NAMESPACE_BEGIN(nne)
@@ -40,7 +40,7 @@ function Implicit_Map_Result implicit_map_function(Application_Links *app, Strin
     
 	Command_Map_ID orig_id = default_get_map_id(app, view);
     Command_Map_ID map_id = orig_id;
-	if (GlobalKeybindingMode == KeyBindingMode_1) {
+	if (global_keybinding_mode == Keybinding_Mode_1) {
 		for (int PairIndex = 0; PairIndex < ArrayCount(GlobalCommandMapReroute); PairIndex += 1) {
 			if (GlobalCommandMapReroute[PairIndex].From == map_id) {
 				map_id = GlobalCommandMapReroute[PairIndex].To;

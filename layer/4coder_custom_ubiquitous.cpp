@@ -3,42 +3,42 @@
 
 // @Cleanup(ema): Why doesn't this file use the short type names (u8, i64...)
 
-NAMESPACE_BEGIN(nne)
+#define GLOBAL_TOOLTIP_CAPACITY 32
 
 global struct {
     String_Const_u8 string;
     ARGB_Color color;
-} global_tooltips[32] = {};
+} global_tooltips[GLOBAL_TOOLTIP_CAPACITY] = {};
 global int global_tooltip_count = 0;
-global Arena global_frame_arena;
+global Arena global_frame_arena = {};
 
-internal String_Const_u8 strip_string_border_characters(String_Const_u8 string) {
+function String_Const_u8 strip_string_border_characters(String_Const_u8 string) {
     string.str  += 1;
     string.size -= 2;
     return string;
 }
 
-internal f32 random_f32(f32 low, f32 high) {
+function f32 random_f32(f32 low, f32 high) {
     return low + (high - low) * ((cast(int)rand() % 10000) / 10000.f); // Eww... rand...
 }
 
-internal f32 min_f32(f32 a, f32 b) {
+function f32 min_of(f32 a, f32 b) {
     return a < b ? a : b;
 }
 
-internal f32 max_f32(f32 a, f32 b) {
+function f32 max_of(f32 a, f32 b) {
     return a > b ? a : b;
 }
 
-internal b32 char_is_alphabetic(int c) {
+function b32 char_is_alphabetic(int c) {
     return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
 }
 
-internal b32 char_is_digit(int c) {
+function b32 char_is_digit(int c) {
     return (c >= '0' && c <= '9');
 }
 
-internal b32 char_is_symbol(int c) {
+function b32 char_is_symbol(int c) {
     return (c == '~' || c == '`' || c == '!' || c == '#' ||
             c == '$' || c == '%' || c == '^' || c == '&' ||
             c == '*' || c == '(' || c == ')' || c == '-' ||
@@ -48,7 +48,7 @@ internal b32 char_is_symbol(int c) {
             c == '?' || c == '/');
 }
 
-internal double get_first_double_from_buffer(char *buffer) {
+function double get_first_double_from_buffer(char *buffer) {
     char number_str[256];
     int number_write_pos = 0;
     double value = 0;
@@ -65,7 +65,7 @@ internal double get_first_double_from_buffer(char *buffer) {
     return value;
 }
 
-internal b32 strings_match_case_sensitive(char *a, int a_length, char *b, int b_length) {
+function b32 strings_match_case_sensitive(char *a, int a_length, char *b, int b_length) {
 	b32 match = false;
     if (a && b && a[0] && b[0] && a_length == b_length) {
         match = true;
@@ -80,7 +80,7 @@ internal b32 strings_match_case_sensitive(char *a, int a_length, char *b, int b_
 }
 
 // @Note(ema): CRC = Cyclic Redundancy Check
-internal unsigned int crc32(unsigned char *buf, int len) {
+function u32 crc32(unsigned char *buf, int len) {
     static unsigned int init = 0xffffffff;
     static const unsigned int crc32_table[] =
     {
@@ -158,28 +158,26 @@ internal unsigned int crc32(unsigned char *buf, int len) {
     return crc;
 }
 
-internal unsigned int string_crc32(char *string, int string_length) {
-    unsigned int hash = crc32(cast(unsigned char *)string, string_length);
+function u32  string_crc32(char *string, int string_length) {
+	u32 hash = crc32(cast(u8 *)string, string_length);
     return hash;
 }
 
-internal unsigned int cstring_crc32(char *string) {
-    int string_length = cast(int)CalculateCStringLength(string);
-    unsigned int hash = crc32(cast(unsigned char *)string, string_length);
+function u32 cstring_crc32(char *string) {
+	i32 string_length = cast(i32)CalculateCStringLength(string);
+	u32 hash = crc32(cast(u8 *)string, string_length);
     return hash;
 }
 
-internal u64 get_single_bit_offset(u64 value) {
+function u64 get_single_bit_offset(u64 value) {
     u64 offset = 0;
     for (u64 i = 0; i < 64; i += 1) {
-        if (value == ((u64)1 << i)) {
+        if (value == (cast(u64)1 << i)) {
             offset = i;
             break;
         }
     }
     return offset;
 }
-
-NAMESPACE_END()
 
 #endif // FCODER_CUSTOM_UBIQUITOUS_CPP

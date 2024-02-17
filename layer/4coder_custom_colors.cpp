@@ -94,7 +94,7 @@ internal Color_Context make_token_color_context(Token token, Buffer_ID buffer) {
     return ctx;
 }
 
-internal Color_Context make_cursor_color_context(Color_Flags flags, keybinding_mode mode) {
+internal Color_Context make_cursor_color_context(Color_Flags flags, Keybinding_Mode mode) {
     Color_Context ctx = {};
     ctx.flags    = flags;
     ctx.mode     = mode;

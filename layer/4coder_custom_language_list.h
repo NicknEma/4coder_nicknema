@@ -15,7 +15,7 @@
 NAMESPACE_BEGIN(nne)
 
 // This procedure just calls register_language for each implemented language.
-procedure void register_languages(void) {
+function void register_languages(void) {
     // C/C++.
     {
         String_Const_u8 extensions[] = {

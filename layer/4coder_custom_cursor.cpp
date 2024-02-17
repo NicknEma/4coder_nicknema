@@ -150,7 +150,7 @@ F4_Cursor_RenderEmacsStyle(Application_Links *app, View_ID view_id, b32 is_activ
     Color_Flags flags = 0;
     flags |= !!global_keyboard_macro_is_recording * Color_Flag_Macro;
     flags |= !!power_mode.enabled * Color_Flag_PowerMode;
-    ARGB_Color cursor_color = get_color(app, make_cursor_color_context(flags, GlobalKeybindingMode));
+    ARGB_Color cursor_color = get_color(app, make_cursor_color_context(flags, global_keybinding_mode));
     ARGB_Color mark_color = cursor_color;
     ARGB_Color inactive_cursor_color = argb_from_id(active_color_table, fleury_color_cursor_inactive, 0);
     
@@ -323,7 +323,7 @@ F4_Cursor_RenderNotepadStyle(Application_Links *app, View_ID view_id, b32 is_act
         
         // NOTE(rjf): Draw cursor
         {
-            ARGB_Color cursor_color = get_color(app, make_cursor_color_context(0, GlobalKeybindingMode));
+            ARGB_Color cursor_color = get_color(app, make_cursor_color_context(0, global_keybinding_mode));
             ARGB_Color ghost_color = fcolor_resolve(fcolor_change_alpha(fcolor_argb(cursor_color), 0.5f));
             Rect_f32 rect = text_layout_character_on_screen(app, text_layout_id, cursor_pos);
             rect.x1 = rect.x0 + outline_thickness;

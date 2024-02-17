@@ -39,14 +39,14 @@ struct Color_Context {
     Token token;
     Buffer_ID buffer;
     Color_Flags flags;
-    keybinding_mode mode;
+    Keybinding_Mode mode;
 };
 
 internal void tick_colors(Application_Links *app, Frame_Info frame_info);
 internal ARGB_Color argb_from_id(Color_Table table, Managed_ID id, int subindex);
 internal ARGB_Color argb_from_id(Color_Table table, Managed_ID id);
 internal Color_Context make_token_color_context(Token token, Buffer_ID buffer);
-internal Color_Context make_cursor_color_context(Color_Flags flags, keybinding_mode mode);
+internal Color_Context make_cursor_color_context(Color_Flags flags, Keybinding_Mode mode);
 internal ARGB_Color get_color(Application_Links *app, Color_Context ctx);
 internal void do_syntax_highlight(Application_Links *app, Text_Layout_ID text_layout_id, Token_Array *array);
 
