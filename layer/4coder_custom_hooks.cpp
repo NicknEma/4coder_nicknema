@@ -307,8 +307,8 @@ namespace nne {
 				Token               *active_cursor_token         = token_it_read(&active_cursor_it);
 				
 				if (active_cursor_token) {
-					Scratch_Block   scratch(app);
-					String_Const_u8 active_cursor_string = push_buffer_range(app, scratch, active_cursor_buffer, Ii64(active_cursor_token));
+					Scratch_Block   local_scratch(app);
+					String_Const_u8 active_cursor_string = push_buffer_range(app, local_scratch, active_cursor_buffer, Ii64(active_cursor_token));
 					
 					// Loop the visible tokens
 					Range_i64 visible_range = text_layout_get_visible_range(app, text_layout_id);
@@ -323,7 +323,7 @@ namespace nne {
 						
 						if (token->kind == TokenBaseKind_Identifier) {
 							Range_i64 token_range = Ii64(token);
-							String_Const_u8 token_string = push_buffer_range(app, scratch, buffer, token_range);
+							String_Const_u8 token_string = push_buffer_range(app, local_scratch, buffer, token_range);
 							
 							if (range_contains(token_range, view_get_cursor_pos(app, view_id))) {
 								// If this is the buffers cursor token, highlight it with an Underline

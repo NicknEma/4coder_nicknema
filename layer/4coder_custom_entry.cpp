@@ -11,8 +11,6 @@
 //~ Macros and pragmase stuff that have to be put here for various reasons.
 #pragma warning(disable: 4102) // The label is defined but never referenced. The compiler ignores the label. This is here because of an unreferenced label in the odin generated lexer.
 #pragma warning(disable: 4702) // Unreachable code was detected.
-#pragma warning(disable: 4706) // Assignment within conditional expression. @Cleanup(ema): Where? If in the custom layer, remove. If in the base editor, explain.
-#pragma warning(disable: 4456) // Declaration of 'identifier' hides previous local declaration. @Cleanup(ema): Where? Should probabily be fixed.
 
 //~ Custom layer headers
 #include "4coder_custom_ubiquitous.h"            // Macros, variables and utility functions that can be used everywhere

@@ -1720,7 +1720,7 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
         i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
         i64 cursor_column = cursor - get_line_start_pos(app, buffer, cursor_line) + 1;
         i64 spaces_to_insert = column_number - cursor_column;
-        History_Group group = history_group_begin(app, buffer);
+        History_Group history_group = history_group_begin(app, buffer);
 		
         for (i64 i = 0; i < spaces_to_insert; i += 1) {
             buffer_replace_range(app, buffer, Ii64(cursor, cursor), str8_lit(" "));
@@ -1728,7 +1728,7 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
 		
         view_set_cursor(app, view, seek_pos(cursor+spaces_to_insert));
         view_set_mark(app, view, seek_pos(cursor+spaces_to_insert));
-        history_group_end(group);
+        history_group_end(history_group);
     }
 }
 
