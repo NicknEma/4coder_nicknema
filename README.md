@@ -19,7 +19,15 @@ _NOTE: On Windows, the path_to.4coder string has to use backslashes (\\) instead
 
 ## Customizing 4coder
 
-# Custom commands
+### Themes, bindings and configs
+
+These three file types are parsed by 4coder as a series of C++ tokens; this means they follow the same rules for comments, semicolons, etc; They are loaded by the editor at startup, so make sure they are in the correct directory before you run the program.
+
+After the config file is parsed, each variable gets saved in a 'variable table' together with its value. Each piece of code wanting to use a config variable can lookup into that table and use the result. Some variables are looked up immediately after being saved (i.e the font), others only when needed (like when running a command or during an editor tick).
+
+If the code tries to lookup a variable that isn't in the table (for example if the variable is commented out in the `config.4coder` file), it is simply added into the table with a default value.
+
+### Custom commands
 
 Write a function using the CUSTOM_COMMAND_SIG macro, like this:
 
@@ -30,9 +38,3 @@ CUSTOM_COMMAND_SIG(command_name) {
 ```
 
 The macro will expand to a function signature that will be detected by the meta-program and added into the custom layer.
-
-# Using the `config.4coder` file
-
-The `config.4coder` file is parsed as a series of C++ tokens, so it follows the same rules for comments, semicolons, etc. After it is parsed, each variable gets saved in a 'variable table' together with its value. Each piece of code wanting to use a config variable can lookup into that table and use the result. Some variables are looked up immediately after being saved (i.e the font), others only when needed (like when running a command or during an editor tick).
-
-If the code tries to lookup a variable that isn't in the table (for example if the variable is commented out in the `config.4coder` file), it is simply added into the table with a default value.
