@@ -1,7 +1,16 @@
 package test;
 
 main :: proc() {
+	if 0 < 1 {
+		;
+	}
 	
+	if 1 > 0 {
+		;
+	}
+	
+	a := 0
+		d := 1
 }
 
 odin_foo :: proc() {

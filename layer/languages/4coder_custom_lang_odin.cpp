@@ -279,7 +279,7 @@ function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
         }
     }
     
-    // NOTE(rjf): Search for *.* pattern (accessing a type)
+    // Search for *.* pattern (accessing a type)
     // The corresponding line will be used to display the tooltip.
     {
         Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);

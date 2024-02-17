@@ -1,17 +1,21 @@
 
 TODO EMA
  [ ] Finish odin parser
-  [ ] Fix some operators not being recognized
+  [X] Fix some operators not being recognized
   [ ] Fix allow directives in front of the keyword proc
- [ ] Fix the tooltip that should be at the bottom but isn't
+  [X] Fix identifiers starting with 'u' acting weird
+  [ ] Allow optional semicolons with auto indentation
+ [ ] Fonts size only works if it loads the custom font (which has to be in the fonts
+     directory). It currently doesn't work for the default font. Fix.
+ [X] Fix the tooltip that should be at the bottom but isn't
  [ ] Hot reloading of themes, projects, configs and bindings
  [ ] Maximize window by default
  [ ] Proportional font for UI, monospaced for code
- [ ] Odin optional semicolons
- [ ] vsplit and hsplit bindings
+ [X] vsplit and hsplit bindings
  [ ] build/run command in opposite panel binding
  [ ] Numpad ascii codes
- [ ] Don't auto-indent comments
+ [ ] cpp_indent_namespaces config option and toggle
+ [ ] Don't auto-indent comments and strings
  [ ] Cursor as a line
  [ ] Multiline editing
  [ ] Right-click context menu
@@ -20,7 +24,8 @@ TODO EMA
  [ ] Display hotkey cheatsheet
  [ ] Peek definition
  [ ] Recursively walk imports/includes, record types, macros, constants, procedures, global variables.
-
+ [ ] The build_lexers.bat emits a "The system could not find the path specified" message even though it does everything as it should.
+     I don't know what it's referring to. Maybe it doesn't matter, but it's annoying.
 
 
 TODO FOR SHAWN

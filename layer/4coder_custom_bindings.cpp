@@ -52,13 +52,15 @@ function Implicit_Map_Result implicit_map_function(Application_Links *app, Strin
 	Command_Binding binding = map_get_binding_recursive(&framework_mapping, map_id, event);
 	if (!binding.custom) {
 		binding = map_get_binding_recursive(&framework_mapping, orig_id, event);
+	} else {
+		Allow_Break();
 	}
     
     // TODO(allen): map_id <-> map name?
     result.map = 0;
     result.command = binding.custom;
     
-    return(result);
+    return result;
 }
 
 
@@ -90,7 +92,7 @@ function void set_absolutely_necessary_bindings(Mapping *mapping) {
 	// Text files related bindings
     SelectMap(file_map_id);
     ParentMap(global_map_id);
-    BindTextInput(fleury_write_text_input); // Every time there's text input, call this command.
+    BindTextInput(f4_write_text_input); // Every time there's text input, call this command.
     BindMouse(click_set_cursor_and_mark, MouseCode_Left);             // Mouse left pressed           => set cursor and mark
     BindMouseRelease(click_set_cursor,   MouseCode_Left);             // Mouse left released          => set cursor
     BindCore(click_set_cursor_and_mark,  CoreCode_ClickActivateView); // View activated               => set cursor and mark
@@ -99,7 +101,7 @@ function void set_absolutely_necessary_bindings(Mapping *mapping) {
 	// Code files related bindings (what counts as a code file is specified in the config.4coder file)
     SelectMap(code_map_id);
     ParentMap(file_map_id);
-    BindTextInput(fleury_write_text_and_auto_indent); // Every time there's text input in a code file, call this command.
+    BindTextInput(nne__write_text_and_auto_indent); // Every time there's text input in a code file, call this command. @Todo(ema): This doesn't work? What? If I step through the code in VS studio, writing text breaks on the default write_text_input.
     BindMouse(f4_lego_click_store_token_1, MouseCode_Right); // @Todo(ema): Figure out what these 2 do (lego isn't a terribly good name...)
     BindMouse(f4_lego_click_store_token_2, MouseCode_Middle);
     
@@ -172,14 +174,14 @@ function void set_default_bindings(Mapping *mapping) {
     Bind(project_fkey_command, KeyCode_F15);
     Bind(project_fkey_command, KeyCode_F16);
     
-    // NOTE(rjf): Custom bindings.
+    // Custom bindings.
     {
         Bind(open_panel_vsplit, KeyCode_P, KeyCode_Control);
         Bind(open_panel_hsplit, KeyCode_Minus, KeyCode_Control);
         Bind(close_panel, KeyCode_P, KeyCode_Control, KeyCode_Shift);
         Bind(f4_search_for_definition__project_wide, KeyCode_J, KeyCode_Control);
         Bind(f4_search_for_definition__current_file, KeyCode_J, KeyCode_Control, KeyCode_Shift);
-        Bind(fleury_toggle_battery_saver, KeyCode_Tick, KeyCode_Alt);
+        Bind(f4_toggle_battery_saver, KeyCode_Tick, KeyCode_Alt);
         Bind(move_right_token_boundary, KeyCode_Right, KeyCode_Shift, KeyCode_Control);
         Bind(move_left_token_boundary, KeyCode_Left, KeyCode_Shift, KeyCode_Control);
     }
@@ -194,7 +196,7 @@ function void set_default_bindings(Mapping *mapping) {
     Bind(move_left,              KeyCode_Left);
     Bind(move_right,             KeyCode_Right);
     Bind(seek_end_of_line,       KeyCode_End);
-    Bind(fleury_home,            KeyCode_Home);
+    Bind(f4_home,            KeyCode_Home);
     Bind(page_up,                KeyCode_PageUp);
     Bind(page_down,              KeyCode_PageDown);
     Bind(goto_beginning_of_file, KeyCode_PageUp, KeyCode_Control);
@@ -244,9 +246,9 @@ function void set_default_bindings(Mapping *mapping) {
     Bind(if_read_only_goto_position_same_panel, KeyCode_Return, KeyCode_Shift);
     Bind(view_jump_list_with_lister,  KeyCode_Period, KeyCode_Control, KeyCode_Shift);
     
-    // NOTE(rjf): Custom bindings.
+    // Custom bindings.
     {
-        Bind(fleury_write_zero_struct,  KeyCode_0, KeyCode_Control);
+        Bind(f4_write_zero_struct,  KeyCode_0, KeyCode_Control);
         Bind(move_right_token_boundary, KeyCode_Right, KeyCode_Shift, KeyCode_Control);
         Bind(move_left_token_boundary, KeyCode_Left, KeyCode_Shift, KeyCode_Control);
     }
@@ -254,7 +256,7 @@ function void set_default_bindings(Mapping *mapping) {
 	// Code files related bindings.
     SelectMap(code_map_id);
     ParentMap(file_map_id);
-    BindTextInput(fleury_write_text_and_auto_indent);
+    BindTextInput(nne__write_text_and_auto_indent);
     Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Control);
     Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Control);
     Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);

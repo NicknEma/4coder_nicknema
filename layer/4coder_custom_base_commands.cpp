@@ -26,8 +26,7 @@ CUSTOM_DOC("when bound to keystroke, ensures the event falls through to text ins
 
 NAMESPACE_BEGIN(nne)
 
-// @Rename(ema): Searches in the current buffer. Make it explicit?
-internal void search(Application_Links *app, Scan_Direction dir) {
+internal void search_current_buffer(Application_Links *app, Scan_Direction dir) {
     Scratch_Block scratch(app);
 	
     View_ID   view   = get_active_view(app, Access_Read);
@@ -46,18 +45,18 @@ NAMESPACE_END()
 
 CUSTOM_COMMAND_SIG(f4_search)
 CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, will fill search query with it.") {
-    nne::search(app, Scan_Forward);
+    nne::search_current_buffer(app, Scan_Forward);
 }
 
 CUSTOM_COMMAND_SIG(f4_reverse_search)
 CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, will fill search query with it.") {
-    nne::search(app, Scan_Backward);
+    nne::search_current_buffer(app, Scan_Backward);
 }
 
-// @Note(ema): What's the point of this exactly? Power mode? @Todo(ema): Write a better command doc and a comment that explains it.
+// @Note(ema): The point of this is explained in notes.h; it's just for enabling power mode.
 CUSTOM_COMMAND_SIG(f4_write_text_input)
 CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
-    write_text_input(app);
+    ::write_text_input(app);
 	
     nne::F4_PowerMode_CharacterPressed();
     User_Input      in     = get_current_input(app);
@@ -67,7 +66,7 @@ CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
 
 CUSTOM_COMMAND_SIG(f4_write_text_and_auto_indent)
 CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.") {
-    write_text_and_auto_indent(app);
+    ::nne__write_text_and_auto_indent(app);
 	
     nne::F4_PowerMode_CharacterPressed();
     User_Input      in     = get_current_input(app);
@@ -105,9 +104,7 @@ CUSTOM_DOC("Toggles battery saving mode.") {
 // @Note(ema): global_compilation_view and global_compilation_view_expanded are defined in ubiquitous.h
 CUSTOM_COMMAND_SIG(f4_toggle_compilation_expand)
 CUSTOM_DOC("Expand the compilation window.") {
-	// using namespace nne;
-	
-    Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
+	Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
     Face_ID face_id = get_face_id(app, buffer);
     Face_Metrics metrics = get_face_metrics(app, face_id);
     if (global_compilation_view_expanded ^= 1) {
@@ -254,7 +251,8 @@ internal void _F4_PushListerOptionForNote(Application_Links *app, Arena *arena, 
             
             default: break;
         }
-        lister_add_item(lister, name, sort, jump, 0);
+        
+		lister_add_item(lister, name, sort, jump, 0);
     }
 }
 
@@ -272,6 +270,7 @@ internal void F4_JumpToLocation(Application_Links *app, View_ID view, Buffer_ID 
     if (auto_center_after_jumps) {
         center_view(app);
     }
+	
     view_set_cursor(app, view, seek);
     view_set_mark(app, view, seek);
 }
@@ -755,96 +754,79 @@ function i64 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buf
 
 NAMESPACE_END()
 
-// @Note(ema): They are probabily different only in notepad mode, since in emacs mode I didn't notice any difference.
-
 CUSTOM_COMMAND_SIG(f4_move_left)
 CUSTOM_DOC("Moves the cursor one character to the left.") {
-    // using namespace nne;
-	
 	Scratch_Block scratch(app);
+	
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
-    View_ID view = get_active_view(app, Access_ReadVisible);
+    View_ID            view = get_active_view(app, Access_ReadVisible);
     
 	if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
         view_set_cursor_by_character_delta(app, view, -1);
     }
+	
     no_mark_snap_to_cursor_if_shift(app, view);
 }
 
 CUSTOM_COMMAND_SIG(f4_move_right)
 CUSTOM_DOC("Moves the cursor one character to the right.") {
-    // using namespace nne;
+    Scratch_Block scratch(app);
 	
-	Scratch_Block scratch(app);
     Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
-    View_ID view = get_active_view(app, Access_ReadVisible);
+    View_ID            view = get_active_view(app, Access_ReadVisible);
+	
     if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
         view_set_cursor_by_character_delta(app, view, +1);
     }
-    no_mark_snap_to_cursor_if_shift(app, view);
+    
+	no_mark_snap_to_cursor_if_shift(app, view);
 }
 
-CUSTOM_COMMAND_SIG(f4_move_up_token_occurrence)
+CUSTOM_COMMAND_SIG(f4_go_to_previous_token_occurrence)
 CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
-CUSTOM_COMMAND_SIG(f4_move_down_token_occurrence)
+CUSTOM_COMMAND_SIG(f4_go_to_next_token_occurrence)
 CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_right_token_boundary)
 CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_move_left_token_boundary)
 CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_token_boundary)
 CUSTOM_DOC("Deletes left to a token boundary.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_delete_token_boundary)
 CUSTOM_DOC("Deletes right to a token boundary.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
 }
 
 CUSTOM_COMMAND_SIG(f4_backspace_alpha_numeric_or_camel_boundary)
 CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
 }
 
 CUSTOM_COMMAND_SIG(f4_delete_alpha_numeric_or_camel_boundary)
 CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.") {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
 }
 
@@ -1368,9 +1350,7 @@ internal void F4_SetLineCommentedOnLine(Application_Links *app, Buffer_ID buffer
 }
 
 internal void F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     
     i64       cursor = *cursor_p;
     i64       mark   = *mark_p;
@@ -1379,15 +1359,18 @@ internal void F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buff
     if (commented) {
         buffer_replace_range(app, buffer, Ii64(range.max, range.max), S8Lit("*/"));
         buffer_replace_range(app, buffer, Ii64(range.min, range.min), S8Lit("/*"));
-        if (cursor > mark) { cursor += 4; }
+        
+		if (cursor > mark) { cursor += 4; }
         else               { mark   += 4; }
     } else if (range.max - range.min >= 2) {
         String_Const_u8 opener = push_buffer_range(app, scratch, buffer, Ii64(range.min, range.min+2));
         String_Const_u8 closer = push_buffer_range(app, scratch, buffer, Ii64(range.max-2, range.max));
-        if (string_match(opener, S8Lit("/*")) && string_match(closer, S8Lit("*/"))) {
+        
+		if (string_match(opener, S8Lit("/*")) && string_match(closer, S8Lit("*/"))) {
             buffer_replace_range(app, buffer, Ii64(range.max-2, range.max), S8Lit(""));
             buffer_replace_range(app, buffer, Ii64(range.min, range.min+2), S8Lit(""));
-            if (cursor > mark) { cursor -= 4; }
+            
+			if (cursor > mark) { cursor -= 4; }
             if (mark > cursor) { mark   -= 4; }
         }
     }
@@ -1397,9 +1380,7 @@ internal void F4_SetBlockCommentedOnRange(Application_Links *app, Buffer_ID buff
 }
 
 function b32 F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID buffer, i64 pos) {
-    // using namespace nne;
-	
-	b32 alread_has_comment = false;
+    b32 alread_has_comment = false;
     u8  check_buffer[2];
     if (buffer_read_range(app, buffer, Ii64(pos, pos + 2), check_buffer)) {
         if (check_buffer[0] == '/' && check_buffer[1] == '*') {
@@ -1411,9 +1392,7 @@ function b32 F4_CBlockCommentStartsAtPosition(Application_Links *app, Buffer_ID 
 }
 
 internal void F4_SetCommentedOnRange(Application_Links *app, Buffer_ID buffer, i64 *cursor_p, i64 *mark_p, b32 commented) {
-    // using namespace nne;
-	
-	Scratch_Block scratch(app);
+    Scratch_Block scratch(app);
     
     i64         cursor = *cursor_p;
     i64         mark   = *mark_p;
@@ -1753,18 +1732,9 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
 }
 
 //~ NOTE(rjf): Deprecated names:
-CUSTOM_COMMAND_SIG(fleury_write_text_input)
-CUSTOM_DOC("Deprecated name. Please update to f4_write_text_input.")
-{ f4_write_text_input(app); }
-CUSTOM_COMMAND_SIG(fleury_write_text_and_auto_indent)
-CUSTOM_DOC("Deprecated name. Please update to f4_write_text_and_auto_indent.")
-{f4_write_text_and_auto_indent(app);}
 CUSTOM_COMMAND_SIG(fleury_write_zero_struct)
 CUSTOM_DOC("Deprecated name. Please update to f4_write_zero_struct.")
 {f4_write_zero_struct(app);}
-CUSTOM_COMMAND_SIG(fleury_home)
-CUSTOM_DOC("Deprecated name. Please update to f4_home.")
-{f4_home(app);}
 CUSTOM_COMMAND_SIG(fleury_toggle_battery_saver)
 CUSTOM_DOC("Deprecated name. Please update to f4_toggle_battery_saver.")
 {f4_toggle_battery_saver(app);}

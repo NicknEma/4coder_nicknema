@@ -1,21 +1,24 @@
-
-
-
-
-
-
-
-
-
 /*c
+2+2
+*/			
+			
+			
+			
+			
+			
+			
+			
+	
+/*c
+plot_function_samples(100)
 plot_function_samples(100)
 plot_title('My Plot')
 plot_xaxis('x', -4, 4)
 plot_yaxis('y', -4, 4)
 plot(x^2 * sin(time()), 4*cos(time())*sin(x*time()))
-plot(sin(time())*cos(x+time()), x^3 * sin(time()),
-sin(-time())*3*x)
+plot(sin(time())*cos(x+time()), x^3 * sin(time()), sin(-time())*3*x)
 */
+
 
 
 

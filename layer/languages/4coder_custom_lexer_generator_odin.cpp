@@ -86,6 +86,7 @@ internal void build_language_model(void) {
     sm_select_base_kind(TokenBaseKind_StatementClose);
     sm_op(";");
     sm_op(",");
+	// sm_op("\n");
 	// @Todo(ema): Add optional semicolons. Will sm_op("\n") work?
 	
     sm_select_base_kind(TokenBaseKind_Operator);
@@ -463,14 +464,18 @@ internal void build_language_model(void) {
 		
 #if 1
 		{
-			// This needs to be here otherwise tooltips don't show up and indentation
-			// doesn't work. I don't even understand what ".</" have to do with indentation,
-			// yet it's the code that makes it work...
+			// This is the code that emits operators. It's what makes automatic
+			// indentation work, since braces are what describes indentation (and
+			// braces are operators).
 			Character_Set *char_set = smo_new_char_set();
+#if 0
 			smo_char_set_union_ops_firsts(char_set, main_ops_without_dot_or_slash);
 			smo_char_set_remove(char_set, ".</");
+#else
+			smo_char_set_union_ops_firsts(char_set, main_ops);
+#endif
 			char *char_set_array = smo_char_set_get_array(char_set);
-			State *operator_state = smo_op_set_lexer_root(main_ops_without_dot_or_slash, root, "LexError");
+			State *operator_state = smo_op_set_lexer_root(main_ops, root, "LexError");
 			sm_case_peek(char_set_array, operator_state);
 		}
 #endif

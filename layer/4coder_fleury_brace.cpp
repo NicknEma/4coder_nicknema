@@ -1,37 +1,31 @@
+#ifndef FCODER_CUSTOM_BRACE_CPP
+#define FCODER_CUSTOM_BRACE_CPP
+
 NAMESPACE_BEGIN(nne)
 
-//~ NOTE(rjf): Brace highlight
+//~ Brace highlight
 
-function void
-F4_Brace_RenderHighlight(Application_Links *app, Buffer_ID buffer, Text_Layout_ID text_layout_id,
-                         i64 pos, ARGB_Color *colors, i32 color_count)
-{
-    if(!def_get_config_b32(vars_save_string_lit("f4_disable_brace_highlight")))
-    {
+internal void F4_Brace_RenderHighlight(Application_Links *app, Buffer_ID buffer, Text_Layout_ID text_layout_id, i64 pos, ARGB_Color *colors, i32 color_count) {
+    if (!def_get_config_b32(vars_save_string_lit("f4_disable_brace_highlight"))) {
         ProfileScope(app, "[F4] Brace Highlight");
-        Token_Array token_array = get_token_array_from_buffer(app, buffer);
-        if (token_array.tokens != 0)
-        {
+        
+		Token_Array token_array = get_token_array_from_buffer(app, buffer);
+        if (token_array.tokens != 0) {
             Token_Iterator_Array it = token_iterator_pos(0, &token_array, pos);
             Token *token = token_it_read(&it);
-            if(token != 0 && token->kind == TokenBaseKind_ScopeOpen)
-            {
+            if (token != 0 && token->kind == TokenBaseKind_ScopeOpen) {
                 pos = token->pos + token->size;
-            }
-            else
-            {
-                if(token_it_dec_all(&it))
-                {
+            } else {
+                if (token_it_dec_all(&it)) {
                     token = token_it_read(&it);
-                    if (token->kind == TokenBaseKind_ScopeClose &&
-                        pos == token->pos + token->size)
-                    {
+                    if (token->kind == TokenBaseKind_ScopeClose && pos == token->pos + token->size) {
                         pos = token->pos;
                     }
                 }
             }
         }
-        draw_enclosures(app, text_layout_id, buffer,
+        
+		draw_enclosures(app, text_layout_id, buffer,
                         pos, FindNest_Scope,
                         RangeHighlightKind_CharacterHighlight,
                         0, 0, colors, color_count);
@@ -303,3 +297,5 @@ F4_Brace_RenderLines(Application_Links *app, Buffer_ID buffer, View_ID view,
 }
 
 NAMESPACE_END()
+
+#endif // FCODER_CUSTOM_BRACE_CPP

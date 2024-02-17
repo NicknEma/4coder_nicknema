@@ -1,48 +1,52 @@
-// Command Mapping
+//~ Command Mapping
 // ""                - Leave the bindings unaltered - use this when writing your own customization!
 // "choose"          - Ask 4coder to choose based on platform.
 // "default"         - Use the default keybindings 4coder has always had.
 // "mac-default"     - Use keybindings similar to those found in other Mac applications.
 mapping = "";
 
-// MODE
+//~ Mode
 // "4coder"       - The default 4coder mode that has been around since the beginning of time (2015)
 // "notepad-like" - Single "thin" cursor and highlight ranges like in notepad, sublime, notepad++, etc
 mode = "4coder";
 bind_by_physical_key = false;
 
-// UI
-use_scroll_bars = false;
-use_file_bars = true;
-use_error_highlight = true;
-use_jump_highlight = true;
-use_scope_highlight = true;
-use_paren_helper = true;
-use_comment_keywords = true;
+lalt_lctrl_is_altgr  = false; // Keyboard AltGr setting
+
+//~ UI
+use_scroll_bars          = false;
+use_file_bars            = true;
+use_error_highlight      = true;
+use_jump_highlight       = true;
+use_scope_highlight      = true;
+use_paren_helper         = true;
+use_comment_keywords     = true;
 lister_whole_word_backspace_when_modified = true;
 show_line_number_margins = false;
-enable_output_wrapping = false;
+enable_output_wrapping   = false;
+enable_undo_fade_out     = true;
 
-enable_undo_fade_out = true;
+//~ Shapes
 
-// cursor_roundess is a value [0,50] setting the radius of the cursor and mark's roundness as a percentage of their width
-// (At 50 the left and right corners will be so round they form a semi-circle,
-//  hence 50 is the max)
+// 'cursor_roundess' is a value [0,50] setting the radius of the cursor and mark's roundness
+// as a percentage of their width.
+// At 50 the left and right corners will be so round they form a semi-circle,
+// hence 50 is the max.
 cursor_roundness = 10;
 
-// mark_thickness is a pixel count value setting the
+// 'mark_thickness' is a pixel count value setting the
 // thickness of the mark wire box in original mode
-mark_thickness = 2;
+mark_thickness   =  2;
 
-// lister_roundess is a value [0,50] setting the radius of
+// 'lister_roundess' is a value [0,50] setting the radius of
 // the lister items' roundness as a percentage of their height
 lister_roundness = 20;
 
-// Code Wrapping
-treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.m.mm.ds.md.4coder.jai.vert.frag.odin.js.ts.css.html.bat.sh";
+//~ Code Wrapping and virtual whitespace
+enable_code_wrapping = true;
 enable_virtual_whitespace = true;
 virtual_whitespace_regular_indent = 4;
-enable_code_wrapping = true;
+treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.4coder.jai.vert.frag.odin.js.ts.css.bat.sh";
 
 // This only applies to code files in code-wrapping mode.
 // Plain text and code files without virtual-whitespace will not be effected.
@@ -54,30 +58,28 @@ automatically_save_changes_on_build = true;
 // Load project on startup
 automatically_load_project = true;
 
-// Indentation
-indent_with_tabs = true;
-indent_width = 4;
+//~ Indentation
+indent_with_tabs  = true;
+indent_width      = 4;
 default_tab_width = 4;
 
-// Theme
-default_theme_name = "theme-fleury";
+//~ Colors
+default_theme_name       = "theme-fleury";
 highlight_line_at_cursor = true;
 
-// Font
-default_font_name = "CascadiaCode.ttf";
-default_font_size = 50;
+//~ Font
+default_font_name    = "CascadiaCode.ttf";
+default_font_size    = 13; // The size is only applied if the custom font is loaded correctly (it has to be in the 4coder\fonts folder.
 default_font_hinting = true;
 
-// anti-aliasing modes:
+// Anti-aliasing modes:
 //  8bit - mono-chrome 0-255 opacity channel per pixel
 //  1bit - mono-chrome 0/1 opacity channel per pixel
 default_font_aa_mode = "8bit";
 
-// User
+//~ User.
+// @Todo(ema): Why does this matter?
 user_name = "nicknema";
-
-// Keyboard AltGr setting
-lalt_lctrl_is_altgr = false;
 
 // Project setup configuration
 default_compiler_bat = "cl";
@@ -85,7 +87,7 @@ default_flags_bat = "-FC -GR- -EHa- -nologo -Zi";
 default_compiler_sh = "g++";
 default_flags_sh  = "-g";
 
-// NOTE(rjf): Fleury 4coder Disabling Options
+//~ Custom config variables
 // f4_disable_brace_highlight = true;
 // f4_disable_close_brace_annotation = true;
 // f4_disable_brace_lines = true;
@@ -96,3 +98,7 @@ default_flags_sh  = "-g";
 f4_poscontext_draw_at_bottom_of_buffer = true;
 // f4_disable_poscontext = true;
 // f4_disable_cursor_token_occurance = true;
+// f4_battery_saver = true;
+
+maximize_window_on_startup = true;
+cpp_indent_namespaces = false;

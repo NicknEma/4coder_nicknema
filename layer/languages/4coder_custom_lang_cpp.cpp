@@ -166,13 +166,24 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
         
         if(0){}
         
-        //~ NOTE(rjf): Extern "C" scope changes (ignore) ((dude C++ syntax is so fucked up))
-        // NOTE(rjf): CORRECTION: Text files in general are so fucked up, fuck all of this
-        // parsing bullshit
+        //~ Extern "C" scope changes (ignore). NOTE(rjf): ((dude C++ syntax is so fucked up))
+        // CORRECTION: NOTE(rjf): Text files in general are so fucked up, fuck all of this
+        // parsing bullshit.
         else if (index__parse_pattern(context, "%t%t%t", "extern", "C", "{")) {
             handled = true;
         }
         
+		// Namespace scope changes. @Note(ema): I agree with the above statement.
+		// %k -> token kind,    requires Token_Base_Kind and Token ** for output token
+		else if (index__parse_pattern(context, "%t%k%t", "namespace", TokenBaseKind_Identifier, 0, "{")) {
+			handled = true;
+			
+			b32 indent_namespaces = def_get_config_b32(vars_save_string_lit("cpp_indent_namespaces"));
+			if (indent_namespaces) {
+				scope_nest += 1;
+			}
+		}
+		
         //~ NOTE(rjf): Scope Nest Changes
         else if (index__parse_pattern(context, "%t", "{")) {
             handled = true;
@@ -289,15 +300,8 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
         
         //~ NOTE(rjf): Functions
         else if (scope_nest == 0 &&
-				 (index__parse_pattern(context, "%k%o%k%t",
-									   TokenBaseKind_Identifier, &base_type,
-									   TokenBaseKind_Identifier, &name,
-									   "(") ||
-				  index__parse_pattern(context, "%k%o%k%t",
-									   TokenBaseKind_Keyword, &base_type,
-									   TokenBaseKind_Identifier, &name,
-									   "(")))
-        {
+				 (index__parse_pattern(context, "%k%o%k%t", TokenBaseKind_Identifier, &base_type, TokenBaseKind_Identifier, &name, "(") ||
+				  index__parse_pattern(context, "%k%o%k%t", TokenBaseKind_Keyword,    &base_type, TokenBaseKind_Identifier, &name, "("))) {
             handled = true;
             b32 prototype = false;
             if (F4_CPP_ParseFunctionBody(context, &prototype)) {
@@ -309,17 +313,10 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
         else if (scope_nest == 0 &&
 				 (index__parse_pattern(context, "%k%o%n%t%k%t",
 									   TokenBaseKind_Identifier, &base_type,
-									   Index__Note_Kind_Type, &containing_struct,
-									   "::",
-									   TokenBaseKind_Identifier, &name,
-									   "(") ||
+									   Index__Note_Kind_Type, &containing_struct, "::", TokenBaseKind_Identifier, &name, "(") ||
 				  index__parse_pattern(context, "%k%o%n%t%k%t",
 									   TokenBaseKind_Keyword, &base_type,
-									   Index__Note_Kind_Type, &containing_struct,
-									   "::",
-									   TokenBaseKind_Identifier, &name,
-									   "(")))
-        {
+									   Index__Note_Kind_Type, &containing_struct, "::", TokenBaseKind_Identifier, &name, "("))) {
             handled = true;
             b32 prototype = false;
             if (F4_CPP_ParseFunctionBody(context, &prototype)) {
@@ -334,11 +331,7 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
         }
         
         //~ NOTE(rjf): Macro Functions
-        else if (0 && index__parse_pattern(context, "%n%t%k",
-										   Index__Note_Kind_Macro, &note,
-										   "(",
-										   TokenBaseKind_Identifier, &name))
-        {
+        else if (0 && index__parse_pattern(context, "%n%t%k", Index__Note_Kind_Macro, &note, "(", TokenBaseKind_Identifier, &name)) {
             b32 valid = false;
             b32 prototype = false;
             
@@ -357,6 +350,7 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
                     valid = true;
                     break;
                 }
+				
                 index__parse_context_inc(context, 0);
             }
             
@@ -386,7 +380,7 @@ internal FILE_INDEXER(F4_CPP_IndexFile) {
     }
 }
 
-internal POSITIONAL_CONTEXT_GETTER(F4_CPP_PosContext) {
+internal POSITIONAL_CONTEXT_GETTER(cpp__get_positional_context) {
     int count = 0;
 	Positional_Context_Data *first = 0;
 	Positional_Context_Data *last = 0;
@@ -394,7 +388,7 @@ internal POSITIONAL_CONTEXT_GETTER(F4_CPP_PosContext) {
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
     Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
     
-    // NOTE(rjf): Search for left parentheses (function call or macro invocation).
+    // Search for left parentheses (function call or macro invocation).
     {
         int paren_nest = 0;
         int arg_idx = 0;
@@ -426,9 +420,9 @@ internal POSITIONAL_CONTEXT_GETTER(F4_CPP_PosContext) {
         }
     }
     
-    // NOTE(rjf): Search for *.* pattern, or *->* pattern (accessing a type)
+    // Search for *.* pattern, or *->* pattern (accessing a type)
     {
-#if 0
+#if 1
         Token *last_query_candidate = 0;
         for (;;) {
             Token *token = token_it_read(&it);
@@ -455,7 +449,7 @@ internal POSITIONAL_CONTEXT_GETTER(F4_CPP_PosContext) {
     return first;
 }
 
-internal LANGUAGE_HIGHLIGHTER(F4_CPP_Highlight) {
+internal LANGUAGE_HIGHLIGHTER(cpp__highlight) {
 }
 
 NAMESPACE_END()

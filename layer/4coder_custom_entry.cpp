@@ -1,5 +1,10 @@
+#if 1
 #define NAMESPACE_BEGIN(name) namespace name {
 #define NAMESPACE_END() }
+#else
+#define NAMESPACE_BEGIN(name)
+#define NAMESPACE_END()
+#endif
 
 #define Allow_Break() Assert(1)
 #define Force_Break() Assert(0)
@@ -47,7 +52,7 @@ typedef int socklen_t;
 #include "4coder_fleury_power_mode.h"
 #include "4coder_fleury_cursor.h"
 #include "4coder_fleury_plot.h"
-#include "4coder_fleury_calc.h"
+#include "4coder_custom_calc.h"
 #include "4coder_fleury_lego.h"
 #include "4coder_fleury_pos_context_tooltips.h"
 #include "4coder_fleury_code_peek.h"
@@ -58,6 +63,7 @@ typedef int socklen_t;
 # include "4coder_fleury_command_server.h"
 #endif
 #include "4coder_custom_hooks.h"                 // Sets up the hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
+#include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 
 //~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
@@ -72,7 +78,7 @@ typedef int socklen_t;
 #include "4coder_fleury_power_mode.cpp"
 #include "4coder_fleury_cursor.cpp"
 #include "4coder_fleury_plot.cpp"
-#include "4coder_fleury_calc.cpp"
+#include "4coder_custom_calc.cpp"
 #include "4coder_fleury_lego.cpp"
 #include "4coder_fleury_pos_context_tooltips.cpp"
 #include "4coder_fleury_code_peek.cpp"
@@ -85,11 +91,13 @@ typedef int socklen_t;
 #endif
 #include "4coder_fleury_casey.cpp"
 #include "4coder_custom_hooks.cpp"
+#include "4coder_custom_load.cpp"
+#include "4coder_custom_auto_indent.cpp"
 
-//~ NOTE(rjf): Plots Demo File
+//~ Plots Demo File
 #include "4coder_fleury_plots_demo.cpp"
 
-//~ NOTE(rjf): 4coder Stuff
+//~ 4coder Stuff
 #include "generated/managed_id_metadata.cpp"
 
 //~ Custom layer initialization
@@ -99,7 +107,7 @@ void custom_layer_init(Application_Links *app) {
     nne::global_frame_arena = make_arena(get_base_allocator_system());
     permanent_arena = make_arena(get_base_allocator_system());
     
-    // NOTE(rjf): Set up hooks.
+    // Set up hooks.
     {
         set_all_default_hooks(app);
         //t $          ($  , $                             , $                     );
@@ -113,7 +121,7 @@ void custom_layer_init(Application_Links *app) {
         set_custom_hook_memory_size(app, HookID_DeltaRule, delta_ctx_size(sizeof(Vec2_f32)));
     }
     
-    // NOTE(rjf): Set up mapping.
+    // Set up mapping.
     {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
@@ -128,29 +136,11 @@ void custom_layer_init(Application_Links *app) {
 	nne::register_languages();
 }
 
-// @Todo(ema): Reload from the current directory (not project)? Is it possible?
-// Probaily use def_search_normal_load_list() to get the executable directory (the so-called BinPath?)
-
-// @Todo(ema): With the same strategy also add a command that goes to the executable directory (sets it as the current directory). It's the parallel to Ctrl+H that goes to the project directory.
-
-CUSTOM_COMMAND_SIG(reload_config_file_from_project_directory)
-CUSTOM_DOC("Reload the config.4coder file from the project directory.") {
-	Face_Description description = get_face_description(app, 0);
-	load_config_and_apply(app, &global_config_arena, description.parameters.pt_size, description.parameters.hinting);
-}
-
-CUSTOM_COMMAND_SIG(reload_bindings_file_from_project_directory)
-CUSTOM_DOC("Reload the bindings.4coder file from the project directory.") {
-	if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
-		nne::set_default_bindings(&framework_mapping);
-	}
-	nne::set_absolutely_necessary_bindings(&framework_mapping);
-}
-
 NAMESPACE_BEGIN(nne)
 
-// TODO(rjf): This is only being used to check if a font file exists because there's a bug in try_create_new_face that crashes the program if a font is not found. This function is only necessary until that is fixed.
-function b32 is_file_readable(String_Const_u8 path) {
+// @Todo: This is only being used to check if a font file exists because there's a bug in try_create_new_face that
+// crashes the program if a font is not found. This function is only necessary until that is fixed.
+internal b32 is_file_readable(String_Const_u8 path) {
     b32 result = false;
     FILE *file = fopen(cast(char *)path.str, "r");
     if (file) {
@@ -158,6 +148,54 @@ function b32 is_file_readable(String_Const_u8 path) {
         fclose(file);
     }
     return result;
+}
+
+#if OS_WINDOWS
+#pragma comment(lib, "user32.lib")
+#endif
+
+internal b32 set_window_maximized(Application_Links *app, b32 maximized) {
+    Scratch_Block scratch(app);
+	b32 success = false;
+	
+#if OS_WINDOWS
+    
+    HWND top_window = GetTopWindow(0);
+    if (top_window) {
+        LONG cur_style = GetWindowLongW(top_window, GWL_STYLE);
+        
+        if (maximized) {
+            cur_style |=  WS_MAXIMIZE;
+        } else {
+            cur_style &= ~WS_MAXIMIZE;
+        }
+        
+		SetLastError(0);
+        LONG old_style = SetWindowLongW(top_window, GWL_STYLE, cur_style);
+		int last_error = GetLastError();
+		if (last_error != 0) {
+			String_Const_u8 message = push_u8_stringf(scratch, "The window could not be maximized/de-maximized because the window style could not be set (last error: %d).", last_error);
+			print_message(app, message);
+			
+			// @Bug: This fails with error code 5 (ERROR_ACCESS_DENIED). The docs say nothing more than "Access is denied". What could the problem be?
+		} else {
+			success = true;
+		}
+		
+        cast(void)old_style;
+    } else {
+		String_Const_u8 message = push_u8_stringf(scratch, "The window could not be maximized/de-maximized because the window handle could not be retrieved (last error: %d).", GetLastError());
+		print_message(app, message);
+    }
+    
+#else
+    
+    cast(void)app;
+	cast(void)maximized;
+    
+#endif
+    
+	return success;
 }
 
 NAMESPACE_END()
@@ -173,14 +211,14 @@ CUSTOM_DOC("Custom startup event") {
         return;
     }
     
-    //~ NOTE(rjf): Default 4coder initialization.
+    //~ Default 4coder initialization.
     String_Const_u8_Array file_names = input.event.core.file_names;
     load_themes_default_folder(app);
     default_4coder_initialize(app, file_names);
-    
-    //~ NOTE(rjf): Open special buffers.
+	
+    //~ Open special buffers.
     {
-        // NOTE(rjf): Open compilation buffer.
+        // Open compilation buffer.
         {
             Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*compilation*"),
                                              BufferCreate_NeverAttachToFile |
@@ -189,7 +227,7 @@ CUSTOM_DOC("Custom startup event") {
             buffer_set_setting(app, buffer, BufferSetting_ReadOnly, true);
         }
         
-        // NOTE(rjf): Open lego buffer.
+        // Open lego buffer.
         {
             Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*lego*"),
                                              BufferCreate_NeverAttachToFile |
@@ -198,7 +236,7 @@ CUSTOM_DOC("Custom startup event") {
             buffer_set_setting(app, buffer, BufferSetting_ReadOnly, true);
         }
         
-        // NOTE(rjf): Open calc buffer.
+        // Open calc buffer.
         {
             Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*calc*"),
                                              BufferCreate_NeverAttachToFile |
@@ -206,7 +244,7 @@ CUSTOM_DOC("Custom startup event") {
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
         }
         
-        // NOTE(rjf): Open peek buffer.
+        // Open peek buffer.
         {
             Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*peek*"),
                                              BufferCreate_NeverAttachToFile |
@@ -214,7 +252,7 @@ CUSTOM_DOC("Custom startup event") {
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
         }
         
-        // NOTE(rjf): Open LOC buffer.
+        // Open LOC buffer.
         {
             Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*loc*"),
                                              BufferCreate_NeverAttachToFile |
@@ -223,7 +261,7 @@ CUSTOM_DOC("Custom startup event") {
         }
     }
     
-    //~ NOTE(rjf): Initialize panels
+    //~ Initialize panels
     {
         Buffer_Identifier comp = buffer_identifier(string_u8_litexpr("*compilation*"));
         Buffer_Identifier left  = buffer_identifier(string_u8_litexpr("*calc*"));
@@ -232,12 +270,12 @@ CUSTOM_DOC("Custom startup event") {
         Buffer_ID left_id = buffer_identifier_to_id(app, left);
         Buffer_ID right_id = buffer_identifier_to_id(app, right);
         
-        // NOTE(rjf): Left Panel
+        // Left Panel
         View_ID view = get_active_view(app, Access_Always);
         new_view_settings(app, view);
         view_set_buffer(app, view, left_id, 0);
         
-        // NOTE(rjf): Bottom panel
+        // Bottom panel
         View_ID compilation_view = 0;
         {
             compilation_view = open_view(app, view, ViewSplit_Bottom);
@@ -253,17 +291,22 @@ CUSTOM_DOC("Custom startup event") {
         
         view_set_active(app, view);
         
-        // NOTE(rjf): Right Panel
+        // Right Panel
         open_panel_vsplit(app);
         
         View_ID right_view = get_active_view(app, Access_Always);
         view_set_buffer(app, right_view, right_id, 0);
         
-        // NOTE(rjf): Restore Active to Left
+        // Restore Active to Left
         view_set_active(app, view);
     }
     
-    //~ NOTE(rjf): Auto-Load Project.
+	b32 auto_maximize = def_get_config_b32(vars_save_string_lit("maximize_window_on_startup"));
+	if (auto_maximize) {
+		nne::set_window_maximized(app, true);
+	}
+	
+    //~ Auto-Load Project.
     {
         b32 auto_load = def_get_config_b32(vars_save_string_lit("automatically_load_project"));
         if (auto_load) {
@@ -271,25 +314,25 @@ CUSTOM_DOC("Custom startup event") {
         }
     }
     
-    //~ NOTE(rjf): Set misc options.
+    //~ Set misc options.
     {
         global_battery_saver = def_get_config_b32(vars_save_string_lit("f4_battery_saver"));
     }
     
-    //~ NOTE(rjf): Initialize audio.
+    //~ Initialize audio.
     {
         def_audio_init();
     }
     
-    //~ NOTE(rjf): Initialize stylish fonts.
+    //~ Initialize stylish fonts.
     {
         Scratch_Block scratch(app);
         String_Const_u8 bin_path = system_get_path(scratch, SystemPath_Binary);
         
-        // NOTE(rjf): Fallback font.
+        // Fallback font.
         Face_ID face_that_should_totally_be_there = get_face_id(app, 0);
         
-        // NOTE(rjf): Title font.
+        // Title font.
         {
             Face_Description desc = {0};
             {
@@ -307,7 +350,7 @@ CUSTOM_DOC("Custom startup event") {
             }
         }
         
-        // NOTE(rjf): Label font.
+        // Label font.
         {
             Face_Description desc = {0};
             {
@@ -325,7 +368,7 @@ CUSTOM_DOC("Custom startup event") {
             }
         }
         
-        // NOTE(rjf): Small code font.
+        // Small code font.
         {
             Face_Description normal_code_desc = get_face_description(app, get_face_id(app, 0));
             
@@ -346,7 +389,7 @@ CUSTOM_DOC("Custom startup event") {
         }
     }
     
-    //~ NOTE(rjf): Prep virtual whitespace.
+    //~ Prep virtual whitespace.
     {
         def_enable_virtual_whitespace = def_get_config_b32(vars_save_string_lit("enable_virtual_whitespace"));
         clear_all_layouts(app);

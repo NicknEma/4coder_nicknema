@@ -187,22 +187,6 @@
 //   "fleury_color_token_minor_highlight". Turn the highlight of other occurances
 //   off with "f4_disable_cursor_token_occurance" in your config file.
 
-//- @f4_calc_intro Built-In Calculator/Plotting
-//
-// This custom layer includes a tiny little calculator language, which has
-// plotting capabilities. It has a few features that comprise it all:
-//
-// - Calculator Comments: Any comments starting with a 'c', e.g. //c or /*c,
-//   will be interpreted as calculator code, including inline plots. This
-//   can be useful to do quick calculations, see a math function represented
-//   visually, or plot data. You can check out examples/demos in the
-//   4coder_fleury_plots_demo.cpp file. Turn it off with "f4_disable_calc_comments"
-//   in your config file.
-//
-// - *calc* Buffer: On startup, a *calc* buffer is opened that you can switch
-//   to. The entire buffer is interpreted as calculator code, and it will
-//   do all the same things that calc comments do.
-
 //- @f4_pos_context_intro Language Position-Context Tooltips
 //
 // This feature shows tooltips relating to the current cursor position, as it
