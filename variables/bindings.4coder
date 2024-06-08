@@ -1,214 +1,241 @@
 
 keys_global =
 {
-    // NOTE(rjf): Meta
-    { "exit_4coder" ,                             "F4",      "Alt"                     },
+    // Meta
+    { "exit_4coder" ,                             "F4",     "Alt"                      },
     { "keyboard_macro_start_recording" ,          "U",      "Control"                  },
     { "keyboard_macro_finish_recording",          "U",      "Control", "Shift"         },
     { "keyboard_macro_replay",                    "U",      "Alt"                      },
-    { "change_active_panel",                      "Comma",  "Control"                  },
-    { "change_active_panel_backwards",            "Comma",  "Control", "Shift"         },
-    { "project_go_to_root_directory",             "H",      "Control"                  },
-    { "f4_toggle_compilation_expand",             "Insert"                             },
-    { "change_to_build_panel",                    "Period", "Alt"                      },
-    { "close_build_panel",                        "Comma",  "Alt"                      },
-    { "f4_switch_syntax_option",                  "Tick",   "Control"                  },
+	{ "f4_switch_syntax_option",                  "Tick",   "Control"                  },
     // @Todo(ema): What is this last one? If useful, change the binding.
+	
+    // Commands
+    { "command_lister",                           "X",      "Alt"                      }, // Opens the command lister to let you search for and run any 4coder command
+    { "execute_any_cli",                          "Z",      "Alt"                      },
+    { "execute_previous_cli",                     "Z",      "Alt",     "Shift"         },
     
-    // NOTE(rjf): Files
-    { "interactive_new",                          "N",      "Control"                  },
+    // Panels
+	{ "change_active_panel",                      "Comma",  "Control"                  }, // When multiple panels are open, it cycles through them
+    { "change_active_panel_backwards",            "Comma",  "Control", "Shift"         }, // Same thing but in the opposite order
+    { "open_panel_vsplit",                        "P",      "Control"                  }, // Splits the current panel vertically   into two panels
+    { "open_panel_hsplit",                        "Minus",  "Control"                  }, // Splits the current panel horizontally into two panels
+    { "close_panel",                              "P",      "Control", "Shift"         },
+    { "f4_search_for_definition__project_wide",   "J",      "Control"                  },
+    { "f4_search_for_definition__current_file",   "J",      "Control", "Shift"         },
+    { "jump_to_last_point",                       "J",      "Alt"                      },
+	
+	// Compilation panel
+	// Whenever you build from inside the editor, the build panel appears. It is read-only and treated differently than other panels
+    { "toggle_compilation_expand",                "Insert"                             }, // Toggles whether the build panel is expanded or minimized
+    { "change_to_build_panel",                    "Period", "Alt"                      }, // Make the build panel active
+    { "close_build_panel",                        "Comma",  "Alt"                      },
+    
+    // Files
+    { "interactive_new",                          "N",      "Control"                  }, // Creates a new file with the specified name
     { "f4_setup_new_project",                     "N",      "Control", "Shift"         },
-    { "interactive_open_or_new",                  "O",      "Control"                  },
+    { "interactive_open_or_new",                  "O",      "Control"                  }, // Open a file with the specified name if it exists, otherwise it creates it
     { "f4_interactive_open_or_new_in_project",    "O",      "Alt"                      },
     { "f4_open_project",                          "O",      "Control", "Shift"         },
-    { "interactive_kill_buffer",                  "K",      "Control"                  },
-    { "interactive_switch_buffer",                "I",      "Control"                  },
     { "save_all_dirty_buffers",                   "S",      "Control", "Shift"         },
     { "f4_recent_files_menu",                     "V",      "Alt"                      },
+	
+	// Buffers
+    { "interactive_kill_buffer",                  "K",      "Control"                  }, // Unloads a buffer with the specified name
+    { "interactive_switch_buffer",                "I",      "Control"                  },
     
-    // NOTE(rjf): Jump Lists
+	// Jump Lists
     { "goto_next_jump",                           "N",      "Alt"                      },
     { "goto_prev_jump",                           "N",      "Alt",     "Shift"         },
     { "goto_first_jump",                          "M",      "Alt",     "Shift"         },
     
-    // NOTE(rjf): Commands
-    { "execute_any_cli",                          "Z",      "Alt"                      },
-    { "execute_previous_cli",                     "Z",      "Alt",     "Shift"         },
-    { "command_lister",                           "X",      "Alt"                      },
-    
-    // NOTE(rjf): Project
-    { "build_in_build_panel",                     "M",      "Alt"                      },
-    { "project_command_lister",                   "X",      "Alt",     "Shift"         },
-    { "project_fkey_command",                     "F1",  "Control"                     },
-    { "project_fkey_command",                     "F2",  "Control"                     },
-    { "project_fkey_command",                     "F3",  "Control"                     },
-    { "project_fkey_command",                     "F4",  "Control"                     },
-    { "project_fkey_command",                     "F5",  "Control"                     },
-    { "project_fkey_command",                     "F6",  "Control"                     },
-    { "project_fkey_command",                     "F7",  "Control"                     },
-    { "project_fkey_command",                     "F8",  "Control"                     },
-    { "project_fkey_command",                     "F9",  "Control"                     },
-    { "project_fkey_command",                     "F10", "Control"                     },
-    { "project_fkey_command",                     "F11", "Control"                     },
-    { "project_fkey_command",                     "F12", "Control"                     },
-    { "project_fkey_command",                     "F13", "Control"                     },
-    { "project_fkey_command",                     "F14", "Control"                     },
-    { "project_fkey_command",                     "F15", "Control"                     },
-    { "project_fkey_command",                     "F16", "Control"                     },
-    
-    // NOTE(rjf): Panels
-    { "open_panel_vsplit", "P", "Control" },
-    { "open_panel_hsplit", "Minus", "Control" },
-    { "close_panel", "P", "Control", "Shift" },
-    { "f4_search_for_definition__project_wide", "J", "Control" },
-    { "f4_search_for_definition__current_file", "J", "Control", "Shift" },
-    { "jump_to_last_point", "J", "Alt" },
+    // Project
+	// The various 'project_fkey_commands' are controlled by specific project.4coder files. For example,
+	// they might be commands to build or run the project.
+	{ "build_in_build_panel",                     "M",      "Alt"                      },
+	{ "project_command_lister",                   "X",      "Alt",     "Shift"         }, // Opens the list of all the commands specified in project.4coder and lets you select and run one
+	{ "project_go_to_root_directory",             "H",      "Control"                  }, // Sets the editor directory to wherever project.4coder lives
+	{ "project_fkey_command",                     "F1",     "Control"                  },
+	{ "project_fkey_command",                     "F2",     "Control"                  },
+	{ "project_fkey_command",                     "F3",     "Control"                  },
+	{ "project_fkey_command",                     "F4",     "Control"                  },
+	{ "project_fkey_command",                     "F5",     "Control"                  },
+	{ "project_fkey_command",                     "F6",     "Control"                  },
+	{ "project_fkey_command",                     "F7",     "Control"                  },
+	{ "project_fkey_command",                     "F8",     "Control"                  },
+	{ "project_fkey_command",                     "F9",     "Control"                  },
+	{ "project_fkey_command",                     "F10",    "Control"                  },
+	{ "project_fkey_command",                     "F11",    "Control"                  },
+	{ "project_fkey_command",                     "F12",    "Control"                  },
+	{ "project_fkey_command",                     "F13",    "Control"                  },
+	{ "project_fkey_command",                     "F14",    "Control"                  },
+	{ "project_fkey_command",                     "F15",    "Control"                  },
+	{ "project_fkey_command",                     "F16",    "Control"                  },
 };
 
+//~ File bindings.
 keys_file =
 {
-    // NOTE(rjf): None => Characters
-    //    Shift + Ctrl => Token
-    //            Ctrl => Alphanumeric
-    //            Alt  => Alphanumeric/Camel
+	// General conventions:
+	//            None => Characters
+	//    Shift + Ctrl => Token
+	//            Ctrl => Alphanumeric
+	//            Alt  => Alphanumeric/Camel
     
-    // NOTE(rjf): Backspace/Delete
-    { "delete_char",                                  "Delete"               },
-    { "f4_delete_token_boundary",                     "Delete",    "Control", "Shift" },
-    { "delete_alpha_numeric_boundary",                "Delete",    "Control" },
-    { "f4_delete_alpha_numeric_or_camel_boundary",    "Delete",    "Alt"     },
-    { "backspace_char",                               "Backspace"            },
-    { "f4_backspace_token_boundary",                  "Backspace", "Control", "Shift" },
-    { "backspace_alpha_numeric_boundary",             "Backspace", "Control" },
-    { "f4_backspace_alpha_numeric_or_camel_boundary", "Backspace", "Alt"     },
+	//- Backspace/Delete
+	{ "delete_char",                                  "Delete"               },
+	{ "delete_token_boundary",                        "Delete",    "Control", "Shift" },
+	{ "delete_alpha_numeric_boundary",                "Delete",    "Control" },
+	{ "delete_alpha_numeric_or_camel_boundary",       "Delete",    "Alt"     },
+	
+	{ "backspace_char",                               "Backspace"            },
+	{ "backspace_token_boundary",                     "Backspace", "Control", "Shift" },
+	{ "backspace_alpha_numeric_boundary",             "Backspace", "Control" },
+	{ "backspace_alpha_numeric_or_camel_boundary",    "Backspace", "Alt"     },
     
-    // NOTE(rjf): Left/Right Arrow Keys
-    { "f4_move_left",                               "Left"              },
-    { "move_left_alpha_numeric_boundary",           "Left", "Control"   },
-    { "move_left_alpha_numeric_or_camel_boundary",  "Left", "Alt"       },
-    { "f4_move_right",                              "Right"             },
-    { "move_right_alpha_numeric_boundary",          "Right", "Control"  },
-    { "move_right_alpha_numeric_or_camel_boundary", "Right", "Alt"      },
+	//- Left/Right Arrow Keys
+	{ "move_left_if_no_selection",                    "Left"                 },
+	{ "move_left_token_boundary",                     "Left",      "Control", "Shift" },
+	{ "move_left_alpha_numeric_boundary",             "Left",      "Control" },
+	{ "move_left_alpha_numeric_or_camel_boundary",    "Left",      "Alt"     },
+	
+	{ "move_right_if_no_selection",                   "Right"                },
+	{ "move_right_token_boundary",                    "Right",     "Control", "Shift" },
+	{ "move_right_alpha_numeric_boundary",            "Right",     "Control" },
+	{ "move_right_alpha_numeric_or_camel_boundary",   "Right",     "Alt"     },
     
-    // NOTE(rjf): Up/Down Arrow Keys
-    { "move_up",                "Up" },
-    { "move_down",              "Down" },
-    { "move_up_to_blank_line_end",        "Up", "Control" },
-    { "move_down_to_blank_line_end",      "Down", "Control" },
-    { "move_line_up",                     "Up", "Alt" },
-    { "move_line_down",                   "Down", "Alt" },
-    { "f4_move_to_prev_divider_comment",  "Up", "Control", "Shift" },
-    { "f4_move_to_next_divider_comment",  "Down", "Control", "Shift" },
-    { "f4_move_up_token_occurrence",      "Up", "Control", "Alt" },
-    { "f4_move_down_token_occurrence",    "Down", "Control", "Alt" },
+	//- Up/Down Arrow Keys
+	{ "move_up",                                      "Up"                   },
+	{ "move_down",                                    "Down"                 },
+	{ "move_up_to_blank_line_end",                    "Up",        "Control" },
+	{ "move_down_to_blank_line_end",                  "Down",      "Control" },
+	{ "move_line_up",                                 "Up",        "Alt"     },
+	{ "move_line_down",                               "Down",      "Alt"     },
+	
+	{ "f4_move_to_prev_divider_comment",  "Up", "Control", "Shift" },
+	{ "f4_move_to_next_divider_comment",  "Down", "Control", "Shift" },
+	{ "f4_move_up_token_occurrence",      "Up", "Control", "Alt" },
+	{ "f4_move_down_token_occurrence",    "Down", "Control", "Alt" },
     
-    // NOTE(rjf): Alternative Movement Keys
-    { "seek_end_of_line",             "End" },
-    { "f4_home_first_non_whitespace", "Home" },
-    { "page_up",                "PageUp" },
-    { "page_down",              "PageDown" },
-    { "goto_beginning_of_file", "PageUp", "Control" },
-    { "goto_end_of_file",       "PageDown", "Control" },
+	//- Alternative Movement Keys
+	{ "seek_end_of_line",                             "End" },
+	{ "f4_home_first_non_whitespace",                 "Home" },
+	{ "page_up",                                      "PageUp" },
+	{ "page_down",                                    "PageDown" },
+	{ "goto_beginning_of_file",                       "PageUp", "Control" },
+	{ "goto_end_of_file",                             "PageDown", "Control" },
     
-    // NOTE(rjf): Mark
-    { "set_mark",                    "Space", "Control" },
-    { "cursor_mark_swap",            "M", "Control" },
+	//- Go To Definition
+	{ "f4_go_to_definition",            "Return", "Control" }, // If there's only one panel, these two commands behave the same.
+	{ "f4_go_to_definition_same_panel", "Return", "Control", "Shift" },
+	
+	//- Search
+	{ "search__prioritize_highlighted",           "F", "Control" },
+	{ "reverse_search__prioritize_highlighted",   "R", "Control" },
+	{ "list_all_locations",          "F", "Control", "Shift" }, // @Rename: All locations of what?
+	{ "list_all_substring_locations_case_insensitive", "F", "Alt" },
+	{ "goto_line",                   "G", "Control" },
+	{ "list_all_locations_of_selection",  "G", "Control", "Shift" },
+	{ "search_identifier",           "T", "Control" },
+	{ "list_all_locations_of_identifier", "T", "Control", "Shift" },
+	// @Functionality: goto_byte_offset, goto_line_and_column, search_case_sensitive
+	
+	//- Mark
+	{ "set_mark",                     "Space", "Control" }, // Places the mark where the cursor is
+	{ "cursor_mark_swap",             "M",     "Control" }, // Swaps the positions of cursor and mark
     
-    // NOTE(rjf): Search
-    { "f4_search",                   "F", "Control" },
-    { "f4_reverse_search",           "R", "Control" },
-    { "list_all_locations",          "F", "Control", "Shift" },
-    { "list_all_substring_locations_case_insensitive", "F", "Alt" },
-    { "goto_line",                   "G", "Control" },
-    { "list_all_locations_of_selection",  "G", "Control", "Shift" },
-    { "search_identifier",           "T", "Control" },
-    { "list_all_locations_of_identifier", "T", "Control", "Shift" },
+	//- Replace
+	{ "replace_in_range",            "A", "Control" },
+	{ "query_replace",               "Q", "Control" },
+	{ "query_replace_identifier",    "Q", "Control", "Shift" },
+	{ "query_replace_selection",     "Q", "Alt" },
     
-    // NOTE(rjf): Replace
-    { "replace_in_range",            "A", "Control" },
-    { "query_replace",               "Q", "Control" },
-    { "query_replace_identifier",    "Q", "Control", "Shift" },
-    { "query_replace_selection",     "Q", "Alt" },
+	//- Clipboard
+	{ "copy",                        "C", "Control" },
+	{ "paste_and_indent",            "V", "Control" },
+	{ "paste_next_and_indent",       "V", "Control", "Shift" },
+	{ "cut",                         "X", "Control" },
     
-    // NOTE(rjf): Clipboard
-    { "copy",                        "C", "Control" },
-    { "paste_and_indent",            "V", "Control" },
-    { "paste_next_and_indent",       "V", "Control", "Shift" },
-    { "cut",                         "X", "Control" },
+	//- Lego
+	{ "f4_lego_buffer_place",        "F1", },
+	{ "f4_lego_buffer_place",        "F2", },
+	{ "f4_lego_buffer_place",        "F3", },
+	{ "f4_lego_buffer_place",        "F4", },
     
-    // NOTE(rjf): Lego
-    { "f4_lego_buffer_place",        "F1", },
-    { "f4_lego_buffer_place",        "F2", },
-    { "f4_lego_buffer_place",        "F3", },
-    { "f4_lego_buffer_place",        "F4", },
+	//- Deletion
+	{ "delete_range",                "D", "Control" },
+	{ "delete_line",                 "D", "Control", "Shift" },
     
-    // NOTE(rjf): Deletion
-    { "delete_range",                "D", "Control" },
-    { "delete_line",                 "D", "Control", "Shift" },
+	//- Insertion
+	{ "duplicate_line",              "L", "Control" },
     
-    // NOTE(rjf): Insertion
-    { "duplicate_line",              "L", "Control" },
+	//- View
+	{ "center_view",                 "E", "Control" },
+	{ "left_adjust_view",            "E", "Control", "Shift" },
     
-    // NOTE(rjf): View
-    { "center_view",                 "E", "Control" },
-    { "left_adjust_view",            "E", "Control", "Shift" },
+	//- Buffers
+	{ "kill_buffer",                 "K", "Control", "Shift" }, // So violent... just call it unload buffer or something.
+	{ "reopen",                      "O", "Alt", "Shift" },
+	{ "save",                        "S", "Control" },
+	{ "save_all_dirty_buffers",      "S", "Control", "Shift" },
+	{ "redo",                        "Y", "Control" },
+	{ "undo",                        "Z", "Control" },
+	{ "view_buffer_other_panel",     "1", "Control" },
     
-    // NOTE(rjf): File
-    { "kill_buffer",                 "K", "Control", "Shift" },
-    { "reopen",                      "O", "Alt", "Shift" },
-    { "save",                        "S", "Control" },
-    { "save_all_dirty_buffers",      "S", "Control", "Shift" },
-    { "redo",                        "Y", "Control" },
-    { "undo",                        "Z", "Control" },
-    { "view_buffer_other_panel",     "1", "Control" },
+	//- Meta
+	{ "swap_panels",                 "2", "Control" },
+	{ "if_read_only_goto_position",  "Return" },
+	{ "if_read_only_goto_position_same_panel", "Return", "Shift" },
+	{ "view_jump_list_with_lister",  "Period", "Control", "Shift" },
     
-    // NOTE(rjf): Meta
-    { "swap_panels",                 "2", "Control" },
-    { "if_read_only_goto_position",  "Return" },
-    { "if_read_only_goto_position_same_panel", "Return", "Shift" },
-    { "view_jump_list_with_lister",  "Period", "Control", "Shift" },
-    
-    // NOTE(rjf): Code Peek
-    { "f4_code_peek",          "Tick",  "Alt" },
-    { "f4_code_peek_yank",     "Tab", "Control" },
-    { "f4_code_peek_clear",    "Shift", "Alt" },
-    
-    // NOTE(rjf): Go To Def
-    { "f4_go_to_definition",   "Return", "Control" },
-    { "f4_go_to_definition_same_panel", "Return", "Control", "Shift" },
-    
-    // NOTE(rjf): Helpers
-    { "f4_write_zero_struct",  "0", "Control" },
-    { "f4_toggle_enclosure_side",  "Semicolon", "Alt" },
+	//- Code Peek
+	{ "f4_code_peek",          "Tick",  "Alt" },
+	{ "f4_code_peek_yank",     "Tab", "Control" },
+	{ "f4_code_peek_clear",    "Shift", "Alt" },
 };
 
+//~ Code bindings.
 keys_code =
 {
-    { "f4_comment_selection",       "Semicolon", "Control" },
-    { "f4_uncomment_selection",     "Semicolon", "Control", "Shift", },
-    { "f4_autocomplete_or_indent",  "Tab" },
+    //- Autocomplete and indentation
+	{ "f4_autocomplete_or_indent",  "Tab" },
     { "f4_unindent",                "Tab", "Shift" },
     { "word_complete_drop_down",    "Tab", "Shift", "Control" },
-    { "write_block",                "R", "Alt" },
+    
+	//- Comments
+	{ "f4_comment_selection",       "Semicolon", "Control" },
+    { "f4_uncomment_selection",     "Semicolon", "Control", "Shift", },
+	{ "write_block",                "R", "Alt" }, // Writes a COMMENT block from the cursor to the mark
+	{ "if0_off",                    "I", "Alt" }, // Writes an #if 0 / #endif block from the cursor to the mark
+	
+	/*
     { "write_todo",                 "T", "Alt" },
     { "write_note",                 "Y", "Alt" },
+*/
+	
     { "list_all_locations_of_type_definition",               "D", "Alt" },
     { "list_all_locations_of_type_definition_of_identifier", "T", "Alt", "Shift" },
-    { "open_long_braces",           "LeftBracket", "Control" },
-    { "open_long_braces_semicolon", "LeftBracket", "Control", "Shift" },
-    { "open_long_braces_break",     "RightBracket", "Control", "Shift" },
-    { "select_surrounding_scope",   "LeftBracket", "Alt" },
+	
+	/*
+		{ "open_long_braces",           "LeftBracket", "Control" },
+		{ "open_long_braces_semicolon", "LeftBracket", "Control", "Shift" },
+		{ "open_long_braces_break",     "RightBracket", "Control", "Shift" },
+	*/
+    
+	//- Scopes
+	{ "select_surrounding_scope",   "LeftBracket", "Alt" },
     { "select_surrounding_scope_maximal", "LeftBracket", "Alt", "Shift" },
     { "select_prev_scope_absolute", "RightBracket", "Alt" },
     { "select_prev_top_most_scope", "RightBracket", "Alt", "Shift" },
     { "select_next_scope_absolute", "Quote", "Alt" },
     { "select_next_scope_after_current", "Quote", "Alt", "Shift" },
-    { "place_in_scope",             "ForwardSlash", "Alt" },
-    { "delete_current_scope",       "Minus", "Alt" },
-    { "if0_off",                    "I", "Alt" },
-    { "open_file_in_quotes",        "1", "Alt" },
-    { "open_matching_file_cpp",     "2", "Alt" },
+	{ "place_in_scope",             "ForwardSlash", "Alt" },
+    { "delete_current_scope",       "Minus", "Alt" }, // @Todo: What?
     
+	//- Files
+    { "open_file_in_quotes",        "1", "Alt" }, // @Todo: What?
+    { "open_matching_file_cpp",     "2", "Alt" }, // @Incomplete: Why isn't there a .h counterpart?
+    
+	//- Lego
     { "f4_lego_store_range",        "F5", "Alt" },
     { "f4_lego_store_range",        "F6", "Alt" },
     { "f4_lego_store_range",        "F7", "Alt" },

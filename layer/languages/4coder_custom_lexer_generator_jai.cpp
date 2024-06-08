@@ -1,9 +1,3 @@
-/*
-4coder_fleury_jai_lexer_gen.cpp - Model definition for a Jai lexer.
-*/
-
-// TOP
-
 #define LANG_NAME_LOWER jai
 #define LANG_NAME_CAMEL Jai
 

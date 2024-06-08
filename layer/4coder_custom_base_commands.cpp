@@ -15,8 +15,7 @@
 // @Todo(ema): Add
 // - Switch between naming styles (camelCase, PascalCase, snake_case, Pascal_Snake_Case, UPPER_SNAKE_CASE)
 
-//~ Basic command replacements
-// Commands that already exist in basic 4coder, but here they are modified slightly.
+//~ Misc commands.
 
 // TODO(rjf): Remove once Allen adds official version.
 CUSTOM_COMMAND_SIG(f4_leave_event_unhandled)
@@ -24,67 +23,316 @@ CUSTOM_DOC("when bound to keystroke, ensures the event falls through to text ins
     leave_current_input_unhandled(app);
 }
 
+// In battery saving mode, the cursor isn't animated. The global_battery_saver variable is in ubiquitous.h
+CUSTOM_COMMAND_SIG(toggle_battery_saver)
+CUSTOM_DOC("Toggles battery saving mode.") {
+	global_battery_saver = !global_battery_saver;
+}
+
+CUSTOM_COMMAND_SIG(toggle_compilation_expand)
+CUSTOM_DOC("Expands or minimizes the compilation window.") {
+	// 'global_compilation_view' and 'global_compilation_view_expanded' are defined in ubiquitous.h
+	// @Cleanup: What happens if we move them here?
+	
+	Buffer_ID     buffer = view_get_buffer(app, global_compilation_view, Access_Always);
+    Face_ID      face_id = get_face_id(app, buffer);
+    Face_Metrics metrics = get_face_metrics(app, face_id);
+    if (global_compilation_view_expanded ^= 1) { // @Cleanup: AHA! Assignment statement in expression! Why wasn't this detected by the compiler?
+        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*32.f));
+    } else {
+        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*4.f));
+    }
+}
+
+//~ Moving the cursor
+
 NAMESPACE_BEGIN(nne)
 
-internal void search_current_buffer(Application_Links *app, Scan_Direction dir) {
-    Scratch_Block scratch(app);
+function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
+											Side side, Scan_Direction direction, i64 pos)
+{
+	using namespace nne;
 	
-    View_ID   view   = get_active_view(app, Access_Read);
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
-    if (view && buffer) {
-        i64 cursor      = view_get_cursor_pos(app, view);
-        i64 mark        = view_get_mark_pos(app, view);
-        i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
-        i64 mark_line   = get_line_number_from_pos(app, buffer, mark);
-        String_Const_u8 query_init = (fcoder_mode != FCoderMode_NotepadLike || cursor == mark || cursor_line != mark_line) ? SCu8() : push_buffer_range(app, scratch, buffer, Ii64(cursor, mark));
-        isearch(app, dir, cursor, query_init);
+    i64 result = boundary_non_whitespace(app, buffer, side, direction, pos);
+    Token_Array tokens = get_token_array_from_buffer(app, buffer);
+    if (tokens.tokens != 0){
+        switch (direction){
+            case Scan_Forward:
+            {
+                i64 buffer_size = buffer_get_size(app, buffer);
+                result = buffer_size;
+                if(tokens.count > 0)
+                {
+                    Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
+                    Token *token = token_it_read(&it);
+                    
+                    if(token == 0)
+                    {
+                        break;
+                    }
+                    
+                    // NOTE(rjf): Comments/Strings
+                    if(token->kind == TokenBaseKind_Comment ||
+                       token->kind == TokenBaseKind_LiteralString)
+                    {
+                        result = boundary_non_whitespace(app, buffer, side, direction, pos);
+                        break;
+                    }
+                    
+                    // NOTE(rjf): All other cases.
+                    else
+                    {
+                        if (token->kind == TokenBaseKind_Whitespace)
+                        {
+                            // token_it_inc_non_whitespace(&it);
+                            // token = token_it_read(&it);
+                        }
+                        
+                        if (side == Side_Max){
+                            result = token->pos + token->size;
+                            
+                            token_it_inc_all(&it);
+                            Token *ws = token_it_read(&it);
+                            if(ws != 0 && ws->kind == TokenBaseKind_Whitespace &&
+                               get_line_number_from_pos(app, buffer, ws->pos + ws->size) ==
+                               get_line_number_from_pos(app, buffer, token->pos))
+                            {
+                                result = ws->pos + ws->size;
+                            }
+                        }
+                        else{
+                            if (token->pos <= pos){
+                                token_it_inc_non_whitespace(&it);
+                                token = token_it_read(&it);
+                            }
+                            if (token != 0){
+                                result = token->pos;
+                            }
+                        }
+                    }
+                    
+                }
+            }break;
+            
+            case Scan_Backward:
+            {
+                result = 0;
+                if (tokens.count > 0){
+                    Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
+                    Token *token = token_it_read(&it);
+                    
+                    Token_Iterator_Array it2 = it;
+                    token_it_dec_non_whitespace(&it2);
+                    Token *token2 = token_it_read(&it2);
+                    
+                    // NOTE(rjf): Comments/Strings
+                    if(token->kind == TokenBaseKind_Comment ||
+                       token->kind == TokenBaseKind_LiteralString ||
+                       (token2 && 
+                        token2->kind == TokenBaseKind_Comment ||
+                        token2->kind == TokenBaseKind_LiteralString))
+                    {
+                        result = boundary_non_whitespace(app, buffer, side, direction, pos);
+                        break;
+                    }
+                    
+                    if (token->kind == TokenBaseKind_Whitespace){
+                        token_it_dec_non_whitespace(&it);
+                        token = token_it_read(&it);
+                    }
+                    if (token != 0){
+                        if (side == Side_Min){
+                            if (token->pos >= pos){
+                                token_it_dec_non_whitespace(&it);
+                                token = token_it_read(&it);
+                            }
+                            result = token->pos;
+                        }
+                        else{
+                            if (token->pos + token->size >= pos){
+                                token_it_dec_non_whitespace(&it);
+                                token = token_it_read(&it);
+                            }
+                            result = token->pos + token->size;
+                        }
+                    }
+                }
+            }break;
+        }
     }
+    return(result);
+}
+
+// TODO(rjf): Replace with the final one from Jack's layer.
+function i64 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
+													 Side side, Scan_Direction direction, i64 pos)
+{
+	using namespace nne;
+	
+    Scratch_Block scratch(app);
+    
+    Range_i64_Array scopes = get_enclosure_ranges(app, scratch, buffer, pos, FindNest_Scope);
+    // NOTE(jack): The outermost scope
+    Range_i64 outer_scope = scopes.ranges[scopes.count - 1];
+    
+    // NOTE(jack): As we are issuing a move command here I will assume that buffer is the active buffer.
+    View_ID view = get_active_view(app, Access_Always);
+    i64 active_cursor_pos = view_get_cursor_pos(app, view);
+    Token_Array tokens = get_token_array_from_buffer(app, buffer);
+    Token_Iterator_Array active_cursor_it = token_iterator_pos(0, &tokens, active_cursor_pos);
+    Token *active_cursor_token = token_it_read(&active_cursor_it);
+    
+    String_Const_u8 cursor_string = push_buffer_range(app, scratch, buffer, Ii64(active_cursor_token));
+    i64 cursor_offset = pos - active_cursor_token->pos;
+    
+    // NOTE(jack): If the cursor token is not an identifier, we will move to empty lines
+    i64 result = get_pos_of_blank_line_grouped(app, buffer, direction, pos);
+    result = view_get_character_legal_pos_from_pos(app, view, result);
+    if (tokens.tokens != 0)
+    {
+        // NOTE(jack): if the the cursor token is an identifier, and we are inside of a scope
+        // perform the cursor occurance movement.
+        if (active_cursor_token->kind == TokenBaseKind_Identifier && !(scopes.count == 0))
+        {
+            // NOTE(jack): Reset result to prevent token movement to escape to blank line movement
+            // when you are on the first/last token in the outermost scope.
+            result = pos;
+            Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
+            
+            for (;;)
+            {
+                b32 done = false;
+                // NOTE(jack): Incremenet first so we dont move to the same cursor that the cursor is on.
+                switch (direction)
+                {
+                    // NOTE(jack): I am using it.ptr->pos because its easier than reading the token with
+                    // token_it_read
+                    case Scan_Forward:
+                    {
+                        if (!token_it_inc_non_whitespace(&it) || it.ptr->pos >= outer_scope.end) {
+                            done = true;
+                        }
+                    } break;
+                    
+                    case Scan_Backward:
+                    {
+                        if (!token_it_dec_non_whitespace(&it) || it.ptr->pos < outer_scope.start) {
+                            done = true;
+                        }
+                    } break;
+                }
+                
+                if (!done) 
+                {
+                    Token *token = token_it_read(&it);
+                    String_Const_u8 token_string = push_buffer_range(app, scratch, buffer, Ii64(token));
+                    if (string_match(cursor_string, token_string)) {
+                        result = token->pos + cursor_offset;
+                        break;
+                    }
+                }
+                else 
+                {
+                    break;
+                }
+            }
+        }
+    }
+    
+    return result ;
 }
 
 NAMESPACE_END()
 
-CUSTOM_COMMAND_SIG(f4_search)
-CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, will fill search query with it.") {
-    nne::search_current_buffer(app, Scan_Forward);
-}
-
-CUSTOM_COMMAND_SIG(f4_reverse_search)
-CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, will fill search query with it.") {
-    nne::search_current_buffer(app, Scan_Backward);
-}
-
-CUSTOM_COMMAND_SIG(write_backtick)
-CUSTOM_DOC("Inserts a ` at the cursor.") {
-	write_string(app, string_u8_litexpr("`"));
-}
-
-CUSTOM_COMMAND_SIG(write_tilde)
-CUSTOM_DOC("Inserts a ~ at the cursor.") {
-	write_string(app, string_u8_litexpr("~"));
-}
-
-// @Note(ema): The point of this is explained in notes.h; it's just for enabling power mode.
-CUSTOM_COMMAND_SIG(f4_write_text_input)
-CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
-    ::write_text_input(app);
+CUSTOM_COMMAND_SIG(move_left_if_no_selection)
+CUSTOM_DOC("Moves the cursor one character to the left. If the mode is set to notepad-like and something is selected, just unselect the text instead.") {
+	Scratch_Block scratch(app);
 	
-    nne::F4_PowerMode_CharacterPressed();
-    User_Input      in     = get_current_input(app);
-    String_Const_u8 insert = to_writable(&in);
-    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
+    Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
+    View_ID            view = get_active_view(app, Access_ReadVisible);
+    
+	if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
+        view_set_cursor_by_character_delta(app, view, -1);
+    }
+	
+    no_mark_snap_to_cursor_if_shift(app, view);
 }
 
-CUSTOM_COMMAND_SIG(f4_write_text_and_auto_indent)
-CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.") {
-    ::nne__write_text_and_auto_indent(app);
+CUSTOM_COMMAND_SIG(move_right_if_no_selection)
+CUSTOM_DOC("Moves the cursor one character to the right. If the mode is set to notepad-like and something is selected, just unselect the text instead.") {
+    Scratch_Block scratch(app);
 	
-    nne::F4_PowerMode_CharacterPressed();
-    User_Input      in     = get_current_input(app);
-    String_Const_u8 insert = to_writable(&in);
-    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
+    Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
+    View_ID            view = get_active_view(app, Access_ReadVisible);
+	
+    if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
+        view_set_cursor_by_character_delta(app, view, +1);
+    }
+    
+	no_mark_snap_to_cursor_if_shift(app, view);
 }
+
+#if 0
+// These are never used... @Unused.
+CUSTOM_COMMAND_SIG(f4_move_previous_token_occurrence)
+CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.") {
+    Scratch_Block scratch(app);
+    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
+}
+
+CUSTOM_COMMAND_SIG(f4_move_next_token_occurrence)
+CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.") {
+    Scratch_Block scratch(app);
+    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
+}
+#endif
+
+#if 0
+// @Note: These already exist in base 4coder, but they call 'boundary_token'.
+// What's the difference between 4coder's 'boundary_token' and 'F4_Boundary_TokenAndWhitespace'?
+CUSTOM_COMMAND_SIG(f4_move_right_token_boundary)
+CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.") {
+    Scratch_Block scratch(app);
+    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
+}
+
+CUSTOM_COMMAND_SIG(f4_move_left_token_boundary)
+CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.") {
+    Scratch_Block scratch(app);
+    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
+}
+#endif
+
+//- Deleting stuff
+
+CUSTOM_COMMAND_SIG(backspace_token_boundary)
+CUSTOM_DOC("Deletes left to a token boundary.") {
+    Scratch_Block scratch(app);
+    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
+}
+
+CUSTOM_COMMAND_SIG(delete_token_boundary)
+CUSTOM_DOC("Deletes right to a token boundary.") {
+    Scratch_Block scratch(app);
+    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
+}
+
+CUSTOM_COMMAND_SIG(backspace_alpha_numeric_or_camel_boundary)
+CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.") {
+    Scratch_Block scratch(app);
+    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
+}
+
+CUSTOM_COMMAND_SIG(delete_alpha_numeric_or_camel_boundary)
+CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.") {
+    Scratch_Block scratch(app);
+    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
+}
+
+//- Alternative movement keys
 
 // @Note(ema): The difference between this and the 4coder default one is that this actually goes to the beginning of the line.
+// Why does one check if view exists and the other one just rolls with it?
 CUSTOM_COMMAND_SIG(f4_home)
 CUSTOM_DOC("Goes to the beginning of the line.") {
 	seek_pos_of_visual_line(app, Side_Min);
@@ -94,25 +342,133 @@ CUSTOM_DOC("Goes to the beginning of the line.") {
     view_set_buffer_scroll(app, view, scroll, SetBufferScroll_NoCursorChange);
 }
 
-//~ Util commands.
-
-// @Note(ema): In battery saving mode, the cursor isn't animated. The global_battery_saver variable is in ubiquitous.h
-CUSTOM_COMMAND_SIG(toggle_battery_saver)
-CUSTOM_DOC("Toggles battery saving mode.") {
-	global_battery_saver = !global_battery_saver;
+CUSTOM_COMMAND_SIG(f4_home_first_non_whitespace)
+CUSTOM_DOC("Goes to the beginning of the line.") {
+    using namespace nne;
+	
+	View_ID view = get_active_view(app, Access_Read);
+    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
+    if (view && buffer) {
+        i64 start_pos = view_get_cursor_pos(app, view);
+        seek_pos_of_visual_line(app, Side_Min);
+        i64 end_pos = view_get_cursor_pos(app, view);
+        i64 line = get_line_number_from_pos(app, buffer, start_pos);
+        
+        // NOTE(rjf): If we are on the first column, go to the first non-whitespace
+        // in the line.
+        if (start_pos == end_pos && start_pos == get_line_start_pos(app, buffer, line)) {
+            Scratch_Block scratch(app);
+            String_Const_u8 string = push_buffer_line(app, scratch, buffer, line);
+            for (u64 i = 0; i < string.size; i += 1) {
+                if (!character_is_whitespace(string.str[i])) {
+                    view_set_cursor_by_character_delta(app, view, (i64)i);
+                    break;
+                }
+            }
+        }
+        
+        // NOTE(rjf): If we hit any non-whitespace, move to the first possible
+        // non-whitespace instead of the front of the line entirely.
+        else  {
+            Scratch_Block scratch(app);
+            String_Const_u8 string = push_buffer_range(app, scratch, buffer, Ii64(start_pos, end_pos));
+            
+            b32 skipped_non_whitespace = 0;
+            {
+                for (i64 i = string.size-1; i >= 0; i -= 1) {
+                    if (!character_is_whitespace(string.str[i])) {
+                        skipped_non_whitespace = 1;
+                        break;
+                    }
+                }
+            }
+            
+            if (skipped_non_whitespace) {
+                for (i64 i = 0; i < cast(i64)string.size; i += 1) {
+                    if (!character_is_whitespace(string.str[i])) {
+                        view_set_cursor_by_character_delta(app, view, i);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // NOTE(rjf): Scroll all the way left.
+        {
+            Buffer_Scroll scroll = view_get_buffer_scroll(app, view);
+            scroll.target.pixel_shift.x = 0;
+            view_set_buffer_scroll(app, view, scroll, SetBufferScroll_NoCursorChange);
+        }
+    }
 }
 
-// @Note(ema): global_compilation_view and global_compilation_view_expanded are defined in ubiquitous.h
-CUSTOM_COMMAND_SIG(f4_toggle_compilation_expand)
-CUSTOM_DOC("Expand the compilation window.") {
-	Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
-    Face_ID face_id = get_face_id(app, buffer);
-    Face_Metrics metrics = get_face_metrics(app, face_id);
-    if (global_compilation_view_expanded ^= 1) {
-        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*32.f));
-    } else {
-        view_set_split_pixel_size(app, global_compilation_view, cast(i32)(metrics.line_height*4.f));
-    }
+//~ Searching
+
+namespace nne {
+	
+	function void search_current_buffer(Application_Links *app, Scan_Direction dir) {
+		Scratch_Block scratch(app);
+		
+		View_ID   view   = get_active_view(app, Access_Read);
+		Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
+		if (view && buffer) {
+			i64 cursor      = view_get_cursor_pos(app, view);
+			i64 mark        = view_get_mark_pos(app, view);
+			i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
+			i64 mark_line   = get_line_number_from_pos(app, buffer, mark);
+			String_Const_u8 query_init = (fcoder_mode != FCoderMode_NotepadLike || cursor == mark || cursor_line != mark_line) ? SCu8() : push_buffer_range(app, scratch, buffer, Ii64(cursor, mark));
+			isearch(app, dir, cursor, query_init);
+		}
+	}
+	
+}
+
+CUSTOM_COMMAND_SIG(search__prioritize_highlighted)
+CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, it will fill search query with it.") {
+    nne::search_current_buffer(app, Scan_Forward);
+}
+
+CUSTOM_COMMAND_SIG(reverse_search__prioritize_highlighted)
+CUSTOM_DOC("Searches the current buffer backwards. If something is highlighted, it will fill search query with it.") {
+    nne::search_current_buffer(app, Scan_Backward);
+}
+
+//~ Writing text
+
+// @Note(ema): The point of this is explained in notes.h; it's just for enabling power mode.
+CUSTOM_COMMAND_SIG(f4_write_text_input)
+CUSTOM_DOC("Inserts whatever text was used to trigger this command.") {
+    write_text_input(app);
+	
+#if 0
+    nne::F4_PowerMode_CharacterPressed();
+    User_Input      in     = get_current_input(app);
+    String_Const_u8 insert = to_writable(&in);
+    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
+#endif
+}
+
+CUSTOM_COMMAND_SIG(f4_write_text_and_auto_indent)
+CUSTOM_DOC("Inserts text and auto-indents the line on which the cursor sits if any of the text contains 'layout punctuation' such as ;:{}()[]# and new lines.") {
+    custom__write_text_and_auto_indent(app);
+	
+#if 0
+    nne::F4_PowerMode_CharacterPressed();
+    User_Input      in     = get_current_input(app);
+    String_Const_u8 insert = to_writable(&in);
+    nne::F4_PowerMode_Spawn(app, get_active_view(app, Access_ReadWriteVisible), insert.str ? insert.str[0] : 0);
+#endif
+}
+
+// These two are useful for who doesn't have them on the keyboard (like me UwU)
+CUSTOM_COMMAND_SIG(write_backtick)
+CUSTOM_DOC("Inserts a ` at the cursor.") {
+	write_string(app, string_u8_litexpr("`"));
+}
+
+CUSTOM_COMMAND_SIG(write_tilde)
+CUSTOM_DOC("Inserts a ~ at the cursor.") {
+	write_string(app, string_u8_litexpr("~"));
 }
 
 //~ Jumping to definitions
@@ -353,6 +709,7 @@ CUSTOM_DOC("List all definitions in the current file and jump to the one selecte
     }
 }
 
+#if 0
 // @Note(ema): Figure out if this is udeful. Maybe @Rename(ema) to toggle_parenthetical_side? Or either way find a better name.
 CUSTOM_COMMAND_SIG(f4_toggle_enclosure_side)
 CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the closest enclosure.") {
@@ -403,6 +760,7 @@ CUSTOM_DOC("Moves the cursor between the open/close brace/paren/bracket of the c
         no_mark_snap_to_cursor_if_shift(app, view);
     }
 }
+#endif
 
 //~ Working with projects
 
@@ -553,353 +911,6 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
     }
     
     load_project(app);
-}
-
-//~ Moving the cursor
-
-NAMESPACE_BEGIN(nne)
-
-function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
-											Side side, Scan_Direction direction, i64 pos)
-{
-	using namespace nne;
-	
-    i64 result = boundary_non_whitespace(app, buffer, side, direction, pos);
-    Token_Array tokens = get_token_array_from_buffer(app, buffer);
-    if (tokens.tokens != 0){
-        switch (direction){
-            case Scan_Forward:
-            {
-                i64 buffer_size = buffer_get_size(app, buffer);
-                result = buffer_size;
-                if(tokens.count > 0)
-                {
-                    Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
-                    Token *token = token_it_read(&it);
-                    
-                    if(token == 0)
-                    {
-                        break;
-                    }
-                    
-                    // NOTE(rjf): Comments/Strings
-                    if(token->kind == TokenBaseKind_Comment ||
-                       token->kind == TokenBaseKind_LiteralString)
-                    {
-                        result = boundary_non_whitespace(app, buffer, side, direction, pos);
-                        break;
-                    }
-                    
-                    // NOTE(rjf): All other cases.
-                    else
-                    {
-                        if (token->kind == TokenBaseKind_Whitespace)
-                        {
-                            // token_it_inc_non_whitespace(&it);
-                            // token = token_it_read(&it);
-                        }
-                        
-                        if (side == Side_Max){
-                            result = token->pos + token->size;
-                            
-                            token_it_inc_all(&it);
-                            Token *ws = token_it_read(&it);
-                            if(ws != 0 && ws->kind == TokenBaseKind_Whitespace &&
-                               get_line_number_from_pos(app, buffer, ws->pos + ws->size) ==
-                               get_line_number_from_pos(app, buffer, token->pos))
-                            {
-                                result = ws->pos + ws->size;
-                            }
-                        }
-                        else{
-                            if (token->pos <= pos){
-                                token_it_inc_non_whitespace(&it);
-                                token = token_it_read(&it);
-                            }
-                            if (token != 0){
-                                result = token->pos;
-                            }
-                        }
-                    }
-                    
-                }
-            }break;
-            
-            case Scan_Backward:
-            {
-                result = 0;
-                if (tokens.count > 0){
-                    Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
-                    Token *token = token_it_read(&it);
-                    
-                    Token_Iterator_Array it2 = it;
-                    token_it_dec_non_whitespace(&it2);
-                    Token *token2 = token_it_read(&it2);
-                    
-                    // NOTE(rjf): Comments/Strings
-                    if(token->kind == TokenBaseKind_Comment ||
-                       token->kind == TokenBaseKind_LiteralString ||
-                       (token2 && 
-                        token2->kind == TokenBaseKind_Comment ||
-                        token2->kind == TokenBaseKind_LiteralString))
-                    {
-                        result = boundary_non_whitespace(app, buffer, side, direction, pos);
-                        break;
-                    }
-                    
-                    if (token->kind == TokenBaseKind_Whitespace){
-                        token_it_dec_non_whitespace(&it);
-                        token = token_it_read(&it);
-                    }
-                    if (token != 0){
-                        if (side == Side_Min){
-                            if (token->pos >= pos){
-                                token_it_dec_non_whitespace(&it);
-                                token = token_it_read(&it);
-                            }
-                            result = token->pos;
-                        }
-                        else{
-                            if (token->pos + token->size >= pos){
-                                token_it_dec_non_whitespace(&it);
-                                token = token_it_read(&it);
-                            }
-                            result = token->pos + token->size;
-                        }
-                    }
-                }
-            }break;
-        }
-    }
-    return(result);
-}
-
-// TODO(rjf): Replace with the final one from Jack's layer.
-function i64 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
-													 Side side, Scan_Direction direction, i64 pos)
-{
-	using namespace nne;
-	
-    Scratch_Block scratch(app);
-    
-    Range_i64_Array scopes = get_enclosure_ranges(app, scratch, buffer, pos, FindNest_Scope);
-    // NOTE(jack): The outermost scope
-    Range_i64 outer_scope = scopes.ranges[scopes.count - 1];
-    
-    // NOTE(jack): As we are issuing a move command here I will assume that buffer is the active buffer.
-    View_ID view = get_active_view(app, Access_Always);
-    i64 active_cursor_pos = view_get_cursor_pos(app, view);
-    Token_Array tokens = get_token_array_from_buffer(app, buffer);
-    Token_Iterator_Array active_cursor_it = token_iterator_pos(0, &tokens, active_cursor_pos);
-    Token *active_cursor_token = token_it_read(&active_cursor_it);
-    
-    String_Const_u8 cursor_string = push_buffer_range(app, scratch, buffer, Ii64(active_cursor_token));
-    i64 cursor_offset = pos - active_cursor_token->pos;
-    
-    // NOTE(jack): If the cursor token is not an identifier, we will move to empty lines
-    i64 result = get_pos_of_blank_line_grouped(app, buffer, direction, pos);
-    result = view_get_character_legal_pos_from_pos(app, view, result);
-    if (tokens.tokens != 0)
-    {
-        // NOTE(jack): if the the cursor token is an identifier, and we are inside of a scope
-        // perform the cursor occurance movement.
-        if (active_cursor_token->kind == TokenBaseKind_Identifier && !(scopes.count == 0))
-        {
-            // NOTE(jack): Reset result to prevent token movement to escape to blank line movement
-            // when you are on the first/last token in the outermost scope.
-            result = pos;
-            Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
-            
-            for (;;)
-            {
-                b32 done = false;
-                // NOTE(jack): Incremenet first so we dont move to the same cursor that the cursor is on.
-                switch (direction)
-                {
-                    // NOTE(jack): I am using it.ptr->pos because its easier than reading the token with
-                    // token_it_read
-                    case Scan_Forward:
-                    {
-                        if (!token_it_inc_non_whitespace(&it) || it.ptr->pos >= outer_scope.end) {
-                            done = true;
-                        }
-                    } break;
-                    
-                    case Scan_Backward:
-                    {
-                        if (!token_it_dec_non_whitespace(&it) || it.ptr->pos < outer_scope.start) {
-                            done = true;
-                        }
-                    } break;
-                }
-                
-                if (!done) 
-                {
-                    Token *token = token_it_read(&it);
-                    String_Const_u8 token_string = push_buffer_range(app, scratch, buffer, Ii64(token));
-                    if (string_match(cursor_string, token_string)) {
-                        result = token->pos + cursor_offset;
-                        break;
-                    }
-                }
-                else 
-                {
-                    break;
-                }
-            }
-        }
-    }
-    
-    return result ;
-}
-
-NAMESPACE_END()
-
-CUSTOM_COMMAND_SIG(f4_move_left)
-CUSTOM_DOC("Moves the cursor one character to the left.") {
-	Scratch_Block scratch(app);
-	
-    Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
-    View_ID            view = get_active_view(app, Access_ReadVisible);
-    
-	if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
-        view_set_cursor_by_character_delta(app, view, -1);
-    }
-	
-    no_mark_snap_to_cursor_if_shift(app, view);
-}
-
-CUSTOM_COMMAND_SIG(f4_move_right)
-CUSTOM_DOC("Moves the cursor one character to the right.") {
-    Scratch_Block scratch(app);
-	
-    Input_Modifier_Set mods = system_get_keyboard_modifiers(scratch);
-    View_ID            view = get_active_view(app, Access_ReadVisible);
-	
-    if (fcoder_mode != FCoderMode_NotepadLike || view_get_cursor_pos(app, view) == view_get_mark_pos(app, view) || has_modifier(&mods, KeyCode_Shift)) {
-        view_set_cursor_by_character_delta(app, view, +1);
-    }
-    
-	no_mark_snap_to_cursor_if_shift(app, view);
-}
-
-CUSTOM_COMMAND_SIG(f4_go_to_previous_token_occurrence)
-CUSTOM_DOC("Moves the cursor to the previous occurrence of the token that the cursor is over.") {
-    Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
-}
-
-CUSTOM_COMMAND_SIG(f4_go_to_next_token_occurrence)
-CUSTOM_DOC("Moves the cursor to the next occurrence of the token that the cursor is over.") {
-    Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_CursorTokenOrBlankLine_TEST));
-}
-
-CUSTOM_COMMAND_SIG(f4_move_right_token_boundary)
-CUSTOM_DOC("Seek right for boundary between alphanumeric characters and non-alphanumeric characters.") {
-    Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
-}
-
-CUSTOM_COMMAND_SIG(f4_move_left_token_boundary)
-CUSTOM_DOC("Seek left for boundary between alphanumeric characters and non-alphanumeric characters.") {
-    Scratch_Block scratch(app);
-    current_view_scan_move(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
-}
-
-CUSTOM_COMMAND_SIG(f4_backspace_token_boundary)
-CUSTOM_DOC("Deletes left to a token boundary.") {
-    Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
-}
-
-CUSTOM_COMMAND_SIG(f4_delete_token_boundary)
-CUSTOM_DOC("Deletes right to a token boundary.") {
-    Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, nne::F4_Boundary_TokenAndWhitespace));
-}
-
-CUSTOM_COMMAND_SIG(f4_backspace_alpha_numeric_or_camel_boundary)
-CUSTOM_DOC("Deletes left to a alphanumeric or camel boundary.") {
-    Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Backward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
-}
-
-CUSTOM_COMMAND_SIG(f4_delete_alpha_numeric_or_camel_boundary)
-CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.") {
-    Scratch_Block scratch(app);
-    current_view_boundary_delete(app, Scan_Forward, push_boundary_list(scratch, boundary_alpha_numeric, boundary_alpha_numeric_camel));
-}
-
-CUSTOM_COMMAND_SIG(f4_home_first_non_whitespace)
-CUSTOM_DOC("Goes to the beginning of the line.")
-{
-    using namespace nne;
-	
-	View_ID view = get_active_view(app, Access_Read);
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
-    if(view && buffer)
-    {
-        i64 start_pos = view_get_cursor_pos(app, view);
-        seek_pos_of_visual_line(app, Side_Min);
-        i64 end_pos = view_get_cursor_pos(app, view);
-        i64 line = get_line_number_from_pos(app, buffer, start_pos);
-        
-        // NOTE(rjf): If we are on the first column, go to the first non-whitespace
-        // in the line.
-        if(start_pos == end_pos && start_pos == get_line_start_pos(app, buffer, line))
-        {
-            Scratch_Block scratch(app);
-            String_Const_u8 string = push_buffer_line(app, scratch, buffer, line);
-            for(u64 i = 0; i < string.size; i += 1)
-            {
-                if(!character_is_whitespace(string.str[i]))
-                {
-                    view_set_cursor_by_character_delta(app, view, (i64)i);
-                    break;
-                }
-            }
-        }
-        
-        // NOTE(rjf): If we hit any non-whitespace, move to the first possible
-        // non-whitespace instead of the front of the line entirely.
-        else 
-        {
-            Scratch_Block scratch(app);
-            String_Const_u8 string = push_buffer_range(app, scratch, buffer, Ii64(start_pos, end_pos));
-            
-            b32 skipped_non_whitespace = 0;
-            {
-                for(i64 i = string.size-1; i >= 0; i -= 1)
-                {
-                    if(!character_is_whitespace(string.str[i]))
-                    {
-                        skipped_non_whitespace = 1;
-                        break;
-                    }
-                }
-            }
-            
-            if(skipped_non_whitespace)
-            {
-                for(i64 i = 0; i < (i64)string.size; i += 1)
-                {
-                    if(!character_is_whitespace(string.str[i]))
-                    {
-                        view_set_cursor_by_character_delta(app, view, i);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // NOTE(rjf): Scroll all the way left.
-        {
-            Buffer_Scroll scroll = view_get_buffer_scroll(app, view);
-            scroll.target.pixel_shift.x = 0;
-            view_set_buffer_scroll(app, view, scroll, SetBufferScroll_NoCursorChange);
-        }
-    }
 }
 
 //~ Indentation and autocomplete
@@ -1511,173 +1522,7 @@ CUSTOM_DOC("Performs VS-style uncommenting on the selected range.") {
     no_mark_snap_to_cursor(app, view);
 }
 
-//~ Lines of Code
-
-NAMESPACE_BEGIN(nne)
-
-struct LOC_Info {
-	LOC_Info *next;
-    String_Const_u8 name;
-    i64 lines;
-    i64 whitespace_only_lines;
-    i64 open_brace_only_lines;
-};
-
-function LOC_Info *LOC_Info_from_buffer(Application_Links *app, Arena *arena, Buffer_ID buffer) {
-    // using namespace nne;
-	
-	LOC_Info *first = 0;
-    LOC_Info *last  = 0;
-    
-    LOC_Info *file_info = push_array_zero(arena, LOC_Info, 1);
-    sll_queue_push(first, last, file_info);
-    file_info->name = str8_lit("all");
-    LOC_Info *active_info = 0;
-    
-    i64 line_count = buffer_get_line_count(app, buffer);
-    for (i64 line_idx = 0; line_idx < line_count; line_idx += 1) {
-        Scratch_Block scratch(app, arena);
-        String_Const_u8 line = push_buffer_line(app, scratch, buffer, line_idx);
-        if (line.size != 0 && line.str[line.size-1] == '\r') {
-            line.size -= 1;
-        }
-        
-        // rjf: begin a section if we find a root divider comment here
-        if (line.size >= 3 && line.str[0] == '/' && line.str[1] == '/' && line.str[2] == '~') {
-            active_info = push_array_zero(arena, LOC_Info, 1);
-            active_info->name = push_string_copy(arena, string_substring(line, Ii64(3, line.size)));
-            sll_queue_push(first, last, active_info);
-        }
-        
-        // rjf: find out if this is a line with only whitespace
-        b32 is_only_whitespace = true;
-        {
-            for (u64 i = 0; i < line.size; i += 1) {
-                if (!character_is_whitespace(line.str[i])) {
-                    is_only_whitespace = false;
-                    break;
-                }
-            }
-        }
-        
-        // rjf: find out if this is a line with only whitespace and an open brace
-        b32 is_only_open_brace = false;
-        if (is_only_whitespace == false) {
-            for (u64 i = 0; i < line.size; i += 1) {
-                if (!character_is_whitespace(line.str[i])) {
-                    is_only_open_brace = line.str[i] == '{';
-                    if (!is_only_open_brace) {
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // rjf: increment line counts
-        {
-            file_info->lines += 1;
-            if (active_info != 0) {
-                active_info->lines += 1;
-            }
-			
-            if (is_only_whitespace) {
-                file_info->whitespace_only_lines += 1;
-                if (active_info != 0) {
-                    active_info->whitespace_only_lines += 1;
-                }
-            }
-			
-            if (is_only_open_brace) {
-                file_info->open_brace_only_lines += 1;
-                if (active_info != 0) {
-                    active_info->open_brace_only_lines += 1;
-                }
-            }
-        }
-    }
-    
-    return first;
-}
-
-// @Note(ema): For qsort
-function int compare_LOC_Info(const void *a_void, const void *b_void) {
-    nne::LOC_Info *a = cast(nne::LOC_Info *)a_void;
-    nne::LOC_Info *b = cast(nne::LOC_Info *)b_void;
-	
-	int result = ((a->lines < b->lines) ? +1 :
-				  (a->lines > b->lines) ? -1 :
-				  0);
-	return result;
-}
-
-NAMESPACE_END()
-
-// Count Lines of Code
-// @Rename(ema): Something more meaningful
-
-CUSTOM_COMMAND_SIG(f4_loc)
-CUSTOM_DOC("Counts the lines of code in the current buffer, breaks it down by section, and outputs to the *loc* buffer.") {
-    // using namespace nne;
-	using nne::LOC_Info;
-	
-	Scratch_Block scratch(app);
-    View_ID   view   = get_active_view(app, Access_Read);
-    Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
-    
-    // rjf: get all sections and counts from buffer
-    LOC_Info *infos_list = nne::LOC_Info_from_buffer(app, scratch, buffer);
-    
-    // rjf: build unsorted info in array form
-    int info_count = 0;
-    LOC_Info *info_array = 0;
-    {
-        for (LOC_Info *info = infos_list; info; info = info->next, info_count += 1);
-        info_array = push_array_zero(scratch, LOC_Info, info_count);
-        int i = 0;
-        for (LOC_Info *info = infos_list; info; info = info->next, i += 1) {
-            info_array[i] = *info;
-        }
-    }
-    
-    // rjf: sort array
-    qsort(info_array, info_count, sizeof(LOC_Info), nne::compare_LOC_Info);
-    
-    // rjf: print loc info
-    Buffer_ID loc_buffer = get_buffer_by_name(app, str8_lit("*loc*"), AccessFlag_Write);
-    if (loc_buffer != 0) {
-        clear_buffer(app, loc_buffer);
-        
-        for (int i = 0; i < info_count; i += 1) {
-            LOC_Info *info = info_array + i;
-            
-            Scratch_Block scratch2(app, scratch);
-            int padding = 25;
-            int chrs    = cast(int)info->name.size;
-            int spaces  = 0;
-            if (chrs > padding) {
-                chrs = padding;
-                spaces = 0;
-            } else {
-                spaces = padding - chrs;
-            }
-            
-            if (spaces < 0) {
-                spaces = 0;
-            }
-            
-            String_Const_u8 string = push_stringf(scratch2,
-                                                  ">>> %.*s%.*s: %6i lines; %6i whitespace; %6i open braces; %6i significant\n",
-                                                  chrs, info->name.str,
-                                                  spaces, "                                            ",
-                                                  cast(int)info->lines,
-                                                  cast(int)info->whitespace_only_lines,
-                                                  cast(int)info->open_brace_only_lines,
-                                                  cast(int)(info->lines - (info->whitespace_only_lines+info->open_brace_only_lines)));
-            b32 write_successful = buffer_replace_range(app, loc_buffer, Ii64(buffer_get_size(app, loc_buffer)), string);
-            write_successful = write_successful; // @Note(ema): What?
-        }
-    }
-}
+//~ Misc
 
 CUSTOM_COMMAND_SIG(f4_remedy_open_cursor)
 CUSTOM_DOC("Opens the active panel's file in an actively-running RemedyBG instance, and moves to the cursor's line position.") {
@@ -1711,11 +1556,11 @@ CUSTOM_DOC("Insert the required number of spaces to get to a specified column nu
     u8 string_space[256];
     Query_Bar bar = {};
     bar.prompt = string_u8_litexpr("Column Number: ");
-    bar.string = SCu8(string_space, (u64)0);
+    bar.string = SCu8(string_space, cast(u64)0);
     bar.string_capacity = sizeof(string_space);
     
 	if (query_user_number(app, &bar)) {
-        i64 column_number = (i64)string_to_integer(bar.string, 10);
+        i64 column_number = cast(i64)string_to_integer(bar.string, 10);
         i64 cursor = view_get_cursor_pos(app, view);
         i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
         i64 cursor_column = cursor - get_line_start_pos(app, buffer, cursor_line) + 1;

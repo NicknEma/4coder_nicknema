@@ -6,7 +6,10 @@
 #include "generated/4coder_custom_lexer_jai.cpp"
 #include "generated/4coder_custom_lexer_odin.h"
 #include "generated/4coder_custom_lexer_odin.cpp"
+#include "generated/4coder_custom_lexer_js.h"
+#include "generated/4coder_custom_lexer_js.cpp"
 
+#include "languages/4coder_custom_lang_js.cpp"
 #include "languages/4coder_custom_lang_cpp.cpp"
 #include "languages/4coder_custom_lang_jai.cpp"
 #include "languages/4coder_custom_lang_odin.cpp"
@@ -54,6 +57,17 @@ function void register_languages(void) {
 						  odin__get_positional_context,
 						  odin__highlight,
 						  Lex_State_Odin);
+    }
+    
+    // JavaScript.
+    {
+        register_language(S8Lit("js"),
+						  js__index_file,
+						  lex_full_input_js_init,
+						  lex_full_input_js_breaks,
+						  js__get_positional_context,
+						  js__highlight,
+						  Lex_State_JS);
     }
     
     // Metadesk.

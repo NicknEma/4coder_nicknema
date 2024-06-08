@@ -29,22 +29,22 @@ load_paths = {
 
 commands = {
 	.build = { .out = "*compilation*", .footer_panel = true, .save_dirty_files = true,
-		.win   =   "build.bat",
-		.linux = "./build.sh",
-		.mac   = "./build.sh",
+		.win   =   "scripts\build.bat",
+		.linux = "./scripts/build.sh",
+		.mac   = "./scripts/build.sh",
 	},
 	
 	.check_statics = { .out = "*statics check*", .footer_panel = false, .save_dirty_files = false,
-		.win   =   "check_statics.bat",
-		.linux = "./check_statics.sh",
-		.mac   = "./check_statics.sh",
+		.win   =   "scripts\check_statics.bat",
+		.linux = "./scripts/check_statics.sh",
+		.mac   = "./scripts/check_statics.sh",
 		
 	},
 	
 	.check_notes = { .out = "*notes check*", .footer_panel = false, .save_dirty_files = false,
-		.win   =   "check_notes.bat",
-		.linux = "./check_notes.sh",
-		.mac   = "./check_notes.sh",
+		.win   =   "scripts\check_notes.bat",
+		.linux = "./scripts/check_notes.sh",
+		.mac   = "./scripts/check_notes.sh",
 	},
 };
 
