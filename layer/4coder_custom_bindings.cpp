@@ -88,7 +88,7 @@ namespace nne {
 		String_ID file_map_id   = vars_save_string_lit("keys_file");
 		SelectMap(file_map_id);
 		ParentMap(global_map_id);           // Every global binding also affects files
-		BindTextInput(f4_write_text_input); // Every time there's text input, call this command. @Cleanup: If power mode is removed, the only thing making this necessary is the custom indentation rule.
+		BindTextInput(write_text_input);    // Every time there's text input, call this command. @Cleanup: If power mode is removed, the only thing making this necessary is the custom indentation rule.
 		BindMouse(click_set_cursor_and_mark, MouseCode_Left);             // Mouse left pressed           => set cursor and mark
 		BindMouseRelease(click_set_cursor,   MouseCode_Left);             // Mouse left released          => set cursor
 		BindCore(click_set_cursor_and_mark,  CoreCode_ClickActivateView); // View activated               => set cursor and mark
@@ -98,7 +98,7 @@ namespace nne {
 		String_ID code_map_id   = vars_save_string_lit("keys_code");
 		SelectMap(code_map_id);
 		ParentMap(file_map_id);
-		BindTextInput(nne__write_text_and_auto_indent); // Every time there's text input in a code file, call this command. @Todo(ema): This doesn't work? What? If I step through the code in VS studio, writing text breaks on the default write_text_input.
+		BindTextInput(custom__write_text_and_auto_indent); // Every time there's text input in a code file, call this command. @Todo(ema): This doesn't work? What? If I step through the code in VS studio, writing text breaks on the default write_text_input.
 		BindMouse(f4_lego_click_store_token_1, MouseCode_Right); // @Todo(ema): Figure out what these 2 do (lego isn't a terribly good name...)
 		BindMouse(f4_lego_click_store_token_2, MouseCode_Middle);
 		
@@ -255,7 +255,7 @@ namespace nne {
 		// Code files related bindings.
 		SelectMap(code_map_id);
 		ParentMap(file_map_id);
-		BindTextInput(nne__write_text_and_auto_indent);
+		BindTextInput(custom__write_text_and_auto_indent);
 		Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Control);
 		Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Control);
 		Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);

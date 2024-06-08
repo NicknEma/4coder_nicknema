@@ -1,6 +1,3 @@
-#if OS_WINDOWS
-#include <windows.h>
-#endif
 
 //~ Default headers
 #include <stdlib.h>
@@ -33,9 +30,11 @@
 #include "4coder_custom_code_peek.h"             // Render helper and commands for code peek
 #include "4coder_custom_recent_files.h"          // Command to open the recent files lister and interact with it
 #include "4coder_custom_bindings.h"              // Functions to set hardcoded default bindings or to load them from a file
+#include "4coder_custom_lines_of_code.h"         // Command for counting and displaying lines of code info
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
 #include "4coder_custom_hooks.h"                 // Implementation of custom hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
+#include "4coder_custom_window.h"                // Functions that relate to the editor's window
 
 //~ Custom layer implementation
 #include "4coder_custom_ubiquitous.cpp"
@@ -55,11 +54,13 @@
 #include "4coder_custom_code_peek.cpp"
 #include "4coder_custom_recent_files.cpp"
 #include "4coder_custom_bindings.cpp"
+#include "4coder_custom_lines_of_code.cpp"
 #include "4coder_custom_base_commands.cpp"
 #include "4coder_custom_casey.cpp"
 #include "4coder_custom_hooks.cpp"
 #include "4coder_custom_load.cpp"
 #include "4coder_custom_auto_indent.cpp"
+#include "4coder_custom_window.cpp"
 
 //~ Plots Demo File
 #include "4coder_custom_plots_demo.cpp"
@@ -71,7 +72,7 @@
 
 void custom_layer_init(Application_Links *app) {
     default_framework_init(app);
-    global_frame_arena = make_arena(get_base_allocator_system());
+    global_frame_arena            = make_arena(get_base_allocator_system());
     global_custom_permanent_arena = make_arena(get_base_allocator_system());
     
     //- Set up hooks.
@@ -85,10 +86,10 @@ void custom_layer_init(Application_Links *app) {
         set_custom_hook(app, HookID_WholeScreenRenderCaller, nne::whole_screen_render);
         set_custom_hook(app, HookID_DeltaRule,               nne::delta_rule);
         set_custom_hook(app, HookID_BufferEditRange,         nne::buffer_edit_range);
-        set_custom_hook_memory_size(app, HookID_DeltaRule, delta_ctx_size(sizeof(Vec2_f32)));
+        set_custom_hook_memory_size(app, HookID_DeltaRule,   delta_ctx_size(sizeof(Vec2_f32)));
     }
     
-    //- Set up mapping.
+    //- Set up bindings.
     {
         mapping_init(get_thread_context(app), &framework_mapping);
 		
@@ -96,64 +97,16 @@ void custom_layer_init(Application_Links *app) {
         if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
             nne::set_default_bindings(&framework_mapping);
         }
-		nne::set_absolutely_necessary_bindings(&framework_mapping); // @Todo(ema): Why is this called two times here? If there's a reason, explain.
+		
+		// We don't want the .4coder file to overwrite some important binding that is necessary
+		// for the editor to work, so we set the minimal bindings again to re-overwrite those.
+		nne::set_absolutely_necessary_bindings(&framework_mapping);
     }
     
+	//- Set up language parsing.
 	nne::index__initialize();
 	nne::register_languages();
 }
-
-NAMESPACE_BEGIN(nne)
-
-#if OS_WINDOWS
-#pragma comment(lib, "user32.lib")
-#endif
-
-internal b32 set_window_maximized(Application_Links *app, b32 maximized) {
-    Scratch_Block scratch(app);
-	b32 success = false;
-	
-#if OS_WINDOWS
-    
-    HWND top_window = GetTopWindow(0);
-    if (top_window) {
-        LONG cur_style = GetWindowLongW(top_window, GWL_STYLE);
-        
-        if (maximized) {
-            cur_style |=  WS_MAXIMIZE;
-        } else {
-            cur_style &= ~WS_MAXIMIZE;
-        }
-        
-		SetLastError(0);
-        LONG old_style = SetWindowLongW(top_window, GWL_STYLE, cur_style);
-		int last_error = GetLastError();
-		if (last_error != 0) {
-			String_Const_u8 message = push_u8_stringf(scratch, "The window could not be maximized/de-maximized because the window style could not be set (last error: %d).", last_error);
-			print_message(app, message);
-			
-			// @Bug: This fails with error code 5 (ERROR_ACCESS_DENIED). The docs say nothing more than "Access is denied". What could the problem be?
-		} else {
-			success = true;
-		}
-		
-        cast(void)old_style;
-    } else {
-		String_Const_u8 message = push_u8_stringf(scratch, "The window could not be maximized/de-maximized because the window handle could not be retrieved (last error: %d).", GetLastError());
-		print_message(app, message);
-    }
-    
-#else
-    
-    cast(void)app;
-	cast(void)maximized;
-    
-#endif
-    
-	return success;
-}
-
-NAMESPACE_END()
 
 //~ Whenever 4coder's core is ready for the custom layer to start up, this is called.
 // In the custom layer entry point above, where the bindings are set, this is passed as a pointer to the editor core. See the bindings.cpp file for more info.
@@ -171,58 +124,43 @@ CUSTOM_DOC("Custom startup event") {
     load_themes_default_folder(app);
     default_4coder_initialize(app, file_names);
 	
-    //~ Open special buffers.
     {
-        // Open compilation buffer.
+		//~ Open special buffers.
         {
-            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*compilation*"),
-                                             BufferCreate_NeverAttachToFile |
-                                             BufferCreate_AlwaysNew);
+            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*compilation*"), BufferCreate_NeverAttachToFile | BufferCreate_AlwaysNew);
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
-            buffer_set_setting(app, buffer, BufferSetting_ReadOnly, true);
+            buffer_set_setting(app, buffer, BufferSetting_ReadOnly,    true);
         }
         
-        // Open lego buffer.
         {
-            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*lego*"),
-                                             BufferCreate_NeverAttachToFile |
-                                             BufferCreate_AlwaysNew);
+            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*lego*"), BufferCreate_NeverAttachToFile | BufferCreate_AlwaysNew);
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
-            buffer_set_setting(app, buffer, BufferSetting_ReadOnly, true);
+            buffer_set_setting(app, buffer, BufferSetting_ReadOnly,    true);
         }
         
-        // Open calc buffer.
         {
-            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*calc*"),
-                                             BufferCreate_NeverAttachToFile |
-                                             BufferCreate_AlwaysNew);
+            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*calc*"), BufferCreate_NeverAttachToFile | BufferCreate_AlwaysNew);
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
         }
         
-        // Open peek buffer.
         {
-            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*peek*"),
-                                             BufferCreate_NeverAttachToFile |
-                                             BufferCreate_AlwaysNew);
+            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*peek*"), BufferCreate_NeverAttachToFile | BufferCreate_AlwaysNew);
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
         }
         
-        // Open LOC buffer.
         {
-            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*loc*"),
-                                             BufferCreate_NeverAttachToFile |
-                                             BufferCreate_AlwaysNew);
+            Buffer_ID buffer = create_buffer(app, string_u8_litexpr("*loc*"), BufferCreate_NeverAttachToFile | BufferCreate_AlwaysNew);
             buffer_set_setting(app, buffer, BufferSetting_Unimportant, true);
         }
     }
     
-    //~ Initialize panels
     {
-        Buffer_Identifier comp = buffer_identifier(string_u8_litexpr("*compilation*"));
-        Buffer_Identifier left  = buffer_identifier(string_u8_litexpr("*calc*"));
+		//~ Initialize panels
+        Buffer_Identifier  comp = buffer_identifier(string_u8_litexpr("*compilation*"));
+        Buffer_Identifier  left = buffer_identifier(string_u8_litexpr("*calc*"));
         Buffer_Identifier right = buffer_identifier(string_u8_litexpr("*messages*"));
-        Buffer_ID comp_id = buffer_identifier_to_id(app, comp);
-        Buffer_ID left_id = buffer_identifier_to_id(app, left);
+        Buffer_ID  comp_id = buffer_identifier_to_id(app, comp);
+        Buffer_ID  left_id = buffer_identifier_to_id(app, left);
         Buffer_ID right_id = buffer_identifier_to_id(app, right);
         
         // Left Panel
@@ -238,7 +176,7 @@ CUSTOM_DOC("Custom startup event") {
             Buffer_ID buffer = view_get_buffer(app, compilation_view, Access_Always);
             Face_ID face_id = get_face_id(app, buffer);
             Face_Metrics metrics = get_face_metrics(app, face_id);
-            view_set_split_pixel_size(app, compilation_view, (i32)(metrics.line_height*4.f));
+            view_set_split_pixel_size(app, compilation_view, cast(i32)(metrics.line_height*4.f));
             view_set_passive(app, compilation_view, true);
             global_compilation_view = compilation_view;
             view_set_buffer(app, compilation_view, comp_id, 0);
@@ -256,26 +194,29 @@ CUSTOM_DOC("Custom startup event") {
         view_set_active(app, view);
     }
     
-	b32 auto_maximize = def_get_config_b32(vars_save_string_lit("maximize_window_on_startup"));
-	if (auto_maximize) {
-		nne::set_window_maximized(app, true);
+	{
+		//~ Maximize window.
+		b32 auto_maximize = def_get_config_b32(vars_save_string_lit("maximize_window_on_startup"));
+		if (auto_maximize) {
+			nne::set_window_maximized(app, true);
+		}
 	}
 	
-    //~ Auto-Load Project.
     {
+		//~ Auto-Load Project.
         b32 auto_load = def_get_config_b32(vars_save_string_lit("automatically_load_project"));
         if (auto_load) {
             load_project(app);
         }
     }
     
-    //~ Set misc options.
     {
+		//~ Set misc options.
         global_battery_saver = def_get_config_b32(vars_save_string_lit("f4_battery_saver"));
     }
     
-    //~ Initialize audio.
     {
+		//~ Initialize audio.
         def_audio_init();
     }
     
@@ -287,14 +228,14 @@ CUSTOM_DOC("Custom startup event") {
         // Fallback font.
         Face_ID face_that_should_totally_be_there = get_face_id(app, 0);
         
-        // Title font.
         {
-            Face_Description desc = {0};
+			// Title font.
+            Face_Description desc = {};
             {
                 desc.font.file_name =  push_u8_stringf(scratch, "%.*sfonts/RobotoCondensed-Regular.ttf", string_expand(bin_path));
                 desc.parameters.pt_size = 18;
-                desc.parameters.bold = 0;
-                desc.parameters.italic = 0;
+                desc.parameters.bold    = 0;
+                desc.parameters.italic  = 0;
                 desc.parameters.hinting = 0;
             }
             
@@ -305,14 +246,14 @@ CUSTOM_DOC("Custom startup event") {
             }
         }
         
-        // Label font.
         {
-            Face_Description desc = {0};
+			// Label font.
+            Face_Description desc = {};
             {
                 desc.font.file_name =  push_u8_stringf(scratch, "%.*sfonts/RobotoCondensed-Regular.ttf", string_expand(bin_path));
                 desc.parameters.pt_size = 10;
-                desc.parameters.bold = 1;
-                desc.parameters.italic = 1;
+                desc.parameters.bold    = 1;
+                desc.parameters.italic  = 1;
                 desc.parameters.hinting = 0;
             }
             
@@ -323,16 +264,16 @@ CUSTOM_DOC("Custom startup event") {
             }
         }
         
-        // Small code font.
         {
+			// Small code font.
             Face_Description normal_code_desc = get_face_description(app, get_face_id(app, 0));
             
-            Face_Description desc = {0};
+            Face_Description desc = {};
             {
                 desc.font.file_name =  push_u8_stringf(scratch, "%.*sfonts/Inconsolata-Regular.ttf", string_expand(bin_path));
                 desc.parameters.pt_size = normal_code_desc.parameters.pt_size - 1;
-                desc.parameters.bold = 1;
-                desc.parameters.italic = 1;
+                desc.parameters.bold    = 1;
+                desc.parameters.italic  = 1;
                 desc.parameters.hinting = 0;
             }
             
@@ -344,8 +285,8 @@ CUSTOM_DOC("Custom startup event") {
         }
     }
     
-    //~ Prep virtual whitespace.
     {
+		//~ Prep virtual whitespace.
         def_enable_virtual_whitespace = def_get_config_b32(vars_save_string_lit("enable_virtual_whitespace"));
         clear_all_layouts(app);
     }

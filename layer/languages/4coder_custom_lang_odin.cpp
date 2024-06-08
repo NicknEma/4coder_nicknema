@@ -130,17 +130,9 @@ function FILE_INDEXER(odin__index_file) {
 					}
 					
 					// Distinct types.
-					else if (index__require_token(context, S("distinct"), flags) &&
-							 index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
-						// <name> :: distinct <ident>
-						
-						Index__Note_Flags note_flags = 0;
-						Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
-						if (rhs_note) {
-							note_flags = rhs_note->flags;
-						}
-						
-						index__make_note(context, Ii64(name), Index__Note_Kind_Type, note_flags);
+					else if (index__require_token(context, S("distinct"), flags)) {
+						// <name> :: distinct
+						index__make_note(context, Ii64(name), Index__Note_Kind_Type, 0);
 					}
 					
 					// Type directives.
@@ -158,19 +150,24 @@ function FILE_INDEXER(odin__index_file) {
 					}
 					
 					// Aliases.
-					else if (index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
-						// <name> :: <ident>
+					else {
+						// <name> ::
 						
-						Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
-						if (rhs_note) {
-							if (rhs_note->kind == Index__Note_Kind_Type) {
-								index__make_note(context, Ii64(name), Index__Note_Kind_Type, rhs_note->flags);
-							} else {
-								index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
+						Index__Note_Kind  note_kind  = Index__Note_Kind_Constant;
+						Index__Note_Flags note_flags = 0;
+						if (index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
+							// <name> :: <ident>
+							
+							Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
+							if (rhs_note) {
+								if (rhs_note->kind == Index__Note_Kind_Type) {
+									note_kind  = Index__Note_Kind_Type;
+									note_flags = rhs_note->flags;
+								}
 							}
-						} else {
-							index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
 						}
+						
+						index__make_note(context, Ii64(name), note_kind, note_flags);
 					}
 				} else if (index__require_token(context, str8_lit("="), flags)) {
 					// <name> :=
