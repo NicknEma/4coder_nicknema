@@ -25,11 +25,11 @@ REM cd %folder_path%
 REM ------------------------------
 REM Retrieve editor location
 set count=0
-for /f "tokens=*" %%x in (%root%path_to.4coder) do (
-													set /a count+=1
-													set var[!count!]=%%x
-													)
-set editor_dir=%var[1]%
+for /f "tokens=*" %%x in (%folder_path%path_to.4coder) do (
+														   set /a count+=1
+														   set var[!count!]=%%x
+														   )
+set editor_path=%var[1]%
 
 if     exist %editor_path%\4ed.exe echo Found %editor_path%\4ed.exe
 if not exist %editor_path%\4ed.exe goto INCORRECT_LOCATION
@@ -37,13 +37,13 @@ if not exist %editor_path%\4ed.exe goto INCORRECT_LOCATION
 
 REM ------------------------------
 REM Copy files
-copy %root%variables\bindings.4coder %editor_dir%\bindings.4coder > NUL
-copy %root%variables\config.4coder   %editor_dir%\config.4coder   > NUL
-copy %root%variables\themes          %editor_dir%\themes\         > NUL
+copy %root%variables\bindings.4coder %editor_path%\bindings.4coder > NUL
+copy %root%variables\config.4coder   %editor_path%\config.4coder   > NUL
+copy %root%variables\themes          %editor_path%\themes\         > NUL
 goto END
 
 :INCORRECT_LOCATION
-echo %editor_dir% does not contain 4ed.exe. Please fix the path in path_to.4coder.
+echo %editor_path% does not contain 4ed.exe. Please fix the path in path_to.4coder.
 
 :END
 cd %caller_path%
