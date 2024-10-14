@@ -812,8 +812,7 @@ CUSTOM_DOC("Open a project by navigating to the project file.") {
     }
 }
 
-// @Todo(ema): Make another one of these. Preserve the original one in case somebody wants to use the r4 version.
-CUSTOM_COMMAND_SIG(f4_setup_new_project)
+CUSTOM_COMMAND_SIG(nne_setup_new_project)
 CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
 	using namespace nne;
 	
@@ -836,72 +835,71 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
             FILE *file = fopen((char *)project_file_path.str, "wb");
             if (file) {
                 
-                char *string = R"PROJ(version(1);
-                  
-                  project_name = "New Project";
-                  
-                  patterns =
-                  {
-                      "*.c",
-                      "*.cpp",
-                      "*.jai",
-                      "*.odin",
-                      "*.zig",
-                      "*.h",
-                      "*.inc",
-                      "*.bat",
-                      "*.sh",
-                      "*.4coder",
-                      "*.txt",
-                  };
-                  
-                  blacklist_patterns =
-                  {
-                      ".*",
-                  };
-                  
-                  load_paths =
-                  {
-                      {
-                          { {"."}, .recursive = true, .relative = true }, .os = "win"
-                      },
-                  };
-                  
-                  command_list =
-                  {
-                      {
-                          .name = "build",
-                          .out = "*compilation*",
-                          .footer_panel = true,
-                          .save_dirty_files = true,
-                          .cursor_at_end = false,
-                          .cmd =
-                          {
-                              { "echo Windows build command not implemented for 4coder project.", .os = "win" },
-        { "echo Linux build command not implemented for 4coder project.", .os = "linux" },
-                          },
-                      },
-                      
-                      {
-                          .name = "run",
-                          .out = "*compilation*",
-                          .footer_panel = true,
-                          .save_dirty_files = true,
-                          .cursor_at_end = false,
-                          .cmd =
-                          {
-                              { "echo Windows run command not implemented for 4coder project.", .os = "win" },
-        { "echo Linux run command not implemented for 4coder project.", .os = "linux" },
-                          },
-                      },
-                      
-                  };
-                  
-                  fkey_command[1] = "build";
-                  fkey_command[2] = "run";
-        )PROJ";
+				// Query user for project name.
+				char *project_name = "New Project";
+				{
+					u8 project_name_buffer[1024];
+					Query_Bar name_bar = {};
+					name_bar.prompt = string_u8_litexpr("Project Name: ");
+					name_bar.string = SCu8(project_name_buffer, (u64)0);
+					name_bar.string_capacity = sizeof(project_name_buffer);
+					if (query_user_string(app, &name_bar)) {
+						project_name = (char *)name_bar.string.str;
+					}
+				}
+				
+                char *format_string = R"PROJ(version(2);
+project_name = "%s";
+
+patterns = {
+	"*.c",
+	"*.cpp",
+	"*.jai",
+	"*.odin",
+	"*.zig",
+	"*.h",
+	"*.inc",
+	"*.bat",
+	"*.sh",
+	"*.4coder",
+	"*.txt",
+};
+
+blacklist_patterns = {
+	".*",
+};
+
+load_paths_base = {
+	{ {"."}, .recursive = true, .relative = true },
+};
+
+load_paths = {
+	.win   = load_paths_base,
+	.linux = load_paths_base,
+	.mac   = load_paths_base,
+};
+
+commands = {
+	.build = { .out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = false,
+		.win   = "echo Windows build command not implemented for 4coder project.",
+		.linux = "echo Linux build command not implemented for 4coder project.",
+		.mac   = "echo Max build command not implemented for 4coder project.",
+	},
+			
+	.run = { .out = "*run*", .footer_panel = true, .save_dirty_files = false, .cursor_at_end = false,
+		.win   = "echo Windows run command not implemented for 4coder project.",
+		.linux = "echo Linux run command not implemented for 4coder project.",
+		.mac   = "echo Max run command not implemented for 4coder project.",
+	},
+};
+
+fkey_command = {
+	.F1 = "build",
+	.F2 = "run",
+};
+)PROJ";
                 
-                fprintf(file, "%s", string);
+                fprintf(file, format_string, project_name);
                 fclose(file);
                 load_project(app);
             } else {
