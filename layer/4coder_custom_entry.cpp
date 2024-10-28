@@ -33,6 +33,7 @@
 #include "4coder_custom_lines_of_code.h"         // Command for counting and displaying lines of code info
 #include "4coder_custom_base_commands.h"         // Generic commands, searchable through the command lister or bindable to an event
 #include "4coder_custom_hooks.h"                 // Implementation of custom hooks (callback for various events such as on-render, on-buffer-edit, on-open-file)
+#include "4coder_custom_load.h"
 #include "4coder_custom_auto_indent.h"           // Slight modification of the default indentation rules to handle languages without semicolons
 #include "4coder_custom_window.h"                // Functions that relate to the editor's window
 
@@ -108,7 +109,7 @@ void custom_layer_init(Application_Links *app) {
 	nne::register_languages();
 }
 
-//~ Whenever 4coder's core is ready for the custom layer to start up, this is called.
+// Whenever 4coder's core is ready for the custom layer to start up, this is called.
 // In the custom layer entry point above, where the bindings are set, this is passed as a pointer to the editor core. See the bindings.cpp file for more info.
 CUSTOM_COMMAND_SIG(custom_startup)
 CUSTOM_DOC("Custom startup event") {
@@ -286,7 +287,7 @@ CUSTOM_DOC("Custom startup event") {
     }
     
     {
-		//~ Prep virtual whitespace.
+		//- Prep virtual whitespace.
         def_enable_virtual_whitespace = def_get_config_b32(vars_save_string_lit("enable_virtual_whitespace"));
         clear_all_layouts(app);
     }
