@@ -18,7 +18,7 @@ use_scroll_bars          = false;
 use_file_bars            =  true; // Draws a bar at the top of the view displaying info about the current file
 use_error_highlight      =  true;
 use_jump_highlight       =  true;
-use_scope_highlight      =  true;
+use_scope_highlight      = false;
 use_paren_helper         =  true; // Colors matching parentheses so that they are easier to see
 use_comment_keywords     =  true; // Highlights NOTE and TODO keywords in comments
 lister_whole_word_backspace_when_modified = true; // Toggles how any lister responds to backspace. 'modified' here means that we're holding shift on the keyboard. When set to false, it _always_ goes back a full word unless modified.
@@ -42,7 +42,7 @@ mark_thickness   =  2;
 lister_roundness = 20;
 
 //~ Code Wrapping and virtual whitespace.
-enable_code_wrapping = true;
+enable_code_wrapping = false;
 enable_virtual_whitespace = true;
 virtual_whitespace_regular_indent = 4;
 treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.4coder.jai.vert.frag.odin.js.ts.css.bat.sh";
