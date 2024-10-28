@@ -28,10 +28,10 @@ CUSTOM_DOC("Switch the keybindings to mode 3.") {
 NAMESPACE_BEGIN(nne)
 
 struct Command_Map_ID_Pair {
-	Command_Map_ID From;
-	Command_Map_ID To;
+	Command_Map_ID from;
+	Command_Map_ID to;
 };
-global Command_Map_ID_Pair GlobalCommandMapReroute[4] = {};
+global Command_Map_ID_Pair global_command_map_reroute[4] = {};
 
 function Implicit_Map_Result
 implicit_map_function(Application_Links *app, String_ID lang, String_ID mode, Input_Event *event) {
@@ -42,9 +42,9 @@ implicit_map_function(Application_Links *app, String_ID lang, String_ID mode, In
 	Command_Map_ID orig_id = default_get_map_id(app, view);
 	Command_Map_ID map_id = orig_id;
 	if (global_keybinding_mode == Keybinding_Mode_1) {
-		for (int PairIndex = 0; PairIndex < ArrayCount(GlobalCommandMapReroute); PairIndex += 1) {
-			if (GlobalCommandMapReroute[PairIndex].From == map_id) {
-				map_id = GlobalCommandMapReroute[PairIndex].To;
+		for (int pair_index = 0; pair_index < ArrayCount(global_command_map_reroute); pair_index += 1) {
+			if (global_command_map_reroute[pair_index].from == map_id) {
+				map_id = global_command_map_reroute[pair_index].to;
 				break;
 			}
 		}
@@ -112,18 +112,18 @@ set_absolutely_necessary_bindings(Mapping *mapping) {
 	
 	SelectMap(global_command_map_id);
 	ParentMap(global_map_id);
-	GlobalCommandMapReroute[0].From = global_map_id;
-	GlobalCommandMapReroute[0].To = global_command_map_id;
+	global_command_map_reroute[0].from = global_map_id;
+	global_command_map_reroute[0].to   = global_command_map_id;
 	
 	SelectMap(file_command_map_id);
 	ParentMap(global_command_map_id);
-	GlobalCommandMapReroute[1].From = file_map_id;
-	GlobalCommandMapReroute[1].To = file_command_map_id;
+	global_command_map_reroute[1].from = file_map_id;
+	global_command_map_reroute[1].to   = file_command_map_id;
 	
 	SelectMap(code_command_map_id);
 	ParentMap(file_command_map_id);
-	GlobalCommandMapReroute[2].From = code_map_id;
-	GlobalCommandMapReroute[2].To = code_command_map_id;
+	global_command_map_reroute[2].from = code_map_id;
+	global_command_map_reroute[2].to   = code_command_map_id;
 }
 
 // This function is only called when we fail to load the bindings.4coder file. When that happens, we hardcode in some default bindings.
@@ -294,8 +294,8 @@ NAMESPACE_END()
 
 //~ Dynamic bindings.
 
-CUSTOM_COMMAND_SIG(load_bindings_from_project_directory)
-CUSTOM_DOC("Load and apply the bindings.4coder file from the project directory.") {
+CUSTOM_COMMAND_SIG(load_bindings_default_directories)
+CUSTOM_DOC("Load and apply the bindings.4coder file from 4coder's default directories (user and image).") {
 	if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
 		nne::set_default_bindings(&framework_mapping);
 		print_message(app, Str_U8("Bindings not loaded\n"));
@@ -303,7 +303,7 @@ CUSTOM_DOC("Load and apply the bindings.4coder file from the project directory."
 	nne::set_absolutely_necessary_bindings(&framework_mapping);
 }
 
-CUSTOM_COMMAND_SIG(load_bindings_from_current_buffer)
+CUSTOM_COMMAND_SIG(load_bindings_current_buffer)
 CUSTOM_DOC("Load and apply the bindings.4coder file from the current buffer.") {
 	Scratch_Block scratch(app);
 	
@@ -319,10 +319,31 @@ CUSTOM_DOC("Load and apply the bindings.4coder file from the current buffer.") {
 	nne::set_absolutely_necessary_bindings(&framework_mapping);
 }
 
+// NOTE(ema): @Copypaste From 4coder_config.cpp. The only (meaningful) difference is the type of the last parameter.
+// TODO(ema): Maybe this overload could be pushed to the community fork.
+function Config_Error *
+def_config_push_error(Arena *arena, Config_Error_List *list, String_Const_u8 file_name, u8 *pos,
+					  String_Const_u8 error_text) {
+    Config_Error *error = push_array(arena, Config_Error, 1);
+    zdll_push_back(list->first, list->last, error);
+    list->count += 1;
+    error->file_name = file_name;
+    error->pos  = pos;
+    error->text = push_string_copy(arena, error_text); // NOTE(ema): Only different line from original procedure.
+    return(error);
+}
+
+// NOTE(ema): Same as above.
+function Config_Error *
+def_config_push_error(Arena *arena, Config *config, u8 *pos, String_Const_u8 error_text) {
+    return def_config_push_error(arena, &config->errors, config->file_name, pos, error_text);
+}
+
 NAMESPACE_BEGIN(nne)
 
-// NOTE(ema): @Copypaste From 4coder_search.cpp's def_search_get_full_path.
-// The only (meaningful) difference is that we check if the string already ends in a slash instead of blindly appending it.
+// NOTE(ema): @Copypaste From 4coder_search.cpp's def_search_get_full_path. The only (meaningful)
+// difference is that we check if the string already ends in a slash instead of blindly appending it.
+// TODO(ema): Maybe this change could be pushed to the community fork.
 internal String_Const_u8
 search_get_full_path(Arena *arena, List_String_Const_u8 *list, String_Const_u8 relative_name) {
 	String_Const_u8 result = {};
@@ -372,7 +393,7 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 	if (parsed != 0) {
 		success = true;
 	} else {
-		error_message = push_string_copy(scratch, Str_U8("can't parse bindings\n"));
+		error_message = Str_U8("can't parse bindings\n");
 	}
 	
 	if (error_message.str == 0) {
@@ -428,17 +449,6 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 							Command_Metadata *command = get_command_metadata_from_name(cmd_string);
 							Key_Code keycode = dynamic_binding_key_code_from_string(key_string);
 							
-#if 0
-							i32 mod_count = 0;
-							Key_Code mods[ArrayCount(mod_string)] = {0};
-							for (i32 i = 0; i < ArrayCount(mod_string); i += 1) {
-								if (mod_string[i].str) {
-									mods[mod_count] = dynamic_binding_key_code_from_string(mod_string[i]);
-									mod_count += 1;
-								}
-							}
-#endif
-							
 							if (command != 0 && keycode != 0) {
 								i32 mod_count = 0;
 								Key_Code mods[ArrayCount(mod_string)] = {0};
@@ -458,8 +468,8 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 								if (command == 0) { cmd_message = push_stringf(scratch, "Command %.*s does not exist", string_expand(cmd_string)); }
 								if (keycode == 0) { key_message = push_stringf(scratch, "Invalid key %.*s",            string_expand(key_string)); }
 								
-								if (cmd_message.str != 0) { def_config_push_error(scratch, parsed, node->result.pos, cast(char *)cmd_message.str); }
-								if (key_message.str != 0) { def_config_push_error(scratch, parsed, node->result.pos, cast(char *)key_message.str); }
+								if (cmd_message.str != 0) { def_config_push_error(scratch, parsed, node->result.pos, cmd_message); }
+								if (key_message.str != 0) { def_config_push_error(scratch, parsed, node->result.pos, key_message); }
 							}
 						}
 						
@@ -484,9 +494,6 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 	return success;
 }
 
-// NOTE(ema): @Copypaste From 4coder_dynamic_bindings.cpp
-// The only (meaningful) difference is the call to a different version def_search_get_full_path() that checks for a backslash before
-// inserting one. This fix might not be necessary if we switch to a community-maintained fork of 4coder that solves it. If it still isn't solved, we could push the change ourselves.
 function b32
 dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_Const_u8 filename) {
 	b32     success = false;
@@ -503,7 +510,7 @@ dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_
 		String8List search_list = {};
 		def_search_normal_load_list(scratch, &search_list);
 		full_path = nne::search_get_full_path(scratch, &search_list, push_string_copy(scratch, filename));
-		// TODO(ema): Why copy the filename instead of passing it? @Speed
+		// NOTE(ema): The filename is copied so that it's going to have a null-terminator.
 		
 		{
 			String8 message = push_stringf(scratch, "loading bindings: %.*s\n", string_expand(full_path));
@@ -513,21 +520,6 @@ dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_
 	
 	// Read file.
 	String_Const_u8 data = {};
-#if 0
-	{
-		FILE *file = 0;
-		if (full_path.size > 0) {
-			file = fopen((char*)full_path.str, "rb");
-		}
-		
-		if (file != 0) {
-			data = dump_file_handle(scratch, file);
-			fclose(file);
-		} else {
-			error_message = push_stringf(scratch, "can't open file: %.*s\n", string_expand(full_path));
-		}
-	}
-#else
 	{
 		if (full_path.size > 0) {
 			File_Name_Data name_and_data = dump_file(scratch, full_path);
@@ -538,7 +530,6 @@ dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_
 			}
 		}
 	}
-#endif
 	
 	if (error_message.str == 0) {
 		success = dynamic_binding_load_from_buffer(app, mapping, filename, data);
