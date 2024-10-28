@@ -218,7 +218,7 @@ F4_PowerMode_Tick(Application_Links *app, Frame_Info frame_info)
         {
             char path[256];
             snprintf(path, sizeof(path), "sounds/PowerKey-%03d.wav", i+1);
-            F4_RequireWAV(app, &f4_powermode_keystroke_sounds[i], path);
+            nne::require_wav(app, &f4_powermode_keystroke_sounds[i], path);
             f4_powermode_keystroke_sounds[i].channel_volume[0] = 0.25f;
             f4_powermode_keystroke_sounds[i].channel_volume[1] = 0.25f;
         }
@@ -237,7 +237,7 @@ F4_PowerMode_Tick(Application_Links *app, Frame_Info frame_info)
             if(power_mode.enabled == 0)
             {
                 power_mode.enabled = 1;
-                F4_RequireWAV(app, &f4_powermode_music, "sounds/chtulthu.wav");
+                nne::require_wav(app, &f4_powermode_music, "sounds/chtulthu.wav");
             }
             
             power_mode.ticks_to_disable = 120;

@@ -1,8 +1,12 @@
 #ifndef FCODER_CUSTOM_AUDIO_H
 #define FCODER_CUSTOM_AUDIO_H
 
-function b32 F4_AudioClipIsValid(Audio_Clip clip);
-function b32 F4_AudioClipIsUnloadable(Audio_Clip clip);
-function void F4_RequireWAV(Application_Links *app, Audio_Clip *clip, char *filename);
+NAMESPACE_BEGIN(nne)
+
+function b32 audio_clip_is_valid(Audio_Clip clip);
+function b32 audio_clip_is_unloadable(Audio_Clip clip);
+function void require_wav(Application_Links *app, Audio_Clip *clip, char *filename);
+
+NAMESPACE_END()
 
 #endif // FCODER_CUSTOM_AUDIO_H

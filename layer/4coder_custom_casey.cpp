@@ -8,7 +8,7 @@ Audio_Control PowerWAVControl = {};
 CUSTOM_COMMAND_SIG(casey_demo_audio)
 CUSTOM_DOC("He used to cut my grass... he was a very nice boy!")
 {
-    F4_RequireWAV(app, &PowerWAV, "sounds/hit.wav");
+    nne::require_wav(app, &PowerWAV, "sounds/hit.wav");
     PowerWAV.channel_volume[0] = 0.5f;
     PowerWAV.channel_volume[1] = 0.25f;
 	if(!def_audio_is_playing(&PowerWAVControl))
@@ -29,7 +29,7 @@ CUSTOM_DOC("The white zone is for loading and unloading only...")
 CUSTOM_COMMAND_SIG(casey_demo_audio_one_shot)
 CUSTOM_DOC("... if you gotta load, or if you gotta unload, you go to the white zone...")
 {
-    F4_RequireWAV(app, &HitWAV, "sounds/hit.wav");
+    nne::require_wav(app, &HitWAV, "sounds/hit.wav");
     HitWAV.channel_volume[0] = 0.5f;
     HitWAV.channel_volume[1] = 0.5f;
     def_audio_play_clip(HitWAV, 0);
