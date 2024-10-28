@@ -143,19 +143,4 @@ CUSTOM_COMMAND_SIG(load_config_from_current_buffer)
 CUSTOM_DOC("Load and apply the config.4coder file from the current buffer.") {
 	; // @Unimplemented(ema).
 }
-
-CUSTOM_COMMAND_SIG(load_bindings_from_project_directory)
-CUSTOM_DOC("Load and apply the bindings.4coder file from the project directory.") {
-	if (!nne::dynamic_binding_load_from_file(app, &framework_mapping, Str_U8("bindings.4coder"))) {
-		nne::set_default_bindings(&framework_mapping);
-	}
-	nne::set_absolutely_necessary_bindings(&framework_mapping);
-}
-
-CUSTOM_COMMAND_SIG(load_bindings_from_current_buffer)
-CUSTOM_DOC("Load and apply the bindings.4coder file from the current buffer.") {
-	; // @Unimplemented(ema).
-}
-
-
 #endif // FCODER_CUSTOM_LOAD_CPP
