@@ -1,51 +1,62 @@
-#ifndef FCODER_CUSTOM_LOAD_CPP
-#define FCODER_CUSTOM_LOAD_CPP
+#ifndef FCODER_CUSTOM_CONFIG_CPP
+#define FCODER_CUSTOM_CONFIG_CPP
 
 //- Config
 
 // TODO(ema): Reload from the current directory (not project)? Is it possible?
 // Probaily use def_search_normal_load_list() to get the executable directory (the so-called BinPath?)
 
-// TODO(ema): With the same strategy also add a command that goes to the executable directory (sets it as the current directory). It's the parallel to Ctrl+H that goes to the project directory.
+// TODO(ema): With the same strategy also add a command that goes to the executable directory (sets it
+// as the current directory). It's the parallel to Ctrl+H that goes to the project directory.
 
-CUSTOM_COMMAND_SIG(load_config_from_project_directory)
-CUSTOM_DOC("Load and apply the config.4coder file from the project directory.") {
+CUSTOM_COMMAND_SIG(load_config_default_directories)
+CUSTOM_DOC("Load and apply the config.4coder file 4coder's default directories (user and image).") {
 	Face_Description description = get_face_description(app, 0);
-	nne::load_config_and_apply(app, &global_config_arena, description.parameters.pt_size, description.parameters.hinting);
+	nne::config_load_from_file(app, &global_config_arena, description.parameters.pt_size,
+							   description.parameters.hinting);
 }
 
-CUSTOM_COMMAND_SIG(load_config_from_current_buffer)
+CUSTOM_COMMAND_SIG(load_config_current_buffer)
 CUSTOM_DOC("Load and apply the config.4coder file from the current buffer.") {
-	; // @Unimplemented(ema).
+	Scratch_Block scratch(app);
+	
+	View_ID   view   = get_active_view(app, AccessFlag_Read);
+	Buffer_ID buffer = view_get_buffer(app, view, AccessFlag_Read);
+	String8   buffer_data = push_whole_buffer(app, scratch, buffer);
+	String8   buffer_name = push_buffer_base_name(app, scratch, buffer);
+	
+	Face_Description description = get_face_description(app, 0);
+	nne::config_load_from_buffer(app, &global_config_arena, description.parameters.pt_size,
+								 description.parameters.hinting, buffer_name, buffer_data);
 }
 
 NAMESPACE_BEGIN(nne)
 
-internal void apply_parsed_config() {
-	; // @Unimplemented(ema).
-}
-
-internal void parse_config_and_apply() {
-	; // @Unimplemented(ema).
-}
-
-internal void load_config_and_apply(Application_Links *app, Arena *out_arena, i32 override_font_size, b32 override_hinting) {
-    Scratch_Block scratch(app, out_arena);
-    
-    linalloc_clear(out_arena);
-    
-	// Load the config file from the "normal" paths.
-    Config *parsed = 0;
-    FILE *file = def_search_normal_fopen(scratch, "config.4coder", "rb");
-    if (file != 0){
-        String_Const_u8 data = dump_file_handle(scratch, file);
-        fclose(file);
-        if (data.str != 0){
+internal b32
+config_load_from_buffer(Application_Links *app, Arena *out_arena, b32 override_font_size,
+						b32 override_hinting, String8 filename, String8 data) {
+	b32     success = false;
+	String8 error_message = {};
+	
+	Scratch_Block scratch(app, out_arena);
+	linalloc_clear(out_arena);
+	
+	// Parse config
+	Config *parsed = 0;
+	{
+		if (data.str != 0) {
             parsed = def_config_from_text(app, scratch, str8_lit("config.4coder"), data);
         }
-    } 
-    
-    if (parsed) {
+		
+		if (parsed != 0) {
+			success = true;
+		} else {
+			error_message = Str_U8("can't parse config\n");
+		}
+	}
+	
+	// Apply config
+    if (error_message.str == 0) {
         // The config file was parsed correctly.
 		// Print errors.
         String_Const_u8 error_text = config_stringize_errors(app, scratch, parsed);
@@ -75,6 +86,8 @@ internal void load_config_and_apply(Application_Links *app, Arena *out_arena, i3
         }
     }
     
+	
+	
 	// After you saved all the variables in the table, start looking them up
 	// and apply their values to the editor.
 	
@@ -142,8 +155,41 @@ internal void load_config_and_apply(Application_Links *app, Arena *out_arena, i3
     } else {
         system_set_key_mode(KeyMode_LanguageArranged);
     }
+	
+	return success;
+}
+
+internal b32
+config_load_from_file(Application_Links *app, Arena *out_arena, i32 override_font_size, b32 override_hinting) {
+    b32     success = false;
+	String8 error_message = {};
+	
+	Scratch_Block scratch(app, out_arena);
+    linalloc_clear(out_arena);
+    
+	String8 filename = Str_U8("config.4coder");
+	
+	// Load the config file from the "normal" paths.
+    String_Const_u8 data = {};
+	{
+		FILE *file = def_search_normal_fopen(scratch, cast(char *)filename.str, "rb");
+		if (file != 0){
+			data = dump_file_handle(scratch, file);
+			fclose(file);
+		} else {
+			error_message = push_stringf(scratch, "can't open file: %.*s\n", string_expand(filename));
+		}
+    }
+	
+	if (error_message.str == 0) {
+		success = config_load_from_buffer(app, out_arena, override_font_size, override_hinting, filename, data);
+	} else {
+		print_message(app, error_message);
+	}
+	
+	return success;
 }
 
 NAMESPACE_END()
 
-#endif // FCODER_CUSTOM_LOAD_CPP
+#endif // FCODER_CUSTOM_CONFIG_CPP
