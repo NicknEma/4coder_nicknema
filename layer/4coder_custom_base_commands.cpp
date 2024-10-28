@@ -48,76 +48,65 @@ CUSTOM_DOC("Expands or minimizes the compilation window.") {
 
 NAMESPACE_BEGIN(nne)
 
-function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, 
-											Side side, Scan_Direction direction, i64 pos)
-{
+function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID buffer, Side side,
+											Scan_Direction direction, i64 pos) {
 	using namespace nne;
-	
     i64 result = boundary_non_whitespace(app, buffer, side, direction, pos);
+	
     Token_Array tokens = get_token_array_from_buffer(app, buffer);
-    if (tokens.tokens != 0){
-        switch (direction){
-            case Scan_Forward:
-            {
+    if (tokens.tokens != 0) {
+        switch (direction) {
+            case Scan_Forward: {
                 i64 buffer_size = buffer_get_size(app, buffer);
                 result = buffer_size;
-                if(tokens.count > 0)
-                {
+                if (tokens.count > 0) {
                     Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
                     Token *token = token_it_read(&it);
                     
-                    if(token == 0)
-                    {
+                    if (token == 0) {
                         break;
                     }
                     
                     // NOTE(rjf): Comments/Strings
-                    if(token->kind == TokenBaseKind_Comment ||
-                       token->kind == TokenBaseKind_LiteralString)
-                    {
+                    if (token->kind == TokenBaseKind_Comment || token->kind == TokenBaseKind_LiteralString) {
                         result = boundary_non_whitespace(app, buffer, side, direction, pos);
                         break;
                     }
                     
                     // NOTE(rjf): All other cases.
-                    else
-                    {
-                        if (token->kind == TokenBaseKind_Whitespace)
-                        {
+                    else {
+                        if (token->kind == TokenBaseKind_Whitespace) {
                             // token_it_inc_non_whitespace(&it);
                             // token = token_it_read(&it);
                         }
                         
-                        if (side == Side_Max){
+                        if (side == Side_Max) {
                             result = token->pos + token->size;
                             
                             token_it_inc_all(&it);
                             Token *ws = token_it_read(&it);
-                            if(ws != 0 && ws->kind == TokenBaseKind_Whitespace &&
-                               get_line_number_from_pos(app, buffer, ws->pos + ws->size) ==
-                               get_line_number_from_pos(app, buffer, token->pos))
-                            {
+                            if (ws != 0 && ws->kind == TokenBaseKind_Whitespace &&
+								get_line_number_from_pos(app, buffer, ws->pos + ws->size) ==
+								get_line_number_from_pos(app, buffer, token->pos)) {
                                 result = ws->pos + ws->size;
                             }
-                        }
-                        else{
-                            if (token->pos <= pos){
+                        } else {
+                            if (token->pos <= pos) {
                                 token_it_inc_non_whitespace(&it);
                                 token = token_it_read(&it);
                             }
-                            if (token != 0){
+                            if (token != 0) {
                                 result = token->pos;
                             }
                         }
                     }
                     
                 }
-            }break;
+            } break;
             
-            case Scan_Backward:
-            {
+            case Scan_Backward: {
                 result = 0;
-                if (tokens.count > 0){
+                if (tokens.count > 0) {
                     Token_Iterator_Array it = token_iterator_pos(0, &tokens, pos);
                     Token *token = token_it_read(&it);
                     
@@ -126,30 +115,28 @@ function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID bu
                     Token *token2 = token_it_read(&it2);
                     
                     // NOTE(rjf): Comments/Strings
-                    if(token->kind == TokenBaseKind_Comment ||
-                       token->kind == TokenBaseKind_LiteralString ||
-                       (token2 && 
-                        token2->kind == TokenBaseKind_Comment ||
-                        token2->kind == TokenBaseKind_LiteralString))
-                    {
+                    if (token->kind == TokenBaseKind_Comment ||
+						token->kind == TokenBaseKind_LiteralString ||
+						(token2 && 
+						 token2->kind == TokenBaseKind_Comment ||
+						 token2->kind == TokenBaseKind_LiteralString)) {
                         result = boundary_non_whitespace(app, buffer, side, direction, pos);
                         break;
                     }
                     
-                    if (token->kind == TokenBaseKind_Whitespace){
+                    if (token->kind == TokenBaseKind_Whitespace) {
                         token_it_dec_non_whitespace(&it);
                         token = token_it_read(&it);
                     }
-                    if (token != 0){
-                        if (side == Side_Min){
-                            if (token->pos >= pos){
+                    if (token != 0) {
+                        if (side == Side_Min) {
+                            if (token->pos >= pos) {
                                 token_it_dec_non_whitespace(&it);
                                 token = token_it_read(&it);
                             }
                             result = token->pos;
-                        }
-                        else{
-                            if (token->pos + token->size >= pos){
+                        } else {
+                            if (token->pos + token->size >= pos) {
                                 token_it_dec_non_whitespace(&it);
                                 token = token_it_read(&it);
                             }
@@ -157,16 +144,16 @@ function i64 F4_Boundary_TokenAndWhitespace(Application_Links *app, Buffer_ID bu
                         }
                     }
                 }
-            }break;
+            } break;
         }
     }
-    return(result);
+    
+	return result;
 }
 
 // TODO(rjf): Replace with the final one from Jack's layer.
 function i64 F4_Boundary_CursorTokenOrBlankLine_TEST(Application_Links *app, Buffer_ID buffer, 
-													 Side side, Scan_Direction direction, i64 pos)
-{
+													 Side side, Scan_Direction direction, i64 pos) {
 	using namespace nne;
 	
     Scratch_Block scratch(app);
@@ -331,12 +318,15 @@ CUSTOM_DOC("Deletes right to an alphanumeric or camel boundary.") {
 
 //- Alternative movement keys
 
-// @Note(ema): The difference between this and the 4coder default one is that this actually goes to the beginning of the line.
-// Why does one check if view exists and the other one just rolls with it?
+// NOTE(ema): The difference between this and the 4coder default one is that this actually goes to the beginning of the line.
+// TODO(ema): Why does one check if view exists and the other one just rolls with it? @Robustness.
 CUSTOM_COMMAND_SIG(f4_home)
 CUSTOM_DOC("Goes to the beginning of the line.") {
+	// Move cursor to first non-whitespace character
 	seek_pos_of_visual_line(app, Side_Min);
-    View_ID view = get_active_view(app, Access_ReadWriteVisible);
+    
+	// Scroll view to the very left.
+	View_ID       view   = get_active_view(app, Access_ReadWriteVisible);
     Buffer_Scroll scroll = view_get_buffer_scroll(app, view);
     scroll.target.pixel_shift.x = 0;
     view_set_buffer_scroll(app, view, scroll, SetBufferScroll_NoCursorChange);
@@ -346,7 +336,7 @@ CUSTOM_COMMAND_SIG(f4_home_first_non_whitespace)
 CUSTOM_DOC("Goes to the beginning of the line.") {
     using namespace nne;
 	
-	View_ID view = get_active_view(app, Access_Read);
+	View_ID   view   = get_active_view(app, Access_Read);
     Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
     if (view && buffer) {
         i64 start_pos = view_get_cursor_pos(app, view);
@@ -404,24 +394,24 @@ CUSTOM_DOC("Goes to the beginning of the line.") {
 
 //~ Searching
 
-namespace nne {
+NAMESPACE_BEGIN(nne)
+
+function void search_current_buffer(Application_Links *app, Scan_Direction dir) {
+	Scratch_Block scratch(app);
 	
-	function void search_current_buffer(Application_Links *app, Scan_Direction dir) {
-		Scratch_Block scratch(app);
-		
-		View_ID   view   = get_active_view(app, Access_Read);
-		Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
-		if (view && buffer) {
-			i64 cursor      = view_get_cursor_pos(app, view);
-			i64 mark        = view_get_mark_pos(app, view);
-			i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
-			i64 mark_line   = get_line_number_from_pos(app, buffer, mark);
-			String_Const_u8 query_init = (fcoder_mode != FCoderMode_NotepadLike || cursor == mark || cursor_line != mark_line) ? SCu8() : push_buffer_range(app, scratch, buffer, Ii64(cursor, mark));
-			isearch(app, dir, cursor, query_init);
-		}
+	View_ID   view   = get_active_view(app, Access_Read);
+	Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
+	if (view && buffer) {
+		i64 cursor      = view_get_cursor_pos(app, view);
+		i64 mark        = view_get_mark_pos(app, view);
+		i64 cursor_line = get_line_number_from_pos(app, buffer, cursor);
+		i64 mark_line   = get_line_number_from_pos(app, buffer, mark);
+		String_Const_u8 query_init = (fcoder_mode != FCoderMode_NotepadLike || cursor == mark || cursor_line != mark_line) ? SCu8() : push_buffer_range(app, scratch, buffer, Ii64(cursor, mark));
+		isearch(app, dir, cursor, query_init);
 	}
-	
 }
+
+NAMESPACE_END()
 
 CUSTOM_COMMAND_SIG(search__prioritize_highlighted)
 CUSTOM_DOC("Searches the current buffer forward. If something is highlighted, it will fill search query with it.") {
@@ -770,6 +760,7 @@ CUSTOM_DOC("Open a project by navigating to the project file.") {
 	
     for (;;) {
         Scratch_Block scratch(app);
+		
         View_ID view = get_this_ctx_view(app, Access_Always);
         File_Name_Result result = get_file_name_from_user(app, scratch, "Open Project:", view);
         if (result.canceled) break;
@@ -915,8 +906,7 @@ fkey_command = {
 
 NAMESPACE_BEGIN(nne)
 
-function void F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_delta)
-{
+function void F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line, i64 indent_delta) {
     using namespace nne;
 	
 	Scratch_Block scratch(app);
@@ -926,27 +916,20 @@ function void F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line
     Range_i64 line_indent_range = Ii64(0, 0);
     i64 tabs_at_beginning = 0;
     i64 spaces_at_beginning = 0;
-    for(u64 i = 0; i < line_string.size; i += 1)
-    {
-        if(line_string.str[i] == '\t')
-        {
+    for (u64 i = 0; i < line_string.size; i += 1) {
+        if (line_string.str[i] == '\t') {
             tabs_at_beginning += 1;
-        }
-        else if(character_is_whitespace(line_string.str[i]))
-        {
+        } else if (character_is_whitespace(line_string.str[i])) {
             spaces_at_beginning += 1;
-        }
-        else if(!character_is_whitespace(line_string.str[i]))
-        {
+        } else if (!character_is_whitespace(line_string.str[i])) {
             line_indent_range.max = (i64)i;
             break;
         }
     }
     
-    // NOTE(rjf): Indent lines.
+    // Indent lines.
     {
-        Range_i64 indent_range =
-        {
+        Range_i64 indent_range = {
             line_indent_range.min + line_start_pos,
             line_indent_range.max + line_start_pos,
         };
@@ -965,61 +948,47 @@ function void F4_ReIndentLine(Application_Links *app, Buffer_ID buffer, i64 line
             buffer_replace_range(app, buffer, Ii64(line_start_pos), indent_string);
         }
     }
-    
 }
 
-internal void
-F4_ReIndentLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta)
-{
+internal void F4_ReIndentLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta) {
     using namespace nne;
 	
-	for(i64 i = range.min; i <= range.max; i += 1)
-    {
+	for (i64 i = range.min; i <= range.max; i += 1) {
         F4_ReIndentLine(app, buffer, i, indent_delta);
     }
 }
 
-internal Range_i64
-F4_LineRangeFromPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 pos_range)
-{
+internal Range_i64 F4_LineRangeFromPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 pos_range) {
     using namespace nne;
 	
-	Range_i64 lines_range =
-        Ii64(get_line_number_from_pos(app, buffer, pos_range.min),
-             get_line_number_from_pos(app, buffer, pos_range.max));
+	Range_i64 lines_range = Ii64(get_line_number_from_pos(app, buffer, pos_range.min),
+								 get_line_number_from_pos(app, buffer, pos_range.max));
     return lines_range;
 }
 
-internal Range_i64
-F4_PosRangeFromLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 line_range)
-{
+internal Range_i64 F4_PosRangeFromLineRange(Application_Links *app, Buffer_ID buffer, Range_i64 line_range) {
     using namespace nne;
 	
-	if(line_range.min > line_range.max)
-    {
+	if (line_range.min > line_range.max) {
         i64 swap = line_range.max;
         line_range.max = line_range.min;
         line_range.min = swap;
     }
-    Range_i64 pos_range =
-        Ii64(get_line_start_pos(app, buffer, line_range.min),
-             get_line_end_pos(app, buffer, line_range.max));
+	
+    Range_i64 pos_range = Ii64(get_line_start_pos(app, buffer, line_range.min),
+							   get_line_end_pos(app, buffer, line_range.max));
     return pos_range;
 }
 
-internal void
-F4_ReIndentPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta)
-{
+internal void F4_ReIndentPosRange(Application_Links *app, Buffer_ID buffer, Range_i64 range, i64 indent_delta) {
     using namespace nne;
 	
-	F4_ReIndentLineRange(app, buffer,
-                         F4_LineRangeFromPosRange(app, buffer, range),
+	F4_ReIndentLineRange(app, buffer, F4_LineRangeFromPosRange(app, buffer, range),
                          indent_delta);
 }
 
-internal void
-F4_AdjustCursorAndMarkForIndentation(Application_Links *app, View_ID view, i64 original_cursor, i64 original_mark, Range_i64 original_line_range)
-{
+internal void F4_AdjustCursorAndMarkForIndentation(Application_Links *app, View_ID view, i64 original_cursor,
+												   i64 original_mark, Range_i64 original_line_range) {
     using namespace nne;
 	
 	Buffer_ID buffer = view_get_buffer(app, view, Access_Read);
@@ -1052,22 +1021,20 @@ F4_AdjustCursorAndMarkForIndentation(Application_Links *app, View_ID view, i64 o
 NAMESPACE_END()
 
 CUSTOM_COMMAND_SIG(f4_autocomplete_or_indent)
-CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts indentation if such a word is not found.")
-{
+CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts indentation if such a word is not found.") {
     using namespace nne;
 	
 	ProfileScope(app, "[F4] Word Complete");
     
-    View_ID view = get_active_view(app, Access_ReadWriteVisible);
+    View_ID   view   = get_active_view(app, Access_ReadWriteVisible);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
     
-    if(buffer != 0)
-    {
+    if (buffer != 0) {
         Managed_Scope scope = view_get_managed_scope(app, view);
         
         b32 first_completion = false;
         Rewrite_Type *rewrite = scope_attachment(app, scope, view_rewrite_loc, Rewrite_Type);
-        if (*rewrite != Rewrite_WordComplete){
+        if (*rewrite != Rewrite_WordComplete) {
             first_completion = true;
         }
         
@@ -1077,24 +1044,23 @@ CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts in
         local_persist b32 initialized = false;
         local_persist Range_i64 range = {};
         
-        if(first_completion || !initialized)
-        {
+        if (first_completion || !initialized) {
             ProfileScope(app, "[F4] Word Complete State Init");
+			
             initialized = false;
             i64 pos = view_get_cursor_pos(app, view);
             Range_i64 needle_range = get_word_complete_needle_range(app, buffer, pos);
-            if(range_size(needle_range) > 0)
-            {
+            if (range_size(needle_range) > 0) {
                 initialized = true;
                 range = needle_range;
                 word_complete_iter_init(buffer, needle_range, it);
             }
         }
         
-        // NOTE(rjf): Word-Complete
-        if(initialized)
-        {
-            ProfileScope(app, "[F4] Word Complete Apply");
+        if (initialized) {
+            // Word-Complete
+			
+			ProfileScope(app, "[F4] Word Complete Apply");
             
             word_complete_iter_next(it);
             String_Const_u8 str = word_complete_iter_read(it);
@@ -1103,17 +1069,15 @@ CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts in
             
             range.max = range.min + str.size;
             view_set_cursor_and_preferred_x(app, view, seek_pos(range.max));
-        }
-        
-        // NOTE(rjf): Insert indentation if autocomplete failed
-        else if(initialized == 0)
-        {
-            i64 pos = view_get_cursor_pos(app, view);
+        } else if (!initialized) {
+            // Insert indentation if autocomplete failed
+			
+			i64 pos  = view_get_cursor_pos(app, view);
             i64 mark = view_get_mark_pos(app, view);
-            Range_i64 pos_range = Ii64(pos, mark);
+            Range_i64 pos_range  = Ii64(pos, mark);
             Range_i64 line_range = F4_LineRangeFromPosRange(app, buffer, pos_range);
             
-            History_Group group = history_group_begin(app, buffer);
+            History_Group group  = history_group_begin(app, buffer);
             F4_ReIndentPosRange(app, buffer, Ii64(pos, mark), +1);
             F4_AdjustCursorAndMarkForIndentation(app, view, pos, mark, line_range);
             history_group_end(group);
@@ -1123,18 +1087,18 @@ CUSTOM_DOC("Tries to autocomplete the word currently being typed, and inserts in
 }
 
 CUSTOM_COMMAND_SIG(f4_unindent)
-CUSTOM_DOC("Unindent the selected range.")
-{
+CUSTOM_DOC("Unindent the selected range.") {
     using namespace nne;
 	
 	Scratch_Block scratch(app);
     
-    View_ID view = get_active_view(app, Access_ReadWrite);
+    View_ID   view   = get_active_view(app, Access_ReadWrite);
     Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWrite);
-    i64 pos = view_get_cursor_pos(app, view);
+    i64 pos  = view_get_cursor_pos(app, view);
     i64 mark = view_get_mark_pos(app, view);
-    Range_i64 pos_range = Ii64(pos, mark);
+    Range_i64 pos_range  = Ii64(pos, mark);
     Range_i64 line_range = F4_LineRangeFromPosRange(app, buffer, pos_range);
+	
     History_Group group = history_group_begin(app, buffer);
     F4_ReIndentPosRange(app, buffer, Ii64(pos, mark), -1);
     F4_AdjustCursorAndMarkForIndentation(app, view, pos, mark, line_range);
