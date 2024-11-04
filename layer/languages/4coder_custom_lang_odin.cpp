@@ -6,7 +6,8 @@ NAMESPACE_BEGIN(nne)
 //~ Index
 
 // Parses a declaration list, such as the formal parameters of a function or the members of a struct.
-internal void odin__parse_decl_list(Index__Parse_Context *context, Index__Note *parent) {
+internal void
+odin__parse_decl_list(Index__Parse_Context *context, Index__Note *parent) {
     Index__Note *last_parent = index__push_parent_note(context, parent);
     
     for (; !context->done; ) {
@@ -39,24 +40,57 @@ internal void odin__parse_decl_list(Index__Parse_Context *context, Index__Note *
     index__pop_parent_note(context, last_parent);
 }
 
-internal void odin__parse_decl_list_in_braces(Index__Parse_Context *context, Index__Note *parent) {
+internal void
+odin__parse_decl_list_in_braces(Index__Parse_Context *context, Index__Note *parent) {
     if (index__require_token(context, str8_lit("{"), Index__Token_Skip_Flag_Skip_Whitespace)) {
         odin__parse_decl_list(context, parent);
         index__require_token(context, str8_lit("}"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
 
-internal void odin__parse_decl_list_in_parens(Index__Parse_Context *context, Index__Note *parent) {
+internal void
+odin__parse_decl_list_in_parens(Index__Parse_Context *context, Index__Note *parent) {
     if (index__require_token(context, str8_lit("("), Index__Token_Skip_Flag_Skip_Whitespace)) {
         odin__parse_decl_list(context, parent);
         index__require_token(context, str8_lit(")"), Index__Token_Skip_Flag_Skip_Whitespace);
     }
 }
 
+internal bool
+odin__require_type_annotation(Index__Parse_Context *context) {
+	bool result = false;
+	
+	bool ident_seen   = false;
+	int  bracket_nest = 0;
+	for (;;index__parse_context_inc(context, Index__Token_Skip_Flag_Skip_Whitespace)) {
+		if (bracket_nest > 0) {
+			if (index__peek_token_kind(context, TokenOdinKind_BrackCl, 0)) {
+				bracket_nest -= 1;
+			}
+		} else if (!ident_seen) {
+			if (index__peek_token_kind(context, TokenOdinKind_BrackOp, 0)) {
+				bracket_nest += 1;
+			} else if (index__peek_token_kind(context, TokenOdinKind_Identifier, 0)) {
+				ident_seen = true;
+			}
+		} else {
+			if (index__peek_token_kind(context, TokenOdinKind_Identifier, 0) ||
+				index__peek_token_kind(context, TokenOdinKind_Dot, 0)) {
+			} else {
+				result = true;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}
+
 #define S(s) str8_lit(s)
 
 // Indexes an entire file of a language and adds stuff to the code index.
-function FILE_INDEXER(odin__index_file) {
+function
+FILE_INDEXER(odin__index_file) {
     int scope_nest = 0;
     
     for (; !context->done; ) {
@@ -85,14 +119,20 @@ function FILE_INDEXER(odin__index_file) {
             if (index__require_token(context, S(":"), flags)) {
 				// <name> :
 				
+#if 1
 				// Skip the possible explicit type annotation.
 				if (index__peek_token_kind(context, TokenBaseKind_Identifier, 0)) {
 					// <name> : <ident>
 					
 					index__parse_context_inc(context, flags);
 				}
+#else
+				// Skip the possible explicit type annotation.
+				if (odin__require_type_annotation(context)) {
+					// <name> : <type>
+				}
+#endif
 				
-				Token *rhs_name = 0;
                 if (index__require_token(context, S(":"), flags)) {
 					// <name> ::
 					
@@ -152,27 +192,11 @@ function FILE_INDEXER(odin__index_file) {
 					// Aliases.
 					else {
 						// <name> ::
-						
-						Index__Note_Kind  note_kind  = Index__Note_Kind_Constant;
-						Index__Note_Flags note_flags = 0;
-						if (index__require_token_kind(context, TokenBaseKind_Identifier, &rhs_name, flags)) {
-							// <name> :: <ident>
-							
-							Index__Note *rhs_note = index__lookup_note(index__string_from_token(context, rhs_name));
-							if (rhs_note) {
-								if (rhs_note->kind == Index__Note_Kind_Type) {
-									note_kind  = Index__Note_Kind_Type;
-									note_flags = rhs_note->flags;
-								}
-							}
-						}
-						
-						index__make_note(context, Ii64(name), note_kind, note_flags);
+						index__make_note(context, Ii64(name), Index__Note_Kind_Constant, 0);
 					}
 				} else if (index__require_token(context, str8_lit("="), flags)) {
 					// <name> :=
-					
-					index__make_note(context, Ii64(name), Index__Note_Kind_Decl, 0);
+					// index__make_note(context, Ii64(name), Index__Note_Kind_Decl, 0);
 				}
 			}
 		}
@@ -194,7 +218,8 @@ function FILE_INDEXER(odin__index_file) {
 
 //~ Positional context:
 
-internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 pos, Token *decl_name) {
+internal Token *
+_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 pos, Token *decl_name) {
     Scratch_Block scratch(app);
 	Token *result = 0;
     
@@ -235,7 +260,8 @@ internal Token *_F4_Odin_FindDecl(Application_Links *app, Buffer_ID buffer, i64 
 // Figures out some language-specific contextual information given some
 // position in a buffer. For example, what type I am accessing, what function I am
 // calling, which parameter am I accessing, etc.
-function POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
+function
+POSITIONAL_CONTEXT_GETTER(odin__get_positional_context) {
     int count = 0;
 	Positional_Context_Data *first = 0;
 	Positional_Context_Data *last  = 0;

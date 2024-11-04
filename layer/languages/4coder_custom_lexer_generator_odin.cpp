@@ -191,6 +191,7 @@ internal void build_language_model(void) {
 		sm_key("NotIn", "not_in");
 		sm_key("OrElse", "or_else");
 		sm_key("OrReturn", "or_return");
+		sm_key("OrBreak", "or_break");
 		sm_key("Package");
 		sm_key("Proc");
 		sm_key("Return");
@@ -203,6 +204,8 @@ internal void build_language_model(void) {
 		sm_key("When");
 		sm_key("Where");
 		sm_key("SizeOf", "size_of");
+		sm_key("AlignOf", "align_of");
+		sm_key("ContainerOf", "container_of");
 		
 		// Types
 		sm_key("Nil");

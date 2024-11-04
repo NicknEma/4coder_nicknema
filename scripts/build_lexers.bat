@@ -41,36 +41,37 @@ REM - Run the lexer generator to generate the lexer
 REM - Copy the generated lexer in the custom layer so it can be #included
 
 set lexers_path=%folder_path%layer\languages
+set lexgen_path=%folder_path%layer\generated
 
-set lexgen_path=%folder_path%lexer_generator
-if not exist %lexgen_path% mkdir %lexgen_path%
-
-
-
-call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_js.cpp %lexgen_path%
-%lexgen_path%\one_time.exe
-copy %editor_path%\custom\generated\lexer_js.h     %lexers_path%\4coder_custom_lexer_js.h
-copy %editor_path%\custom\generated\lexer_js.cpp   %lexers_path%\4coder_custom_lexer_js.cpp
+set lexbin_path=%folder_path%lexer_generator
+if not exist %lexbin_path% mkdir %lexbin_path%
 
 
 
-call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_jai.cpp %lexgen_path%
-%lexgen_path%\one_time.exe
-copy %editor_path%\custom\generated\lexer_jai.h    %lexers_path%\4coder_custom_lexer_jai.h
-copy %editor_path%\custom\generated\lexer_jai.cpp  %lexers_path%\4coder_custom_lexer_jai.cpp
+call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_js.cpp %lexbin_path%
+%lexbin_path%\one_time.exe
+copy %editor_path%\custom\generated\lexer_js.h     %lexgen_path%\4coder_custom_lexer_js.h
+copy %editor_path%\custom\generated\lexer_js.cpp   %lexgen_path%\4coder_custom_lexer_js.cpp
 
 
 
-call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_odin.cpp %lexgen_path%
-%lexgen_path%\one_time.exe
-copy %editor_path%\custom\generated\lexer_odin.h   %lexers_path%\4coder_custom_lexer_odin.h
-copy %editor_path%\custom\generated\lexer_odin.cpp %lexers_path%\4coder_custom_lexer_odin.cpp
+call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_jai.cpp %lexbin_path%
+%lexbin_path%\one_time.exe
+copy %editor_path%\custom\generated\lexer_jai.h    %lexgen_path%\4coder_custom_lexer_jai.h
+copy %editor_path%\custom\generated\lexer_jai.cpp  %lexgen_path%\4coder_custom_lexer_jai.cpp
+
+
+
+call %editor_path%\custom\bin\build_one_time.bat   %lexers_path%\4coder_custom_lexer_generator_odin.cpp %lexbin_path%
+%lexbin_path%\one_time.exe
+copy %editor_path%\custom\generated\lexer_odin.h   %lexgen_path%\4coder_custom_lexer_odin.h
+copy %editor_path%\custom\generated\lexer_odin.cpp %lexgen_path%\4coder_custom_lexer_odin.cpp
 
 
 REM ------------------------------
 REM Cleanup after the storm
 REM TODO(ema): Figure out how to delete directories that have files in them.
-REM if exist %lexgen_path% del %lexgen_path% /S /Q
+REM if exist %lexbin_path% del %lexbin_path% /S /Q
 goto END
 
 :INCORRECT_LOCATION

@@ -43,257 +43,250 @@ lexeme_table_lookup(u64 *hash_array, String_Const_u8 *key_array,
 }
 
 #endif
-u64 js_main_keys_hash_array[87] = {
-0x4cf7cbefd3852ce9,0x15f9d2a800efc43f,0xb4c27d06ba955255,0x0000000000000000,
-0x778b3d2be449697d,0x0000000000000000,0x0000000000000000,0x49614738e66a4205,
-0x4cf7cbef526689e9,0x458f201aa2e025ad,0xb4c27d06ba95525d,0x0000000000000000,
-0x4cf7cbef52459ed3,0x0000000000000000,0xa21900d8fa7259bf,0x0000000000000000,
-0x4961473999e99eb9,0x0000000000000000,0x15f9d2a80352c3c9,0x4cf7cbd0630d07b1,
-0x0000000000000000,0xa22020f83181daff,0x0000000000000000,0x458f201aa2e01ce7,
-0x49614e5491179cd3,0x458f201aa21fb7b1,0xb4c27d06ba955167,0x0000000000000000,
-0x0000000000000000,0x4cf7cbd01780a4a9,0x7884b97523f211d1,0x15f9d2a8d74ee6bf,
-0x4cf7cbd061d43f75,0x0000000000000000,0x0000000000000000,0x4cf7cbef44013a77,
-0x7884b1cc61ba3109,0x7884b1eced8a1db1,0x0000000000000000,0x0000000000000000,
-0x4cf7cbd0160be9c1,0xc06dc27908bd6777,0x0000000000000000,0x7795f3f8dd56e449,
-0x7884b194d4745c1b,0x0000000000000000,0x7884b1eb108b31e7,0x0000000000000000,
+u64 js_main_keys_hash_array[84] = {
+0x9a0119a29759daff,0x9a0119a297507db9,0x0000000000000000,0xcb3a38693bbac347,
+0x0000000000000000,0x9a0119a2977d0479,0x1c80afe3c0339995,0xcb3a3869eb27434b,
+0x625f01fbd479fe67,0x0000000000000000,0x78221b5f553fd8eb,0xcb3a3869348d12bf,
+0x0000000000000000,0x0000000000000000,0x0000000000000000,0x625f01fd22b1314f,
+0x0000000000000000,0x9a0119a297661a4d,0x78220f01df2d6185,0xfaca6767c5e1d1a5,
+0x9a0119a2975f7303,0x68ac419bc592ad1b,0x0000000000000000,0xcb3a38693fbead6f,
+0x0000000000000000,0x9a0119a2977c01fd,0x6ac4a39e2f7948ad,0xcb3a38693e58664f,
+0x1c80ac0f06eabcf3,0x0000000000000000,0x9a0119a29746d9af,0x0000000000000000,
+0xcb3a386939e329bd,0x0000000000000000,0x0000000000000000,0x0000000000000000,
 0x0000000000000000,0x0000000000000000,0x0000000000000000,0x0000000000000000,
-0x49614e5494962f71,0x4cf7cbefd8d6195f,0x0000000000000000,0x0000000000000000,
-0x0000000000000000,0x458f201aa2e01a51,0x15f9d2a8d74697c7,0x0000000000000000,
-0x0000000000000000,0x7795e3513a431937,0x0000000000000000,0x0000000000000000,
-0x15f9d2a8d74c2149,0x15f9d2a8d7415e2d,0x49614e443506d59f,0x0000000000000000,
-0x07c247b7efddcd05,0x0000000000000000,0x0000000000000000,0x0000000000000000,
-0x49614e45f41c5685,0x15f9d2a800eff05f,0x0000000000000000,0x4961473b7f2bae35,
-0x0000000000000000,0x4cf7cbef4d1ae477,0x15f9d2a800fea47f,0x0000000000000000,
-0x0000000000000000,0x458f201aa21f907d,0x4961475971d7ee71,0x0000000000000000,
-0x05cc31ab7f59b5fb,0x0000000000000000,0x0000000000000000,
+0xfacb62da4c91ee55,0x0000000000000000,0x656b4d32afc80e03,0x68ac419bc592d733,
+0x0000000000000000,0x0000000000000000,0x68ac419bc5935633,0x0000000000000000,
+0x0000000000000000,0x0000000000000000,0x625f01fa699fbe5f,0x0000000000000000,
+0xcb3a38693fa1b1a9,0x0000000000000000,0x1c80afa02921474f,0x0000000000000000,
+0xfa83ec59cb36bfe5,0x0000000000000000,0xa05f56359eaa3db3,0x625f01faed54bbaf,
+0x0000000000000000,0x1c80aff3eb65ff2d,0x0000000000000000,0x0000000000000000,
+0x625f01fdb89c4321,0xcb3a386938c899b9,0xa05f56359eaa3dbb,0x0000000000000000,
+0xcb3a386927788da9,0x625f01fd11e0cbbd,0x9a0119a29759a2d5,0x0000000000000000,
+0x68ac419bc592e4c5,0x0000000000000000,0x68ac419bc59282ff,0xcb3a38693cee6777,
+0x0000000000000000,0xa05f56359eaa3ec1,0x782172823d9670eb,0x1c80afe903a882b7,
+0x0000000000000000,0x0000000000000000,0x625f01fa14e3ca3f,0x625f01fa9c8346e3,
 };
-u8 js_main_keys_key_array_0[] = {0x62,0x72,0x65,0x61,0x6b,};
-u8 js_main_keys_key_array_1[] = {0x65,0x6e,0x75,0x6d,};
-u8 js_main_keys_key_array_2[] = {0x69,0x6e,};
-u8 js_main_keys_key_array_4[] = {0x66,0x75,0x6e,0x63,0x74,0x69,0x6f,0x6e,};
-u8 js_main_keys_key_array_7[] = {0x65,0x78,0x70,0x6f,0x72,0x74,};
-u8 js_main_keys_key_array_8[] = {0x63,0x6c,0x61,0x73,0x73,};
-u8 js_main_keys_key_array_9[] = {0x6e,0x65,0x77,};
-u8 js_main_keys_key_array_10[] = {0x69,0x66,};
-u8 js_main_keys_key_array_12[] = {0x63,0x61,0x74,0x63,0x68,};
-u8 js_main_keys_key_array_14[] = {0x70,0x72,0x6f,0x74,0x65,0x63,0x74,0x65,0x64,};
-u8 js_main_keys_key_array_16[] = {0x70,0x75,0x62,0x6c,0x69,0x63,};
-u8 js_main_keys_key_array_18[] = {0x6e,0x75,0x6c,0x6c,};
-u8 js_main_keys_key_array_19[] = {0x77,0x68,0x69,0x6c,0x65,};
-u8 js_main_keys_key_array_21[] = {0x69,0x6e,0x74,0x65,0x72,0x66,0x61,0x63,0x65,};
-u8 js_main_keys_key_array_23[] = {0x6c,0x65,0x74,};
-u8 js_main_keys_key_array_24[] = {0x73,0x77,0x69,0x74,0x63,0x68,};
-u8 js_main_keys_key_array_25[] = {0x76,0x61,0x72,};
-u8 js_main_keys_key_array_26[] = {0x64,0x6f,};
-u8 js_main_keys_key_array_29[] = {0x73,0x75,0x70,0x65,0x72,};
-u8 js_main_keys_key_array_30[] = {0x64,0x65,0x66,0x61,0x75,0x6c,0x74,};
-u8 js_main_keys_key_array_31[] = {0x74,0x72,0x75,0x65,};
-u8 js_main_keys_key_array_32[] = {0x74,0x68,0x72,0x6f,0x77,};
-u8 js_main_keys_key_array_35[] = {0x63,0x6f,0x6e,0x73,0x74,};
-u8 js_main_keys_key_array_36[] = {0x66,0x69,0x6e,0x61,0x6c,0x6c,0x79,};
-u8 js_main_keys_key_array_37[] = {0x70,0x72,0x69,0x76,0x61,0x74,0x65,};
-u8 js_main_keys_key_array_40[] = {0x79,0x69,0x65,0x6c,0x64,};
-u8 js_main_keys_key_array_41[] = {0x75,0x6e,0x64,0x65,0x66,0x69,0x6e,0x65,0x64,};
-u8 js_main_keys_key_array_43[] = {0x64,0x65,0x62,0x75,0x67,0x67,0x65,0x72,};
-u8 js_main_keys_key_array_44[] = {0x65,0x78,0x74,0x65,0x6e,0x64,0x73,};
-u8 js_main_keys_key_array_46[] = {0x70,0x61,0x63,0x6b,0x61,0x67,0x65,};
-u8 js_main_keys_key_array_52[] = {0x73,0x74,0x61,0x74,0x69,0x63,};
-u8 js_main_keys_key_array_53[] = {0x66,0x61,0x6c,0x73,0x65,};
-u8 js_main_keys_key_array_57[] = {0x66,0x6f,0x72,};
-u8 js_main_keys_key_array_58[] = {0x76,0x6f,0x69,0x64,};
-u8 js_main_keys_key_array_61[] = {0x63,0x6f,0x6e,0x74,0x69,0x6e,0x75,0x65,};
-u8 js_main_keys_key_array_64[] = {0x74,0x68,0x69,0x73,};
-u8 js_main_keys_key_array_65[] = {0x77,0x69,0x74,0x68,};
-u8 js_main_keys_key_array_66[] = {0x72,0x65,0x74,0x75,0x72,0x6e,};
-u8 js_main_keys_key_array_68[] = {0x69,0x6e,0x73,0x74,0x61,0x6e,0x63,0x65,0x6f,0x66,};
-u8 js_main_keys_key_array_72[] = {0x74,0x79,0x70,0x65,0x6f,0x66,};
-u8 js_main_keys_key_array_73[] = {0x65,0x6c,0x73,0x65,};
-u8 js_main_keys_key_array_75[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,};
-u8 js_main_keys_key_array_77[] = {0x61,0x77,0x61,0x69,0x74,};
-u8 js_main_keys_key_array_78[] = {0x63,0x61,0x73,0x65,};
-u8 js_main_keys_key_array_81[] = {0x74,0x72,0x79,};
-u8 js_main_keys_key_array_82[] = {0x64,0x65,0x6c,0x65,0x74,0x65,};
-u8 js_main_keys_key_array_84[] = {0x69,0x6d,0x70,0x6c,0x65,0x6d,0x65,0x6e,0x74,0x73,};
-String_Const_u8 js_main_keys_key_array[87] = {
-{js_main_keys_key_array_0, 5},
+u8 js_main_keys_key_array_0[] = {0x74,0x68,0x69,0x73,};
+u8 js_main_keys_key_array_1[] = {0x76,0x6f,0x69,0x64,};
+u8 js_main_keys_key_array_3[] = {0x77,0x68,0x69,0x6c,0x65,};
+u8 js_main_keys_key_array_5[] = {0x65,0x6c,0x73,0x65,};
+u8 js_main_keys_key_array_6[] = {0x70,0x61,0x63,0x6b,0x61,0x67,0x65,};
+u8 js_main_keys_key_array_7[] = {0x62,0x72,0x65,0x61,0x6b,};
+u8 js_main_keys_key_array_8[] = {0x64,0x65,0x6c,0x65,0x74,0x65,};
+u8 js_main_keys_key_array_10[] = {0x64,0x65,0x62,0x75,0x67,0x67,0x65,0x72,};
+u8 js_main_keys_key_array_11[] = {0x79,0x69,0x65,0x6c,0x64,};
+u8 js_main_keys_key_array_15[] = {0x73,0x74,0x61,0x74,0x69,0x63,};
+u8 js_main_keys_key_array_17[] = {0x63,0x61,0x73,0x65,};
+u8 js_main_keys_key_array_18[] = {0x63,0x6f,0x6e,0x74,0x69,0x6e,0x75,0x65,};
+u8 js_main_keys_key_array_19[] = {0x69,0x6e,0x74,0x65,0x72,0x66,0x61,0x63,0x65,};
+u8 js_main_keys_key_array_20[] = {0x77,0x69,0x74,0x68,};
+u8 js_main_keys_key_array_21[] = {0x74,0x72,0x79,};
+u8 js_main_keys_key_array_23[] = {0x63,0x6c,0x61,0x73,0x73,};
+u8 js_main_keys_key_array_25[] = {0x65,0x6e,0x75,0x6d,};
+u8 js_main_keys_key_array_26[] = {0x69,0x6d,0x70,0x6c,0x65,0x6d,0x65,0x6e,0x74,0x73,};
+u8 js_main_keys_key_array_27[] = {0x73,0x75,0x70,0x65,0x72,};
+u8 js_main_keys_key_array_28[] = {0x66,0x69,0x6e,0x61,0x6c,0x6c,0x79,};
+u8 js_main_keys_key_array_30[] = {0x6e,0x75,0x6c,0x6c,};
+u8 js_main_keys_key_array_32[] = {0x63,0x61,0x74,0x63,0x68,};
+u8 js_main_keys_key_array_40[] = {0x70,0x72,0x6f,0x74,0x65,0x63,0x74,0x65,0x64,};
+u8 js_main_keys_key_array_42[] = {0x69,0x6e,0x73,0x74,0x61,0x6e,0x63,0x65,0x6f,0x66,};
+u8 js_main_keys_key_array_43[] = {0x6e,0x65,0x77,};
+u8 js_main_keys_key_array_46[] = {0x66,0x6f,0x72,};
+u8 js_main_keys_key_array_50[] = {0x65,0x78,0x70,0x6f,0x72,0x74,};
+u8 js_main_keys_key_array_52[] = {0x63,0x6f,0x6e,0x73,0x74,};
+u8 js_main_keys_key_array_54[] = {0x64,0x65,0x66,0x61,0x75,0x6c,0x74,};
+u8 js_main_keys_key_array_56[] = {0x75,0x6e,0x64,0x65,0x66,0x69,0x6e,0x65,0x64,};
+u8 js_main_keys_key_array_58[] = {0x69,0x66,};
+u8 js_main_keys_key_array_59[] = {0x70,0x75,0x62,0x6c,0x69,0x63,};
+u8 js_main_keys_key_array_61[] = {0x65,0x78,0x74,0x65,0x6e,0x64,0x73,};
+u8 js_main_keys_key_array_64[] = {0x72,0x65,0x74,0x75,0x72,0x6e,};
+u8 js_main_keys_key_array_65[] = {0x66,0x61,0x6c,0x73,0x65,};
+u8 js_main_keys_key_array_66[] = {0x69,0x6e,};
+u8 js_main_keys_key_array_68[] = {0x61,0x77,0x61,0x69,0x74,};
+u8 js_main_keys_key_array_69[] = {0x73,0x77,0x69,0x74,0x63,0x68,};
+u8 js_main_keys_key_array_70[] = {0x74,0x72,0x75,0x65,};
+u8 js_main_keys_key_array_72[] = {0x6c,0x65,0x74,};
+u8 js_main_keys_key_array_74[] = {0x76,0x61,0x72,};
+u8 js_main_keys_key_array_75[] = {0x74,0x68,0x72,0x6f,0x77,};
+u8 js_main_keys_key_array_77[] = {0x64,0x6f,};
+u8 js_main_keys_key_array_78[] = {0x66,0x75,0x6e,0x63,0x74,0x69,0x6f,0x6e,};
+u8 js_main_keys_key_array_79[] = {0x70,0x72,0x69,0x76,0x61,0x74,0x65,};
+u8 js_main_keys_key_array_82[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,};
+u8 js_main_keys_key_array_83[] = {0x74,0x79,0x70,0x65,0x6f,0x66,};
+String_Const_u8 js_main_keys_key_array[84] = {
+{js_main_keys_key_array_0, 4},
 {js_main_keys_key_array_1, 4},
-{js_main_keys_key_array_2, 2},
 {0, 0},
-{js_main_keys_key_array_4, 8},
+{js_main_keys_key_array_3, 5},
 {0, 0},
+{js_main_keys_key_array_5, 4},
+{js_main_keys_key_array_6, 7},
+{js_main_keys_key_array_7, 5},
+{js_main_keys_key_array_8, 6},
 {0, 0},
-{js_main_keys_key_array_7, 6},
-{js_main_keys_key_array_8, 5},
-{js_main_keys_key_array_9, 3},
-{js_main_keys_key_array_10, 2},
-{0, 0},
-{js_main_keys_key_array_12, 5},
-{0, 0},
-{js_main_keys_key_array_14, 9},
-{0, 0},
-{js_main_keys_key_array_16, 6},
-{0, 0},
-{js_main_keys_key_array_18, 4},
-{js_main_keys_key_array_19, 5},
-{0, 0},
-{js_main_keys_key_array_21, 9},
-{0, 0},
-{js_main_keys_key_array_23, 3},
-{js_main_keys_key_array_24, 6},
-{js_main_keys_key_array_25, 3},
-{js_main_keys_key_array_26, 2},
+{js_main_keys_key_array_10, 8},
+{js_main_keys_key_array_11, 5},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_29, 5},
-{js_main_keys_key_array_30, 7},
-{js_main_keys_key_array_31, 4},
+{0, 0},
+{js_main_keys_key_array_15, 6},
+{0, 0},
+{js_main_keys_key_array_17, 4},
+{js_main_keys_key_array_18, 8},
+{js_main_keys_key_array_19, 9},
+{js_main_keys_key_array_20, 4},
+{js_main_keys_key_array_21, 3},
+{0, 0},
+{js_main_keys_key_array_23, 5},
+{0, 0},
+{js_main_keys_key_array_25, 4},
+{js_main_keys_key_array_26, 10},
+{js_main_keys_key_array_27, 5},
+{js_main_keys_key_array_28, 7},
+{0, 0},
+{js_main_keys_key_array_30, 4},
+{0, 0},
 {js_main_keys_key_array_32, 5},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_35, 5},
-{js_main_keys_key_array_36, 7},
-{js_main_keys_key_array_37, 7},
-{0, 0},
-{0, 0},
-{js_main_keys_key_array_40, 5},
-{js_main_keys_key_array_41, 9},
-{0, 0},
-{js_main_keys_key_array_43, 8},
-{js_main_keys_key_array_44, 7},
-{0, 0},
-{js_main_keys_key_array_46, 7},
 {0, 0},
 {0, 0},
 {0, 0},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_52, 6},
-{js_main_keys_key_array_53, 5},
+{js_main_keys_key_array_40, 9},
+{0, 0},
+{js_main_keys_key_array_42, 10},
+{js_main_keys_key_array_43, 3},
+{0, 0},
+{0, 0},
+{js_main_keys_key_array_46, 3},
 {0, 0},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_57, 3},
-{js_main_keys_key_array_58, 4},
+{js_main_keys_key_array_50, 6},
+{0, 0},
+{js_main_keys_key_array_52, 5},
+{0, 0},
+{js_main_keys_key_array_54, 7},
+{0, 0},
+{js_main_keys_key_array_56, 9},
+{0, 0},
+{js_main_keys_key_array_58, 2},
+{js_main_keys_key_array_59, 6},
+{0, 0},
+{js_main_keys_key_array_61, 7},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_61, 8},
+{js_main_keys_key_array_64, 6},
+{js_main_keys_key_array_65, 5},
+{js_main_keys_key_array_66, 2},
+{0, 0},
+{js_main_keys_key_array_68, 5},
+{js_main_keys_key_array_69, 6},
+{js_main_keys_key_array_70, 4},
+{0, 0},
+{js_main_keys_key_array_72, 3},
+{0, 0},
+{js_main_keys_key_array_74, 3},
+{js_main_keys_key_array_75, 5},
+{0, 0},
+{js_main_keys_key_array_77, 2},
+{js_main_keys_key_array_78, 8},
+{js_main_keys_key_array_79, 7},
 {0, 0},
 {0, 0},
-{js_main_keys_key_array_64, 4},
-{js_main_keys_key_array_65, 4},
-{js_main_keys_key_array_66, 6},
-{0, 0},
-{js_main_keys_key_array_68, 10},
-{0, 0},
-{0, 0},
-{0, 0},
-{js_main_keys_key_array_72, 6},
-{js_main_keys_key_array_73, 4},
-{0, 0},
-{js_main_keys_key_array_75, 6},
-{0, 0},
-{js_main_keys_key_array_77, 5},
-{js_main_keys_key_array_78, 4},
-{0, 0},
-{0, 0},
-{js_main_keys_key_array_81, 3},
 {js_main_keys_key_array_82, 6},
-{0, 0},
-{js_main_keys_key_array_84, 10},
-{0, 0},
-{0, 0},
+{js_main_keys_key_array_83, 6},
 };
-Lexeme_Table_Value js_main_keys_value_array[87] = {
-{4, TokenJSKind_Break},
-{4, TokenJSKind_Enum},
-{4, TokenJSKind_In},
+Lexeme_Table_Value js_main_keys_value_array[84] = {
+{4, TokenJSKind_This},
+{4, TokenJSKind_Void},
 {0, 0},
-{4, TokenJSKind_Function},
-{0, 0},
-{0, 0},
-{4, TokenJSKind_Export},
-{4, TokenJSKind_Class},
-{4, TokenJSKind_New},
-{4, TokenJSKind_If},
-{0, 0},
-{4, TokenJSKind_Catch},
-{0, 0},
-{4, TokenJSKind_Protected},
-{0, 0},
-{4, TokenJSKind_Public},
-{0, 0},
-{4, TokenJSKind_Null},
 {4, TokenJSKind_While},
 {0, 0},
-{4, TokenJSKind_Interface},
-{0, 0},
-{4, TokenJSKind_Let},
-{4, TokenJSKind_Switch},
-{4, TokenJSKind_Var},
-{4, TokenJSKind_Do},
-{0, 0},
-{0, 0},
-{4, TokenJSKind_Super},
-{4, TokenJSKind_Default},
-{8, TokenJSKind_LiteralTrue},
-{4, TokenJSKind_Throw},
-{0, 0},
-{0, 0},
-{4, TokenJSKind_Const},
-{4, TokenJSKind_Finally},
-{4, TokenJSKind_Private},
-{0, 0},
-{0, 0},
-{4, TokenJSKind_Yield},
-{4, TokenJSKind_Undefined},
+{4, TokenJSKind_Else},
+{4, TokenJSKind_Package},
+{4, TokenJSKind_Break},
+{4, TokenJSKind_Delete},
 {0, 0},
 {4, TokenJSKind_Debugger},
-{4, TokenJSKind_Extends},
-{0, 0},
-{4, TokenJSKind_Package},
-{0, 0},
-{0, 0},
+{4, TokenJSKind_Yield},
 {0, 0},
 {0, 0},
 {0, 0},
 {4, TokenJSKind_Static},
-{8, TokenJSKind_LiteralFalse},
 {0, 0},
+{4, TokenJSKind_Case},
+{4, TokenJSKind_Continue},
+{4, TokenJSKind_Interface},
+{4, TokenJSKind_With},
+{4, TokenJSKind_Try},
+{0, 0},
+{4, TokenJSKind_Class},
+{0, 0},
+{4, TokenJSKind_Enum},
+{4, TokenJSKind_Implements},
+{4, TokenJSKind_Super},
+{4, TokenJSKind_Finally},
+{0, 0},
+{4, TokenJSKind_Null},
+{0, 0},
+{4, TokenJSKind_Catch},
+{0, 0},
+{0, 0},
+{0, 0},
+{0, 0},
+{0, 0},
+{0, 0},
+{0, 0},
+{4, TokenJSKind_Protected},
+{0, 0},
+{4, TokenJSKind_Instanceof},
+{4, TokenJSKind_New},
 {0, 0},
 {0, 0},
 {4, TokenJSKind_For},
-{4, TokenJSKind_Void},
 {0, 0},
 {0, 0},
-{4, TokenJSKind_Continue},
+{0, 0},
+{4, TokenJSKind_Export},
+{0, 0},
+{4, TokenJSKind_Const},
+{0, 0},
+{4, TokenJSKind_Default},
+{0, 0},
+{4, TokenJSKind_Undefined},
+{0, 0},
+{4, TokenJSKind_If},
+{4, TokenJSKind_Public},
+{0, 0},
+{4, TokenJSKind_Extends},
 {0, 0},
 {0, 0},
-{4, TokenJSKind_This},
-{4, TokenJSKind_With},
 {4, TokenJSKind_Return},
-{0, 0},
-{4, TokenJSKind_Instanceof},
-{0, 0},
-{0, 0},
-{0, 0},
-{4, TokenJSKind_Typeof},
-{4, TokenJSKind_Else},
-{0, 0},
-{4, TokenJSKind_Import},
+{8, TokenJSKind_LiteralFalse},
+{4, TokenJSKind_In},
 {0, 0},
 {4, TokenJSKind_Await},
-{4, TokenJSKind_Case},
+{4, TokenJSKind_Switch},
+{8, TokenJSKind_LiteralTrue},
+{0, 0},
+{4, TokenJSKind_Let},
+{0, 0},
+{4, TokenJSKind_Var},
+{4, TokenJSKind_Throw},
+{0, 0},
+{4, TokenJSKind_Do},
+{4, TokenJSKind_Function},
+{4, TokenJSKind_Private},
 {0, 0},
 {0, 0},
-{4, TokenJSKind_Try},
-{4, TokenJSKind_Delete},
-{0, 0},
-{4, TokenJSKind_Implements},
-{0, 0},
-{0, 0},
+{4, TokenJSKind_Import},
+{4, TokenJSKind_Typeof},
 };
-i32 js_main_keys_slot_count = 87;
-u64 js_main_keys_seed = 0x487a8c8f180b2c60;
+i32 js_main_keys_slot_count = 84;
+u64 js_main_keys_seed = 0xd2fa3952c9fd2eda;
 struct Lex_State_JS{
 u32 flags_ZF0;
 u8 *base;
