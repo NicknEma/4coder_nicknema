@@ -3,3 +3,6 @@
 *.dll
 *.sln
 .vs
+*.ilk
+*.exe
+*.obj
