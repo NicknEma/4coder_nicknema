@@ -70,9 +70,9 @@ config_load_from_buffer(Application_Links *app, Arena *out_arena, b32 override_f
 		// a handle to multiple variables, as it is in this case.
         if (error_text.str == 0){
             // TODO(allen): this always applies to "def_config". need to get "usr_config" working too.
-            Variable_Handle config_vars = def_fill_var_from_config(app, vars_get_root(), vars_save_string_lit("def_config"), parsed);
-			vars_print(app, config_vars);
-            print_message(app, string_u8_litexpr("\n"));
+            // Variable_Handle config_vars = def_fill_var_from_config(app, vars_get_root(), vars_save_string_lit("def_config"), parsed);
+			// vars_print(app, config_vars);
+            // print_message(app, string_u8_litexpr("\n"));
         }
     } else {
 		// The config file was NOT parsed correctly.

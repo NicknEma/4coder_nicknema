@@ -393,7 +393,7 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 	if (parsed != 0) {
 		success = true;
 	} else {
-		error_message = Str_U8("can't parse bindings\n");
+		error_message = Str_U8("Bindings could not be parsed correctly.\n\n");
 	}
 	
 	if (error_message.str == 0) {
@@ -404,6 +404,7 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 		MappingScope();
 		SelectMapping(mapping);
 		
+		b32 there_were_errors = false;
 		for (Config_Assignment *assignment = parsed->first; assignment; assignment = assignment->next) {
 			Config_LValue *lvalue = assignment->l;
 			
@@ -479,11 +480,17 @@ dynamic_binding_load_from_buffer(Application_Links *app, Mapping *mapping, Strin
 					if (parsed->errors.first != 0) {
 						String_Const_u8 error_text = config_stringize_errors(app, scratch, parsed);
 						print_message(app, error_text);
+						
+						there_were_errors = true;
 					}
 				} else {
 					// NOTE(ema): Non-compound rvalue at global scope, ignore.
 				}
 			}
+		}
+		
+		if (there_were_errors) {
+			print_message(app, Str_U8("\n"));
 		}
 	}
 	
@@ -509,13 +516,9 @@ dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_
 		
 		String8List search_list = {};
 		def_search_normal_load_list(scratch, &search_list);
-		full_path = nne::search_get_full_path(scratch, &search_list, push_string_copy(scratch, filename));
-		// NOTE(ema): The filename is copied so that it's going to have a null-terminator.
 		
-		{
-			String8 message = push_stringf(scratch, "loading bindings: %.*s\n", string_expand(full_path));
-			print_message(app, message);
-		}
+		// NOTE(ema): The filename is copied so that it's going to have a null-terminator.
+		full_path = nne::search_get_full_path(scratch, &search_list, push_string_copy(scratch, filename));
 	}
 	
 	// Read file.
@@ -526,7 +529,7 @@ dynamic_binding_load_from_file(Application_Links *app, Mapping *mapping, String_
 			if (name_and_data.data.str != 0) {
 				data = name_and_data.data;
 			} else {
-				error_message = push_stringf(scratch, "can't open file: %.*s\n", string_expand(full_path));
+				error_message = push_stringf(scratch, "Could not read file: %.*s\n\n", string_expand(full_path));
 			}
 		}
 	}
