@@ -64,7 +64,7 @@ indent_width      = 4;
 default_tab_width = 4;
 
 //~ Colors
-default_theme_name       = "theme-fleury";
+default_theme_name       = "theme-jon";
 highlight_line_at_cursor = true;
 
 //~ Font
