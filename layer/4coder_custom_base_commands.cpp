@@ -852,6 +852,7 @@ patterns = {
 	"*.inc",
 	"*.bat",
 	"*.sh",
+	"*.rc",
 	"*.4coder",
 	"*.txt",
 };
@@ -900,6 +901,437 @@ fkey_command = {
     }
     
     load_project(app);
+}
+
+NAMESPACE_BEGIN(nne)
+
+// TODO(ema): Replace nne_setup_new_project with something more similar to Allen's version (rather than Ryan's version)
+
+// NOTE(ema): These functions were @Copypasted from 4coder_project_commands.cpp and edited. They may contain redundant work
+// or counterintuitive control flow, just because they weren't properly cleaned up.
+typedef u32 Prj_Setup_Script_Flags;
+enum {
+	Prj_Setup_Script_Flag_PROJECT = (1 << 0),
+	Prj_Setup_Script_Flag_BAT     = (1 << 1),
+	Prj_Setup_Script_Flag_SH      = (1 << 2),
+} Prj_Setup_Script_Flags_Enum;
+
+function b32
+prj_generate_c_or_cpp_bat(Arena *scratch, String8 opts, String8 compiler, String8 script_path, String8 script_file,
+						  String8 source_file, String8 output_dir, String8 binary_file) {
+    b32 success = false;
+    Temp_Memory temp = begin_temp(scratch);
+    
+    String8 sf = push_string_copy(scratch, source_file);
+    String8 od = push_string_copy(scratch, output_dir);
+    String8 bf = push_string_copy(scratch, binary_file);
+    String8 df = push_string_copy(scratch, string_file_without_extension(binary_file));
+	
+    sf = string_mod_replace_character(sf, '/', '\\');
+    od = string_mod_replace_character(od, '/', '\\');
+    bf = string_mod_replace_character(bf, '/', '\\');
+	df = string_mod_replace_character(bf, '/', '\\');
+    
+    String8 file_name = push_u8_stringf(scratch, "%.*s/%.*s.bat", string_expand(script_path), string_expand(script_file));
+    
+	{
+		FILE *bat_script = fopen((char*)file_name.str, "wb");
+		if (bat_script) {
+			fprintf(bat_script, "@echo off\n\n");
+			fprintf(bat_script, "set opts=%.*s\n", (i32)opts.size, opts.str);
+			fprintf(bat_script, "set root=%%cd%%\n\n");
+			fprintf(bat_script, "if not exist %.*s mkdir %.*s\n", (i32)od.size, od.str, (i32)od.size, od.str);
+			fprintf(bat_script, "pushd %.*s\n", (i32)od.size, od.str);
+			fprintf(bat_script, "del %.*s > NUL 2> NUL\n", (i32)df.size, df.str);
+			fprintf(bat_script, "%.*s %%opts%% %%root%%\\%.*s -Fe%.*s\n",
+					(i32)compiler.size, compiler.str, (i32)sf.size, sf.str, (i32)bf.size, bf.str);
+			fprintf(bat_script, "popd\n");
+			fclose(bat_script);
+			success = true;
+		}
+    }
+	
+    end_temp(temp);
+    return success;
+}
+
+function b32
+prj_generate_bat_for_odin(Arena *scratch, String8 script_path, String8 build_script, String8 build_opts, String8 test_script,
+						  String8 test_opts, String8 source_file, String8 output_dir, String8 binary_file) {
+	b32 success = false;
+    Temp_Memory temp = begin_temp(scratch);
+    
+    String8 sf = push_string_copy(scratch, source_file);
+    String8 od = push_string_copy(scratch, output_dir);
+    String8 bf = push_string_copy(scratch, binary_file);
+    String8 df = push_string_copy(scratch, string_file_without_extension(binary_file));
+	
+    sf = string_mod_replace_character(sf, '/', '\\');
+    od = string_mod_replace_character(od, '/', '\\');
+    bf = string_mod_replace_character(bf, '/', '\\');
+	df = string_mod_replace_character(bf, '/', '\\');
+    
+    String8 build_name = push_u8_stringf(scratch, "%.*s/%.*s.bat", string_expand(script_path), string_expand(build_script));
+	{
+		FILE *bat_script = fopen((char*)build_name.str, "wb");
+		if (bat_script) {
+			fprintf(bat_script, "@echo off\n\n");
+			fprintf(bat_script, "set opts=%.*s\n", (i32)build_opts.size, build_opts.str);
+			fprintf(bat_script, "set root=%%cd%%\n\n");
+			fprintf(bat_script, "if not exist %.*s mkdir %.*s\n", (i32)od.size, od.str, (i32)od.size, od.str);
+			fprintf(bat_script, "pushd %.*s\n", (i32)od.size, od.str);
+			fprintf(bat_script, "del %.*s > NUL 2> NUL\n", (i32)df.size, df.str);
+			fprintf(bat_script, "odin build %%root%%\\%.*s %%opts%% -out:%.*s\n",
+					(i32)sf.size, sf.str, (i32)bf.size, bf.str);
+			fprintf(bat_script, "popd\n");
+			fclose(bat_script);
+			success = true;
+		}
+    }
+	
+	if (test_script.size > 0) {
+		String8 test_name = push_u8_stringf(scratch, "%.*s/%.*s.bat", string_expand(script_path), string_expand(test_script));
+		{
+			FILE *bat_script = fopen((char*)test_name.str, "wb");
+			if (bat_script) {
+				fprintf(bat_script, "@echo off\n\n");
+				fprintf(bat_script, "set opts=%.*s\n", (i32)test_opts.size, test_opts.str);
+				fprintf(bat_script, "set root=%%cd%%\n\n");
+				fprintf(bat_script, "if not exist %.*s mkdir %.*s\n", (i32)od.size, od.str, (i32)od.size, od.str);
+				fprintf(bat_script, "pushd %.*s\n", (i32)od.size, od.str);
+				fprintf(bat_script, "del %.*s > NUL 2> NUL\n", (i32)df.size, df.str);
+				fprintf(bat_script, "odin test %%root%%\\%.*s %%opts%% -out:%.*s\n",
+						(i32)sf.size, sf.str, (i32)bf.size, bf.str);
+				fprintf(bat_script, "popd\n");
+				fclose(bat_script);
+				success = true;
+			}
+		}
+	}
+	
+    end_temp(temp);
+    return success;
+}
+
+function b32
+prj_generate_c_or_cpp_sh(Arena *scratch, String8 opts, String8 compiler, String8 script_path, String8 script_file,
+						 String8 source_file, String8 output_dir, String8 binary_file) {
+    b32 success = false;
+    Temp_Memory temp = begin_temp(scratch);
+    
+    String8 sf = source_file;
+    String8 od = output_dir;
+    String8 bf = binary_file;
+    
+    String8 file_name = push_u8_stringf(scratch, "%.*s/%.*s.sh", string_expand(script_path), string_expand(script_file));
+    
+	{
+		FILE *sh_script = fopen((char*)file_name.str, "wb");
+		if (sh_script != 0){
+			fprintf(sh_script, "#!/bin/bash\n\n");
+			fprintf(sh_script, "root=\"$PWD\"\n");
+			fprintf(sh_script, "opts=%.*s\n\n", string_expand(opts));
+			fprintf(sh_script, "cd %.*s > /dev/null\n", string_expand(od));
+			fprintf(sh_script, "%.*s $opts $root/%.*s -o %.*s\n", string_expand(compiler), string_expand(sf), string_expand(bf));
+			fprintf(sh_script, "cd $root > /dev/null\n");
+			fclose(sh_script);
+			success = true;
+		}
+    }
+	
+    end_temp(temp);
+    return(success);
+}
+
+function b32
+prj_generate_sh_for_odin(Arena *scratch, String8 script_path, String8 build_script, String8 build_opts, String8 test_script,
+						 String8 test_opts, String8 source_file, String8 output_dir, String8 binary_file) {
+    b32 success = false;
+    Temp_Memory temp = begin_temp(scratch);
+    
+    String8 sf = source_file;
+    String8 od = output_dir;
+    String8 bf = binary_file;
+    
+    String8 build_name = push_u8_stringf(scratch, "%.*s/%.*s.sh", string_expand(script_path), string_expand(build_script));
+	{
+		FILE *sh_script = fopen((char*)build_name.str, "wb");
+		if (sh_script) {
+			fprintf(sh_script, "#!/bin/bash\n\n");
+			fprintf(sh_script, "root=\"$PWD\"\n");
+			fprintf(sh_script, "opts=%.*s\n\n", string_expand(build_opts));
+			fprintf(sh_script, "cd %.*s > /dev/null\n", string_expand(od));
+			fprintf(sh_script, "odin build %%root%%\\%.*s %%opts%% -out:%.*s\n",
+					(i32)sf.size, sf.str, (i32)bf.size, bf.str);
+			fprintf(sh_script, "cd $root > /dev/null\n");
+			fclose(sh_script);
+			success = true;
+		}
+    }
+	
+	{
+		String8 test_name = push_u8_stringf(scratch, "%.*s/%.*s.sh", string_expand(script_path), string_expand(test_script));
+		{
+			FILE *sh_script = fopen((char*)test_name.str, "wb");
+			if (sh_script) {
+				fprintf(sh_script, "#!/bin/bash\n\n");
+				fprintf(sh_script, "root=\"$PWD\"\n");
+				fprintf(sh_script, "opts=%.*s\n\n", string_expand(build_opts));
+				fprintf(sh_script, "cd %.*s > /dev/null\n", string_expand(od));
+				fprintf(sh_script, "odin test %%root%%\\%.*s %%opts%% -out:%.*s\n",
+						(i32)sf.size, sf.str, (i32)bf.size, bf.str);
+				fprintf(sh_script, "cd $root > /dev/null\n");
+				fclose(sh_script);
+				success = true;
+			}
+		}
+	}
+	
+    end_temp(temp);
+    return(success);
+}
+
+function void
+prj_setup_scripts(Application_Links *app, nne::Prj_Setup_Script_Flags flags) {
+    Scratch_Block scratch(app);
+    String8 script_path = push_hot_directory(app, scratch);
+    
+	// Extract flags into booleans for easier access
+    b32 do_project_file = (flags & Prj_Setup_Script_Flag_PROJECT);
+    b32 do_bat_script   = (flags & Prj_Setup_Script_Flag_BAT);
+    b32 do_sh_script    = (flags & Prj_Setup_Script_Flag_SH);
+    
+	// Check if files already exist
+    b32 needs_to_do_work = false;
+    Prj_Setup_Status status = {};
+    if (do_project_file) {
+        status = prj_file_is_setup(app, script_path, string_u8_litexpr("build"));
+        needs_to_do_work = (!status.project_exists ||
+							(do_bat_script && !status.bat_exists) ||
+							(do_sh_script  && !status.sh_exists));
+    } else {
+        needs_to_do_work = true;
+    }
+    
+    if (needs_to_do_work) {
+        // Query the User for Key File Names
+        
+        b32 finished_queries = false;
+        local_const i32 text_field_cap = 1024;
+        
+		typedef u32 Prj_Languages;
+		enum {
+			Prj_Language_C    = (1 << 0),
+			Prj_Language_CPP  = (1 << 1),
+			Prj_Language_ODIN = (1 << 2),
+			// ...
+			Prj_Language_GLSL = (1 << 16),
+			Prj_Language_HLSL = (1 << 17),
+		}/* Prj_Language_Enum*/;
+		
+		Prj_Languages languages = 0;
+		
+		String8 source_file = {}; // Or directory, in the case of Odin
+        String8 output_dir = {};
+        String8 binary_file = {};
+        
+        {
+            Query_Bar_Group bar_group(app);
+            
+			Query_Bar languages_bar = {};
+			Query_Bar source_file_bar = {};
+			Query_Bar output_dir_bar = {};
+            Query_Bar binary_file_bar = {};
+            
+			// Get languages
+			{
+				languages_bar.prompt = string_u8_litexpr("List of languages used (separated by space): ");
+                languages_bar.string.str = push_array(scratch, u8, text_field_cap);
+                languages_bar.string_capacity = text_field_cap;
+                if (!query_user_string(app, &languages_bar) ||
+                    languages_bar.string.size == 0) {
+                    goto fail_out;
+                }
+			}
+			
+			{
+				String8 separator = string_u8_litexpr("");
+				List_String_Const_u8 language_list = string_split(scratch, languages_bar.string, separator.str, (i32)separator.size);
+				for (Node_String_Const_u8 *node = language_list.first; node; node = node->next) {
+					String8 language = node->string;
+					if        (string_match_insensitive(language, string_u8_litexpr("c"))) {
+						languages |= Prj_Language_C;
+					} else if (string_match_insensitive(language, string_u8_litexpr("cpp")) ||
+							   string_match_insensitive(language, string_u8_litexpr("c++"))) {
+						languages |= Prj_Language_CPP;
+					} else if (string_match_insensitive(language, string_u8_litexpr("odin"))) {
+						languages |= Prj_Language_ODIN;
+					} else if (string_match_insensitive(language, string_u8_litexpr("glsl"))) {
+						languages |= Prj_Language_GLSL;
+					} else if (string_match_insensitive(language, string_u8_litexpr("hlsl"))) {
+						languages |= Prj_Language_HLSL;
+					}
+				}
+			}
+			
+            b32 get_source_file = ((do_bat_script && !status.bat_exists) || (do_sh_script && !status.sh_exists));
+            if (get_source_file) {
+                source_file_bar.prompt = string_u8_litexpr("Build Target (source file or directory): ");
+                source_file_bar.string.str = push_array(scratch, u8, text_field_cap);
+                source_file_bar.string_capacity = text_field_cap;
+                if (!query_user_string(app, &source_file_bar) ||
+                    source_file_bar.string.size == 0) {
+                    goto fail_out;
+                }
+            }
+            
+			{
+				output_dir_bar.prompt = string_u8_litexpr("Output Directory: ");
+				output_dir_bar.string.str = push_array(scratch, u8, text_field_cap);
+				output_dir_bar.string_capacity = text_field_cap;
+				if (!query_user_string(app, &output_dir_bar)){
+					goto fail_out;
+				}
+				if (output_dir_bar.string.size == 0){
+					output_dir_bar.string.str[0] = '.';
+					output_dir_bar.string.size = 1;
+				}
+            }
+			
+			{
+				binary_file_bar.prompt = string_u8_litexpr("Binary Output (including extension): ");
+				binary_file_bar.string.str = push_array(scratch, u8, text_field_cap);
+				binary_file_bar.string_capacity = text_field_cap;
+				if (!query_user_string(app, &binary_file_bar) ||
+					binary_file_bar.string.size == 0){
+					goto fail_out;
+				}
+            }
+			
+            finished_queries = true;
+            source_file = source_file_bar.string;
+            output_dir  = output_dir_bar.string;
+            binary_file = binary_file_bar.string;
+            
+            fail_out:;
+        }
+        
+        if (!finished_queries) {
+            return;
+        }
+        
+        if (!do_project_file) {
+            status = prj_file_is_setup(app, script_path, string_u8_litexpr("build"));
+        }
+        
+		String8 build_script_file = string_u8_litexpr("build");
+		
+        // Generate Scripts
+        if (do_bat_script) {
+			if (!status.bat_exists) {
+				b32 build_bat_tried = false;
+				b32 build_bat_created = false;
+                if ((languages & Prj_Language_C) || (languages & Prj_Language_CPP)) {
+					String8 default_flags_bat = def_get_config_string(scratch, vars_save_string_lit("default_flags_bat"));
+					String8 default_compiler_bat = def_get_config_string(scratch, vars_save_string_lit("default_compiler_bat"));
+					
+					build_bat_tried = true;
+					build_bat_created = nne::prj_generate_c_or_cpp_bat(scratch, default_flags_bat, default_compiler_bat, script_path,
+																	   build_script_file, source_file, output_dir, binary_file);
+				}
+				if (languages & Prj_Language_ODIN) {
+					if (!build_bat_created) {
+						String8 test_script_file = string_u8_litexpr("test");
+						String8 build_opts = string_u8_litexpr("-debug -vet-shadowing");
+						String8 test_opts = string_u8_litexpr("-vet-shadowing -keep-executable");
+						
+						build_bat_tried = true;
+						build_bat_created = nne::prj_generate_bat_for_odin(scratch, script_path, build_script_file, build_opts, test_script_file,
+																		   test_opts, source_file, output_dir, binary_file);
+					} else {
+						print_message(app, string_u8_litexpr("Do not know how to create a build.bat for both Odin and C/C++\n"));
+					}
+				}
+				
+				if (!build_bat_tried) {
+					print_message(app, string_u8_litexpr("Do not know how to create a build.bat for the chosen language\n"));
+				}
+				if (!build_bat_created) {
+					print_message(app, string_u8_litexpr("Could not create build.bat for new project\n"));
+				}
+            } else {
+                print_message(app, string_u8_litexpr("The batch script already exists, no changes made to it\n"));
+            }
+        }
+        
+        if (do_sh_script) {
+            if (!status.bat_exists) {
+				b32 build_sh_tried = false;
+				b32 build_sh_created = false;
+                if ((languages & Prj_Language_C) || (languages & Prj_Language_CPP)) {
+					String8 default_flags_sh = def_get_config_string(scratch, vars_save_string_lit("default_flags_sh"));
+					String8 default_compiler_sh = def_get_config_string(scratch, vars_save_string_lit("default_compiler_sh"));
+					
+					build_sh_tried = true;
+					build_sh_created = nne::prj_generate_c_or_cpp_sh(scratch, default_flags_sh, default_compiler_sh,
+																	 script_path, build_script_file, source_file, output_dir, binary_file);
+				}
+				if (languages & Prj_Language_ODIN) {
+					if (!build_sh_tried) {
+						String8 test_script_file = string_u8_litexpr("test");
+						String8 build_opts = string_u8_litexpr("-debug -vet-shadowing");
+						String8 test_opts = string_u8_litexpr("-vet-shadowing -keep-executable");
+						
+						build_sh_tried = true;
+						build_sh_created = nne::prj_generate_sh_for_odin(scratch, script_path, build_script_file, build_opts, test_script_file,
+																		 test_opts, source_file, output_dir, binary_file);
+					} else {
+						print_message(app, string_u8_litexpr("Do not know how to create a build.sh for both Odin and C/C++\n"));
+					}
+				}
+				
+				if (!build_sh_tried) {
+					print_message(app, string_u8_litexpr("Do not know how to create a build.sh for the chosen language\n"));
+				}
+				if (!build_sh_created) {
+					print_message(app, string_u8_litexpr("Could not create build.sh for new project\n"));
+				}
+            } else {
+                print_message(app, string_u8_litexpr("The shell script already exists, no changes made to it\n"));
+            }
+        }
+        
+        if (do_project_file) {
+            if (!status.project_exists) {
+                if (!prj_generate_project(scratch, script_path, build_script_file, output_dir, binary_file)) {
+                    print_message(app, string_u8_litexpr("Could not create project.4coder for new project\n"));
+                }
+            } else {
+                print_message(app, string_u8_litexpr("project.4coder already exists, no changes made to it\n"));
+            }
+        }
+    } else {
+        if (do_project_file) {
+            print_message(app, string_u8_litexpr("Project already setup, no changes made\n"));
+        }
+    }
+}
+
+NAMESPACE_END()
+
+CUSTOM_COMMAND_SIG(nne_setup_build_bat)
+CUSTOM_DOC("Queries the user for several configuration options and initializes a new build batch script.") {
+    nne::prj_setup_scripts(app, nne::Prj_Setup_Script_Flag_BAT);
+}
+
+CUSTOM_COMMAND_SIG(nne_setup_build_sh)
+CUSTOM_DOC("Queries the user for several configuration options and initializes a new build shell script.") {
+    nne::prj_setup_scripts(app, nne::Prj_Setup_Script_Flag_SH);
+}
+
+CUSTOM_COMMAND_SIG(nne_setup_build_bat_and_sh)
+CUSTOM_DOC("Queries the user for several configuration options and initializes a new build batch & shell script.") {
+    nne::prj_setup_scripts(app, nne::Prj_Setup_Script_Flag_BAT|nne::Prj_Setup_Script_Flag_SH);
 }
 
 //~ Indentation and autocomplete
