@@ -42,7 +42,7 @@ mark_thickness   =  2;
 lister_roundness = 20;
 
 //~ Code Wrapping and virtual whitespace.
-enable_code_wrapping = true;
+enable_code_wrapping = false;
 enable_virtual_whitespace = true;
 virtual_whitespace_regular_indent = 4;
 treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.4coder.jai.vert.frag.odin.js.ts.css.bat.sh";
