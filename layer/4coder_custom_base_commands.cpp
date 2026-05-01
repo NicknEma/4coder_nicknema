@@ -803,7 +803,7 @@ CUSTOM_DOC("Open a project by navigating to the project file.") {
     }
 }
 
-CUSTOM_COMMAND_SIG(nne_setup_new_project)
+CUSTOM_COMMAND_SIG(rjf_setup_new_project)
 CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
 	using namespace nne;
 	
@@ -825,22 +825,23 @@ CUSTOM_DOC("Sets up a blank 4coder project provided some user folder.") {
             String_Const_u8 project_file_path = push_u8_stringf(scratch, "%.*s/project.4coder", string_expand(path_bar.string));
             FILE *file = fopen((char *)project_file_path.str, "wb");
             if (file) {
-                
 				// Query user for project name.
-				char *project_name = "New Project";
+				String_Const_u8 project_name = string_u8_litexpr("New Project");
 				{
-					u8 project_name_buffer[1024];
+					i32 project_name_cap = 1024;
+					u8 *project_name_buffer = push_array(scratch, u8, project_name_cap);
+					
 					Query_Bar name_bar = {};
 					name_bar.prompt = string_u8_litexpr("Project Name: ");
 					name_bar.string = SCu8(project_name_buffer, (u64)0);
-					name_bar.string_capacity = sizeof(project_name_buffer);
+					name_bar.string_capacity = project_name_cap;
 					if (query_user_string(app, &name_bar)) {
-						project_name = (char *)name_bar.string.str;
+						project_name = name_bar.string;
 					}
 				}
 				
                 char *format_string = R"PROJ(version(2);
-project_name = "%s";
+project_name = "%.*s";
 
 patterns = {
 	"*.c",
@@ -891,7 +892,7 @@ fkey_command = {
 };
 )PROJ";
                 
-                fprintf(file, format_string, project_name);
+                fprintf(file, format_string, string_expand(project_name));
                 fclose(file);
                 load_project(app);
             } else {
@@ -905,8 +906,6 @@ fkey_command = {
 
 NAMESPACE_BEGIN(nne)
 
-// TODO(ema): Replace nne_setup_new_project with something more similar to Allen's version (rather than Ryan's version)
-
 // NOTE(ema): These functions were @Copypasted from 4coder_project_commands.cpp and edited. They may contain redundant work
 // or counterintuitive control flow, just because they weren't properly cleaned up.
 typedef u32 Prj_Setup_Script_Flags;
@@ -915,6 +914,101 @@ enum {
 	Prj_Setup_Script_Flag_BAT     = (1 << 1),
 	Prj_Setup_Script_Flag_SH      = (1 << 2),
 } Prj_Setup_Script_Flags_Enum;
+
+function b32
+prj_generate_project(Application_Links *app, Arena *scratch, String8 script_path, String8 script_file, String8 output_dir,
+					 String8 binary_file) {
+    b32 success = false;
+    
+    Temp_Memory temp = begin_temp(scratch);
+    
+    String8 od = output_dir;
+    String8 bf = binary_file;
+    
+    String8 od_win = string_replace(scratch, od,
+                                    string_u8_litexpr("/"), string_u8_litexpr("\\"));
+    String8 bf_win = string_replace(scratch, bf,
+                                    string_u8_litexpr("/"), string_u8_litexpr("\\"));
+    
+    String8 file_name = push_u8_stringf(scratch, "%.*s/project.4coder", string_expand(script_path));
+	
+    // Query user for project name.
+	String8 project_name = string_u8_litexpr("New Project");
+	{
+		i32 project_name_cap = 1024;
+		u8 *project_name_buffer = push_array(scratch, u8, project_name_cap);
+		
+		Query_Bar name_bar = {};
+		name_bar.prompt = string_u8_litexpr("Project Name: ");
+		name_bar.string = SCu8(project_name_buffer, (u64)0);
+		name_bar.string_capacity = project_name_cap;
+		if (query_user_string(app, &name_bar)) {
+			project_name = name_bar.string;
+		}
+	}
+	
+    FILE *out = fopen((char*)file_name.str, "wb");
+    if (out != 0) {
+        fprintf(out, "version(2);\n");
+        fprintf(out, "project_name = \"%.*s\";\n", string_expand(project_name));
+		
+		fprintf(out, "\n");
+        
+		fprintf(out, "patterns = {\n");
+        fprintf(out, "\"*.c\",\n");
+        fprintf(out, "\"*.cpp\",\n");
+        fprintf(out, "\"*.h\",\n");
+		fprintf(out, "\"*.hpp\",\n");
+		fprintf(out, "\"*.inc\",\n");
+		fprintf(out, "\"*.inl\",\n");
+		fprintf(out, "\"*.m\",\n");
+		fprintf(out, "\"*.jai\",\n");
+		fprintf(out, "\"*.odin\",\n");
+		fprintf(out, "\"*.rc\",\n");
+		fprintf(out, "\"*.bat\",\n");
+        fprintf(out, "\"*.sh\",\n");
+        fprintf(out, "\"*.4coder\",\n");
+        fprintf(out, "};\n");
+        fprintf(out, "blacklist_patterns = {\n");
+        fprintf(out, "\".*\",\n");
+        fprintf(out, "};\n");
+		
+		fprintf(out, "\n");
+        
+		fprintf(out, "load_paths_base = {\n");
+        fprintf(out, " { \".\", .relative = true, .recursive = true, },\n");
+        fprintf(out, "};\n");
+        fprintf(out, "load_paths = {\n");
+        fprintf(out, " .win = load_paths_base,\n");
+        fprintf(out, " .linux = load_paths_base,\n");
+        fprintf(out, " .mac = load_paths_base,\n");
+        fprintf(out, "};\n");
+        
+        fprintf(out, "\n");
+        
+        fprintf(out, "commands = {\n");
+        fprintf(out, " .build = { .out = \"*compilation*\", .footer_panel = true, .save_dirty_files = true,\n");
+        fprintf(out, "   .win = \"%.*s.bat\",\n", string_expand(script_file));
+        fprintf(out, "   .linux = \"./%.*s.sh\",\n", string_expand(script_file));
+        fprintf(out, "   .mac = \"./%.*s.sh\", },\n", string_expand(script_file));
+        fprintf(out, " .run = { .out = \"*run*\", .footer_panel = false, .save_dirty_files = false,\n");
+        fprintf(out, "   .win = \"%.*s\\\\%.*s\",\n", string_expand(od_win), string_expand(bf_win));
+        fprintf(out, "   .linux = \"%.*s/%.*s\",\n", string_expand(od), string_expand(bf));
+        fprintf(out, "   .mac = \"%.*s/%.*s\", },\n", string_expand(od), string_expand(bf));
+        fprintf(out, "};\n");
+        fprintf(out, "fkey_command = {\n");
+        fprintf(out, " .F1 = \"run\";\n");
+        fprintf(out, " .F2 = \"run\";\n");
+        fprintf(out, "};\n");
+        
+        fclose(out);
+        success = true;
+    }
+    
+    end_temp(temp);
+    
+    return success;
+}
 
 function b32
 prj_generate_c_or_cpp_bat(Arena *scratch, String8 opts, String8 compiler, String8 script_path, String8 script_file,
@@ -1309,7 +1403,7 @@ prj_setup_scripts(Application_Links *app, nne::Prj_Setup_Script_Flags flags) {
         
         if (do_project_file) {
             if (!status.project_exists) {
-                if (!prj_generate_project(scratch, script_path, build_script_file, output_dir, binary_file)) {
+                if (!nne::prj_generate_project(app, scratch, script_path, build_script_file, output_dir, binary_file)) {
                     print_message(app, string_u8_litexpr("Could not create project.4coder for new project\n"));
                 }
             } else {
@@ -1338,6 +1432,11 @@ CUSTOM_DOC("Queries the user for several configuration options and initializes a
 CUSTOM_COMMAND_SIG(nne_setup_build_bat_and_sh)
 CUSTOM_DOC("Queries the user for several configuration options and initializes a new build batch & shell script.") {
     nne::prj_setup_scripts(app, nne::Prj_Setup_Script_Flag_BAT|nne::Prj_Setup_Script_Flag_SH);
+}
+
+CUSTOM_COMMAND_SIG(nne_setup_new_project)
+CUSTOM_DOC("Queries the user for several configuration options and initializes a new 4coder project with build scripts for every OS.") {
+    nne::prj_setup_scripts(app, nne::Prj_Setup_Script_Flag_PROJECT|nne::Prj_Setup_Script_Flag_BAT|nne::Prj_Setup_Script_Flag_SH);
 }
 
 //~ Indentation and autocomplete
