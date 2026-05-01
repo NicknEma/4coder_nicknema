@@ -943,8 +943,12 @@ prj_generate_c_or_cpp_bat(Arena *scratch, String8 opts, String8 compiler, String
 			fprintf(bat_script, "if not exist %.*s mkdir %.*s\n", (i32)od.size, od.str, (i32)od.size, od.str);
 			fprintf(bat_script, "pushd %.*s\n", (i32)od.size, od.str);
 			fprintf(bat_script, "del %.*s > NUL 2> NUL\n", (i32)df.size, df.str);
-			fprintf(bat_script, "%.*s %%opts%% %%root%%\\%.*s -Fe%.*s\n",
+			fprintf(bat_script, "del *.pdb > NUL 2> NUL\n");
+			fprintf(bat_script, "del *.rdi > NUL 2> NUL\n");
+			fprintf(bat_script, "%.*s %%root%%\\%.*s -Fe%.*s %%opts%%\n",
 					(i32)compiler.size, compiler.str, (i32)sf.size, sf.str, (i32)bf.size, bf.str);
+			fprintf(bat_script, "del *.obj > NUL 2> NUL\n");
+			fprintf(bat_script, "del *.ilk > NUL 2> NUL\n");
 			fprintf(bat_script, "popd\n");
 			fclose(bat_script);
 			success = true;
@@ -981,6 +985,8 @@ prj_generate_bat_for_odin(Arena *scratch, String8 script_path, String8 build_scr
 			fprintf(bat_script, "if not exist %.*s mkdir %.*s\n", (i32)od.size, od.str, (i32)od.size, od.str);
 			fprintf(bat_script, "pushd %.*s\n", (i32)od.size, od.str);
 			fprintf(bat_script, "del %.*s > NUL 2> NUL\n", (i32)df.size, df.str);
+			fprintf(bat_script, "del *.pdb > NUL 2> NUL\n");
+			fprintf(bat_script, "del *.rdi > NUL 2> NUL\n");
 			fprintf(bat_script, "odin build %%root%%\\%.*s %%opts%% -out:%.*s\n",
 					(i32)sf.size, sf.str, (i32)bf.size, bf.str);
 			fprintf(bat_script, "popd\n");
