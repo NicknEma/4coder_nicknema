@@ -84,7 +84,7 @@ user_name = "nicknema"; // The name that will be painted in a special color when
 //  When creating a new 4coder project with the 'setup_new_project' command, this is what will be used to create
 //  the various build.* files.
 default_compiler_bat = "cl";
-default_flags_bat    = "/FC /GR- /EHa- /nologo /Z7 /WX /W4 /external:anglebrackets /external:W0";
+default_flags_bat    = "/FC /GR- /EHa- /nologo /Z7 /WX /W4 /wd4100 /wd4101 /wd4189 /external:anglebrackets /external:W0 /link /incremental:no";
 default_compiler_sh  = "g++";
 default_flags_sh     = "-g";
 
